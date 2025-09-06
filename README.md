@@ -1,4 +1,4 @@
 # Site_Diplom
 
 
-Amin хуесос
+Amin хуесос 100%
