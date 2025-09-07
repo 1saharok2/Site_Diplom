@@ -1,141 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Typography,
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  CardMedia,
-  Button,
-  Chip,
-  CircularProgress,
-  Alert
-} from '@mui/material';
+import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { mockCategories } from '../../../data/mockData'; // Импортируем конкретные категории
+import { getCategories } from '../../../services/categoryService';
+import './CategoriesPage.css';
 
 const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Имитация загрузки данных
-    const timer = setTimeout(() => {
-      setCategories(mockCategories); // Используем конкретные категории из mockData
-      setLoading(false);
-    }, 500);
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const data = await getCategories();
+        setCategories(data);
+      } catch (err) {
+        setError('Ошибка загрузки категорий');
+        console.error('Error fetching categories:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    fetchCategories();
   }, []);
 
   if (loading) {
     return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <Box textAlign="center">
-          <CircularProgress />
-          <Typography variant="body1" sx={{ mt: 2 }}>
-            Загружаем категории...
-          </Typography>
-        </Box>
+      <Container className="text-center mt-5">
+        <Spinner animation="border" role="status" variant="primary">
+          <span className="visually-hidden">Загрузка категорий...</span>
+        </Spinner>
+        <p className="mt-3">Загружаем категории...</p>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="mt-5">
+        <Alert variant="danger">
+          <Alert.Heading>Ошибка!</Alert.Heading>
+          <p>{error}</p>
+          <Button variant="outline-danger" onClick={() => window.location.reload()}>
+            Попробовать снова
+          </Button>
+        </Alert>
       </Container>
     );
   }
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Box textAlign="center" sx={{ mb: 6 }}>
-        <Typography variant="h2" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-          Категории товаров
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          Выберите интересующую вас категорию
-        </Typography>
-      </Box>
+    <Container className="categories-page">
+      <div className="text-center mb-5">
+        <h1 className="display-4 fw-bold text-primary">Категории товаров</h1>
+        <p className="lead text-muted">Выберите интересующую вас категорию</p>
+      </div>
 
-      <Grid container spacing={3}>
-        {categories.map((category) => (
-          <Grid item xs={12} sm={6} md={4} key={category.id}>
-            <Card
-              sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: 6
-                }
-              }}
-            >
-              <Box sx={{ position: 'relative' }}>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={category.image}
-                  alt={category.name}
-                  sx={{
-                    objectFit: 'cover'
-                  }}
-                />
-                <Chip
-                  label={`${category.productsCount || 0} товаров`}
-                  color="primary"
-                  size="small"
-                  sx={{
-                    position: 'absolute',
-                    top: 12,
-                    right: 12,
-                    fontWeight: 'bold'
-                  }}
-                />
-              </Box>
-              
-              <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                <Typography variant="h6" component="h3" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
-                  {category.name}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{
-                    flexGrow: 1,
-                    mb: 2,
-                    minHeight: '60px'
-                  }}
-                >
-                  {category.description}
-                </Typography>
-                <Button
-                  component={Link}
-                  to={`/catalog?category=${category.slug}`}
-                  variant="contained"
-                  size="large"
-                  fullWidth
-                  sx={{
-                    borderRadius: 2,
-                    fontWeight: 'bold'
-                  }}
-                >
-                  Смотреть товары
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+<div className="categories-grid">
+  {categories.map((category) => (
+    <div key={category.id} className="category-card">
+      <div className="category-image-container">
+        <img 
+          src={category.image} 
+          alt={category.name}
+          className="category-image"
+        />
+        <div className="product-count-badge">
+          <span className="badge bg-primary">{category.productCount} товаров</span>
+        </div>
+      </div>
+      
+      <div className="card-body-content">
+        <h5 className="category-title">{category.name}</h5>
+        <p className="category-description">{category.description}</p>
+        <Link 
+          to={`/catalog/${category.slug}`}
+          className="btn btn-primary view-products-btn"
+        >
+          Смотреть товары
+        </Link>
+      </div>
+    </div>
+  ))}
+</div>
 
-      {categories.length === 0 && (
-        <Box textAlign="center" sx={{ mt: 4 }}>
-          <Alert severity="info">
-            <Typography variant="h6" gutterBottom>
-              Категории не найдены
-            </Typography>
-            <Typography>
-              Пока нет доступных категорий товаров
-            </Typography>
+      {categories.length === 0 && !loading && (
+        <div className="text-center mt-5">
+          <Alert variant="info">
+            <Alert.Heading>Категории не найдены</Alert.Heading>
+            <p>Пока нет доступных категорий товаров</p>
           </Alert>
-        </Box>
+        </div>
       )}
     </Container>
   );
