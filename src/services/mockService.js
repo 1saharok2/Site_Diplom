@@ -157,6 +157,15 @@ export const mockService = {
     return { data: mockOrders };
   },
 
+  getOrder: async (id) => {
+  await delay(300);
+  const order = mockOrders.find(o => o.id === parseInt(id));
+  if (order) {
+    return { data: order };
+  }
+  throw new Error('Order not found');
+  },
+
   updateOrderStatus: async (id, status) => {
     await delay(500);
     const order = mockOrders.find(o => o.id === parseInt(id));
@@ -194,5 +203,39 @@ export const mockService = {
         recentOrders: mockOrders.slice(0, 5)
       }
     };
+  },
+
+  getUsers: async () => {
+    await delay(500);
+    return { data: mockUsers };
+  },
+
+  getUser: async (id) => {
+    await delay(300);
+    const user = mockUsers.find(u => u.id === parseInt(id));
+    if (user) {
+      return { data: user };
+    }
+    throw new Error('User not found');
+  },
+
+  updateUser: async (id, userData) => {
+    await delay(500);
+    const index = mockUsers.findIndex(u => u.id === parseInt(id));
+    if (index !== -1) {
+      mockUsers[index] = { ...mockUsers[index], ...userData };
+      return { data: mockUsers[index] };
+    }
+    throw new Error('User not found');
+  },
+
+  deleteUser: async (id) => {
+    await delay(500);
+    const index = mockUsers.findIndex(u => u.id === parseInt(id));
+    if (index !== -1) {
+      mockUsers.splice(index, 1);
+      return { data: { success: true } };
+    }
+    throw new Error('User not found');
   }
 };

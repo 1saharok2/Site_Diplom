@@ -22,7 +22,7 @@ import {
   Favorite
 } from '@mui/icons-material';
 import { mockProducts, mockCategories } from '../../data/mockData'; // Импортируем конкретные данные
-import { useCart } from '../../context/CartContext/CartContext';
+import { useCart } from '../../context/CartContext';
 
 const HomePage = () => {
   const { addToCart } = useCart();

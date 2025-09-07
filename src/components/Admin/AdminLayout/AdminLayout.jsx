@@ -1,23 +1,120 @@
-// src/components/Admin/AdminLayout/AdminLayout.jsx
+// components/Admin/AdminLayout/AdminLayout.jsx
 import React, { useState } from 'react';
-import { Box, Drawer, useMediaQuery, useTheme } from '@mui/material';
-import AdminSidebar from './AdminSidebar';
-import AdminHeader from './AdminHeader';
+import {
+  Box,
+  Drawer,
+  AppBar,
+  Toolbar,
+  List,
+  Typography,
+  Divider,
+  IconButton,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  useTheme,
+  useMediaQuery
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Dashboard,
+  Inventory,
+  ShoppingCart,
+  People,
+  Category,
+  ExitToApp
+} from '@mui/icons-material';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 
-const drawerWidth = 280;
+const drawerWidth = 240;
+
+const menuItems = [
+  { text: 'Дашборд', icon: <Dashboard />, path: '/admin/dashboard' },
+  { text: 'Товары', icon: <Inventory />, path: '/admin/products' },
+  { text: 'Заказы', icon: <ShoppingCart />, path: '/admin/orders' },
+  { text: 'Пользователи', icon: <People />, path: '/admin/users' },
+  { text: 'Категории', icon: <Category />, path: '/admin/categories' }
+];
 
 const AdminLayout = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
-  //const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { logout } = useAuth();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const drawer = (
+    <div>
+      <Toolbar>
+        <Typography variant="h6" noWrap component="div">
+          Админ Панель
+        </Typography>
+      </Toolbar>
+      <Divider />
+      <List>
+        {menuItems.map((item) => (
+          <ListItem key={item.text} disablePadding>
+            <ListItemButton
+              selected={location.pathname === item.path}
+              onClick={() => navigate(item.path)}
+            >
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+      <Divider />
+      <List>
+        <ListItem disablePadding>
+          <ListItemButton onClick={handleLogout}>
+            <ListItemIcon>
+              <ExitToApp />
+            </ListItemIcon>
+            <ListItemText primary="Выйти" />
+          </ListItemButton>
+        </ListItem>
+      </List>
+    </div>
+  );
+
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Sidebar */}
+    <Box sx={{ display: 'flex' }}>
+      <AppBar
+        position="fixed"
+        sx={{
+          width: { md: `calc(100% - ${drawerWidth}px)` },
+          ml: { md: `${drawerWidth}px` }
+        }}
+      >
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mr: 2, display: { md: 'none' } }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" noWrap component="div">
+            Панель управления
+          </Typography>
+        </Toolbar>
+      </AppBar>
+
       <Box
         component="nav"
         sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
@@ -29,29 +126,35 @@ const AdminLayout = ({ children }) => {
           ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth }
           }}
         >
-          <AdminSidebar onItemClick={handleDrawerToggle} />
+          {drawer}
         </Drawer>
         <Drawer
           variant="permanent"
           sx={{
             display: { xs: 'none', md: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth }
           }}
           open
         >
-          <AdminSidebar />
+          {drawer}
         </Drawer>
       </Box>
 
-      {/* Main content */}
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        <AdminHeader onMenuClick={handleDrawerToggle} />
-        <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: '#f5f5f5' }}>
-          {children}
-        </Box>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          width: { md: `calc(100% - ${drawerWidth}px)` },
+          minHeight: '100vh',
+          backgroundColor: theme.palette.grey[100]
+        }}
+      >
+        <Toolbar />
+        {children}
       </Box>
     </Box>
   );

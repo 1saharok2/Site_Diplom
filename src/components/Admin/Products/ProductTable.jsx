@@ -1,3 +1,4 @@
+// components/Admin/Products/ProductTable.jsx
 import React from 'react';
 import {
   Table,

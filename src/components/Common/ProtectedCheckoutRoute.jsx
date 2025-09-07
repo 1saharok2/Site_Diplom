@@ -1,10 +1,10 @@
-// components/Common/AdminRoute.jsx
+// components/Common/ProtectedCheckoutRoute.jsx
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { CircularProgress, Box } from '@mui/material';
 
-const AdminRoute = ({ children }) => {
+const ProtectedCheckoutRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
 
   if (loading) {
@@ -15,20 +15,13 @@ const AdminRoute = ({ children }) => {
     );
   }
 
-  console.log('Current user:', currentUser); // Добавим для отладки
-  console.log('User role:', currentUser?.role); // Добавим для отладки
-
   if (!currentUser) {
-    console.log('No user, redirecting to login');
+    // Сохраняем URL для редиректа после входа
+    sessionStorage.setItem('redirectAfterLogin', '/checkout');
     return <Navigate to="/login" replace />;
-  }
-
-  if (currentUser.role !== 'admin') {
-    console.log('User is not admin, redirecting to home');
-    return <Navigate to="/" replace />;
   }
 
   return children;
 };
 
-export default AdminRoute;
+export default ProtectedCheckoutRoute;
