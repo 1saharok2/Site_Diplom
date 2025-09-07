@@ -169,15 +169,28 @@ const CategoryPage = () => {
         </Breadcrumb>
 
       {/* Заголовок категории */}
-      <Row className="mb-4">
-        <Col>
-          <h1 className="display-5 fw-bold">{category.name}</h1>
-          <p className="lead text-muted">{category.description}</p>
-          <p className="text-primary fw-semibold">
-            Найдено товаров: {filteredAndSortedProducts.length}
-          </p>
-        </Col>
-      </Row>
+<div className="products-grid-container">
+  {filteredAndSortedProducts.length === 0 ? (
+    <div className="no-products-alert">
+      <h4>Товары не найдены</h4>
+      <p>
+        {filterInStock 
+          ? 'Нет товаров в наличии в этой категории' 
+          : 'В этой категории пока нет товаров'
+        }
+      </p>
+      <Link to="/catalog" className="back-to-categories-btn">
+        Посмотреть другие категории
+      </Link>
+    </div>
+  ) : (
+    <div className="products-grid">
+      {filteredAndSortedProducts.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  )}
+</div>
 
       {/* Фильтры и сортировка */}
      <div className="filters-container">
@@ -216,29 +229,28 @@ const CategoryPage = () => {
 </div>
 
       {/* Список товаров */}
-      {/* Список товаров */}
-<div className="products-grid">
+
+{/* Список товаров */}
+<div className="products-container">
   {filteredAndSortedProducts.length === 0 ? (
-    <Alert variant="info" className="text-center">
-      <Alert.Heading>Товары не найдены</Alert.Heading>
+    <div className="no-products">
+      <h4>Товары не найдены</h4>
       <p>
         {filterInStock 
           ? 'Нет товаров в наличии в этой категории' 
           : 'В этой категории пока нет товаров'
         }
       </p>
-      <Button 
-        as={Link} 
-        to="/catalog" 
-        variant="outline-primary"
-      >
-        Посмотреть другие категории
-      </Button>
-    </Alert>
+      <Link to="/catalog" className="back-btn">
+        ← Вернуться к категориям
+      </Link>
+    </div>
   ) : (
-    filteredAndSortedProducts.map((product) => (
-      <ProductCard key={product.id} product={product} />
-    ))
+    <div className="products-grid">
+      {filteredAndSortedProducts.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
   )}
 </div>
 

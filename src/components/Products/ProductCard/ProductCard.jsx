@@ -23,6 +23,8 @@ const ProductCard = ({ product }) => {
   console.log('Image type:', typeof images[0]);
   console.log('======================');
 
+
+
   return (
     <Card className="h-100" style={{ border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
       {/* Бейджи */}
@@ -130,5 +132,31 @@ const ProductCard = ({ product }) => {
     </Card>
   );
 };
-//dsakjdhsaj
+
+
+const cardStyles = {
+  card: {
+    border: 'none',
+    borderRadius: '15px',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+    transition: 'all 0.3s ease',
+    overflow: 'hidden'
+  },
+  imageContainer: {
+    height: '250px',
+    overflow: 'hidden',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8f9fa'
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    transition: 'transform 0.3s ease'
+  }
+};
+
+
 export default ProductCard;
