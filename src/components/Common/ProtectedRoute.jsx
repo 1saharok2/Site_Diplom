@@ -1,19 +1,20 @@
+// components/Common/ProtectedRoute.jsx
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const AdminRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+const ProtectedRoute = ({ children }) => {
+  const { currentUser, loading } = useAuth();
 
   if (loading) {
     return <div>Загрузка...</div>;
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!currentUser) {
     return <Navigate to="/login" replace />;
   }
 
   return children;
 };
 
-export default AdminRoute;
+export default ProtectedRoute;

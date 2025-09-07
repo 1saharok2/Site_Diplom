@@ -1,5 +1,6 @@
 // src/components/Layout/Header/Header.jsx
 import React, { useState } from 'react';
+import './Header.css';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -16,7 +17,8 @@ import {
   useMediaQuery,
   useTheme,
   Menu,
-  MenuItem
+  MenuItem,
+  ListItemButton
 } from '@mui/material';
 import {
   ShoppingCart,
@@ -57,7 +59,6 @@ const Header = () => {
   const cartItemsCount = cartItems ? cartItems.reduce((total, item) => total + item.quantity, 0) : 0;
 
   const navigationItems = [
-    { label: 'Главная', path: '/' },
     { label: 'Каталог', path: '/catalog' },
     { label: 'О нас', path: '/about' },
     { label: 'Контакты', path: '/contacts' }
@@ -75,8 +76,11 @@ const Header = () => {
             component={Link}
             to={item.path}
             sx={{ textDecoration: 'none', color: 'inherit' }}
+            disablePadding
           >
-            <ListItemText primary={item.label} />
+            <ListItemButton sx={{ textAlign: 'center' }}>
+              <ListItemText primary={item.label} />
+            </ListItemButton>
           </ListItem>
         ))}
         {currentUser ? (
@@ -85,20 +89,28 @@ const Header = () => {
               component={Link}
               to="/profile"
               sx={{ textDecoration: 'none', color: 'inherit' }}
+              disablePadding
             >
-              <ListItemText primary="Профиль" />
+              <ListItemButton sx={{ textAlign: 'center' }}>
+                <ListItemText primary="Профиль" />
+              </ListItemButton>
             </ListItem>
             {currentUser.role === 'admin' && (
               <ListItem
                 component={Link}
                 to="/admin"
                 sx={{ textDecoration: 'none', color: 'inherit' }}
+                disablePadding
               >
-                <ListItemText primary="Админка" />
+                <ListItemButton sx={{ textAlign: 'center' }}>
+                  <ListItemText primary="Админка" />
+                </ListItemButton>
               </ListItem>
             )}
-            <ListItem button onClick={handleLogout}>
-              <ListItemText primary="Выйти" />
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleLogout} sx={{ textAlign: 'center' }}>
+                <ListItemText primary="Выйти" />
+              </ListItemButton>
             </ListItem>
           </>
         ) : (
@@ -107,15 +119,21 @@ const Header = () => {
               component={Link}
               to="/login"
               sx={{ textDecoration: 'none', color: 'inherit' }}
+              disablePadding
             >
-              <ListItemText primary="Войти" />
+              <ListItemButton sx={{ textAlign: 'center' }}>
+                <ListItemText primary="Войти" />
+              </ListItemButton>
             </ListItem>
             <ListItem
               component={Link}
               to="/register"
               sx={{ textDecoration: 'none', color: 'inherit' }}
+              disablePadding
             >
-              <ListItemText primary="Регистрация" />
+              <ListItemButton sx={{ textAlign: 'center' }}>
+                <ListItemText primary="Регистрация" />
+              </ListItemButton>
             </ListItem>
           </>
         )}
@@ -127,23 +145,33 @@ const Header = () => {
     <>
       <AppBar position="static" sx={{ backgroundColor: 'white', color: 'black', boxShadow: 'none', borderBottom: '1px solid #e0e0e0' }}>
         <Toolbar>
+          {/* Логотип Магазин - ТОЛЬКО ЭТА ОБЛАСТЬ КЛИКАБЕЛЬНА */}
           <Typography
             variant="h6"
             component={Link}
             to="/"
             sx={{
-              flexGrow: 1,
               textDecoration: 'none',
               color: 'inherit',
               fontWeight: 'bold',
-              fontSize: '1.5rem'
+              fontSize: '1.5rem',
+              // Ограничиваем область только текстом
+              padding: '8px 16px',
+              margin: '-8px -16px', // Компенсируем padding
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                borderRadius: '4px'
+              }
             }}
           >
             🛍️ Магазин
           </Typography>
 
+          {/* Остальная часть flexGrow для выравнивания */}
+          <Box sx={{ flexGrow: 1 }} />
+
           {!isMobile && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mr: 2 }}>
               {navigationItems.map((item) => (
                 <Button
                   key={item.path}
@@ -164,7 +192,7 @@ const Header = () => {
             </Box>
           )}
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <IconButton
               component={Link}
               to="/cart"
@@ -273,4 +301,4 @@ const Header = () => {
   );
 };
 
-export default Header; // ✅ Добавьте default export
+export default Header;

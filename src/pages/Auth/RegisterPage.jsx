@@ -1,4 +1,4 @@
-// pages/Auth/LoginPage.jsx
+// pages/Auth/RegisterPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -13,20 +13,23 @@ import {
   CircularProgress
 } from '@mui/material';
 
-const LoginPage = () => {
-  const [credentials, setCredentials] = useState({
+const RegisterPage = () => {
+  const [formData, setFormData] = useState({
+    name: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: '',
+    phone: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setCredentials({
-      ...credentials,
+    setFormData({
+      ...formData,
       [e.target.name]: e.target.value
     });
   };
@@ -36,10 +39,27 @@ const LoginPage = () => {
     setLoading(true);
     setError('');
 
-    const result = await login(credentials);
-    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Пароли не совпадают');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Пароль должен содержать минимум 6 символов');
+      setLoading(false);
+      return;
+    }
+
+    const result = await register({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      phone: formData.phone
+    });
+
     if (result.success) {
-      navigate(result.user.role === 'admin' ? '/admin' : '/profile');
+      navigate('/profile');
     } else {
       setError(result.error);
     }
@@ -55,12 +75,12 @@ const LoginPage = () => {
         justifyContent: 'center',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         padding: 2,
-        marginTop: '-64px'
+        marginTop: '-64px' // Компенсируем высоту хедера
       }}
     >
       <Container 
         maxWidth="sm" 
-        sx={{
+        sx={{ 
           py: 0 
         }}
       >
@@ -85,7 +105,7 @@ const LoginPage = () => {
               mb: 3
             }}
           >
-            Вход в систему
+            Регистрация
           </Typography>
 
           {error && (
@@ -97,12 +117,42 @@ const LoginPage = () => {
           <Box component="form" onSubmit={handleSubmit}>
             <TextField
               fullWidth
+              label="Имя"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              margin="normal"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2
+                }
+              }}
+            />
+            
+            <TextField
+              fullWidth
               type="email"
               label="Email"
               name="email"
-              value={credentials.email}
+              value={formData.email}
               onChange={handleChange}
               required
+              margin="normal"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2
+                }
+              }}
+            />
+            
+            <TextField
+              fullWidth
+              type="tel"
+              label="Телефон"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
               margin="normal"
               sx={{
                 '& .MuiOutlinedInput-root': {
@@ -116,7 +166,23 @@ const LoginPage = () => {
               type="password"
               label="Пароль"
               name="password"
-              value={credentials.password}
+              value={formData.password}
+              onChange={handleChange}
+              required
+              margin="normal"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2
+                }
+              }}
+            />
+            
+            <TextField
+              fullWidth
+              type="password"
+              label="Подтвердите пароль"
+              name="confirmPassword"
+              value={formData.confirmPassword}
               onChange={handleChange}
               required
               margin="normal"
@@ -151,41 +217,22 @@ const LoginPage = () => {
                 }
               }}
             >
-              {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'ВОЙТИ'}
+              {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'ЗАРЕГИСТРИРОВАТЬСЯ'}
             </Button>
 
-            <Box textAlign="center" sx={{ mb: 2 }}>
+            <Box textAlign="center">
               <Typography variant="body2" sx={{ color: '#666' }}>
-                Нет аккаунта?{' '}
+                Уже есть аккаунт?{' '}
                 <Link
-                  to="/register"
+                  to="/login"
                   style={{
                     color: '#667eea',
                     textDecoration: 'none',
                     fontWeight: 600
                   }}
                 >
-                  Зарегистрироваться
+                  Войти
                 </Link>
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{
-                p: 2,
-                bgcolor: 'grey.100',
-                borderRadius: 2,
-                borderLeft: '4px solid #667eea'
-              }}
-            >
-              <Typography variant="body2" sx={{ color: '#333', fontWeight: 600, mb: 1 }}>
-                Демо доступ:
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#666' }}>
-                Email: admin@mail.com
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#666' }}>
-                Пароль: admin123
               </Typography>
             </Box>
           </Box>
@@ -195,4 +242,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;
