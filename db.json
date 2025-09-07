@@ -1,0 +1,85 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Смартфон Samsung Galaxy S23",
+      "price": 69990,
+      "oldPrice": 79990,
+      "image": "https://via.placeholder.com/300x300?text=Samsung+S23",
+      "category": "Смартфоны",
+      "stock": 15,
+      "sku": "SM-S23-BLK",
+      "rating": 4.8,
+      "description": "Флагманский смартфон с лучшей камерой",
+      "isActive": true,
+      "isFeatured": true,
+      "createdAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Ноутбук Apple MacBook Air M2",
+      "price": 119990,
+      "oldPrice": 129990,
+      "image": "https://via.placeholder.com/300x300?text=MacBook+Air",
+      "category": "Ноутбуки",
+      "stock": 8,
+      "sku": "MBA-M2-SLV",
+      "rating": 4.9,
+      "description": "Легкий и мощный ноутбук от Apple",
+      "isActive": true,
+      "isFeatured": true,
+      "createdAt": "2024-01-14T15:30:00Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": 1,
+      "customerName": "Иван Иванов",
+      "customerEmail": "ivan@mail.com",
+      "total": 139980,
+      "status": "completed",
+      "items": [
+        {
+          "productId": 1,
+          "name": "Смартфон Samsung Galaxy S23",
+          "price": 69990,
+          "quantity": 2
+        }
+      ],
+      "createdAt": "2024-01-15T14:30:00Z",
+      "updatedAt": "2024-01-15T16:45:00Z"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "name": "Администратор",
+      "email": "admin@mail.com",
+      "password": "admin123",
+      "role": "admin",
+      "createdAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Иван Иванов",
+      "email": "ivan@mail.com",
+      "password": "user123",
+      "role": "user",
+      "createdAt": "2024-01-10T12:00:00Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Смартфоны",
+      "slug": "smartphones",
+      "description": "Мобильные телефоны и смартфоны"
+    },
+    {
+      "id": 2,
+      "name": "Ноутбуки",
+      "slug": "laptops",
+      "description": "Ноутбуки и ультрабуки"
+    }
+  ]
+}

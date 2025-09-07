@@ -1,5 +1,6 @@
-
-import React, { createContext, useContext, useState } from 'react';
+// context/AuthContext.jsx
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { adminService } from '../services/adminService';
 
 const AuthContext = createContext();
 
@@ -13,19 +14,89 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = (userData) => {
-    setCurrentUser(userData);
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('userData');
+    
+    if (token && userData) {
+      setCurrentUser(JSON.parse(userData));
+    }
+    setLoading(false);
+  }, []);
+
+  const login = async (credentials) => {
+    try {
+      const response = await adminService.login(credentials);
+      const { user: userData, token } = response.data;
+      
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('userData', JSON.stringify(userData));
+      setCurrentUser(userData);
+      
+      return { success: true, user: userData };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.message || 'Ошибка входа' 
+      };
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      // В реальном приложении здесь будет вызов API регистрации
+      // Пока используем mock-регистрацию
+      const newUser = {
+        ...userData,
+        id: Math.floor(Math.random() * 1000) + 3,
+        role: 'user',
+        isActive: true,
+        createdAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('authToken', 'mock-jwt-token');
+      localStorage.setItem('userData', JSON.stringify(newUser));
+      setCurrentUser(newUser);
+      
+      return { success: true, user: newUser };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.message || 'Ошибка регистрации' 
+      };
+    }
   };
 
   const logout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
     setCurrentUser(null);
+  };
+
+  const updateProfile = async (userData) => {
+    try {
+      const updatedUser = { ...currentUser, ...userData };
+      localStorage.setItem('userData', JSON.stringify(updatedUser));
+      setCurrentUser(updatedUser);
+      
+      return { success: true, user: updatedUser };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.message || 'Ошибка обновления профиля' 
+      };
+    }
   };
 
   const value = {
     currentUser,
+    loading,
     login,
-    logout
+    register,
+    logout,
+    updateProfile
   };
 
   return (
@@ -34,5 +105,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-export default AuthContext;

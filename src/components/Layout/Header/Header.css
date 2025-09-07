@@ -1,14 +1,138 @@
-/* src/components/Layout/Header/Header.css */
-.MuiAppBar-root {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  padding: 0 20px;
 }
 
-.MuiButton-root {
-  text-transform: none !important;
-  font-weight: 500 !important;
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 70px;
 }
 
-.MuiBadge-badge {
-  background-color: #ff4757 !important;
-  color: white !important;
+.logo {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #667eea;
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  gap: 30px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #667eea;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.login-btn,
+.register-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.login-btn {
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.login-btn:hover {
+  background: #667eea;
+  color: white;
+}
+
+.register-btn {
+  background: #667eea;
+  color: white;
+}
+
+.register-btn:hover {
+  background: #5a67d8;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-greeting {
+  color: #666;
+  font-weight: 500;
+}
+
+.admin-btn,
+.logout-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.admin-btn {
+  background: #48bb78;
+  color: white;
+}
+
+.admin-btn:hover {
+  background: #38a169;
+}
+
+.logout-btn {
+  background: #f56565;
+  color: white;
+}
+
+.logout-btn:hover {
+  background: #e53e3e;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .header-container {
+    flex-direction: column;
+    height: auto;
+    padding: 15px 0;
+  }
+  
+  .nav {
+    margin: 15px 0;
+    gap: 20px;
+  }
+  
+  .header-actions {
+    margin-top: 10px;
+  }
 }

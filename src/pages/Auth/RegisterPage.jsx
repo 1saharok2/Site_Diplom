@@ -1,4 +1,4 @@
-// pages/Auth/LoginPage.jsx
+// pages/Auth/RegisterPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -14,20 +14,23 @@ import {
 } from '@mui/material';
 import './AuthPages.css';
 
-const LoginPage = () => {
-  const [credentials, setCredentials] = useState({
+const RegisterPage = () => {
+  const [formData, setFormData] = useState({
+    name: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: '',
+    phone: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setCredentials({
-      ...credentials,
+    setFormData({
+      ...formData,
       [e.target.name]: e.target.value
     });
   };
@@ -37,11 +40,27 @@ const LoginPage = () => {
     setLoading(true);
     setError('');
 
-    const result = await login(credentials);
-    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Пароли не совпадают');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Пароль должен содержать минимум 6 символов');
+      setLoading(false);
+      return;
+    }
+
+    const result = await register({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      phone: formData.phone
+    });
+
     if (result.success) {
-      // Перенаправляем в личный кабинет для пользователей, в админку для админов
-      navigate(result.user.role === 'admin' ? '/admin' : '/profile');
+      navigate('/profile');
     } else {
       setError(result.error);
     }
@@ -52,7 +71,7 @@ const LoginPage = () => {
     <Container maxWidth="sm" sx={{ py: 8 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
-          Вход в систему
+          Регистрация
         </Typography>
 
         {error && (
@@ -64,12 +83,32 @@ const LoginPage = () => {
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
           <TextField
             fullWidth
+            label="Имя"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            margin="normal"
+          />
+          
+          <TextField
+            fullWidth
             type="email"
             label="Email"
             name="email"
-            value={credentials.email}
+            value={formData.email}
             onChange={handleChange}
             required
+            margin="normal"
+          />
+          
+          <TextField
+            fullWidth
+            type="tel"
+            label="Телефон"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
             margin="normal"
           />
           
@@ -78,7 +117,18 @@ const LoginPage = () => {
             type="password"
             label="Пароль"
             name="password"
-            value={credentials.password}
+            value={formData.password}
+            onChange={handleChange}
+            required
+            margin="normal"
+          />
+          
+          <TextField
+            fullWidth
+            type="password"
+            label="Подтвердите пароль"
+            name="confirmPassword"
+            value={formData.confirmPassword}
             onChange={handleChange}
             required
             margin="normal"
@@ -92,27 +142,15 @@ const LoginPage = () => {
             disabled={loading}
             sx={{ mt: 3, mb: 2 }}
           >
-            {loading ? <CircularProgress size={24} /> : 'Войти'}
+            {loading ? <CircularProgress size={24} /> : 'Зарегистрироваться'}
           </Button>
 
           <Box textAlign="center">
             <Typography variant="body2">
-              Нет аккаунта?{' '}
-              <Link to="/register" style={{ textDecoration: 'none' }}>
-                Зарегистрироваться
+              Уже есть аккаунт?{' '}
+              <Link to="/login" style={{ textDecoration: 'none' }}>
+                Войти
               </Link>
-            </Typography>
-          </Box>
-
-          <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Демо доступ:
-            </Typography>
-            <Typography variant="body2">
-              Email: admin@mail.com
-            </Typography>
-            <Typography variant="body2">
-              Пароль: admin123
             </Typography>
           </Box>
         </Box>
@@ -121,4 +159,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;

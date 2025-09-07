@@ -1,5 +1,6 @@
 // src/components/Layout/Header/Header.jsx
 import React, { useState } from 'react';
+import './Header.css';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -16,7 +17,8 @@ import {
   useMediaQuery,
   useTheme,
   Menu,
-  MenuItem
+  MenuItem,
+  ListItemButton // Добавьте этот импорт
 } from '@mui/material';
 import {
   ShoppingCart,
@@ -75,8 +77,11 @@ const Header = () => {
             component={Link}
             to={item.path}
             sx={{ textDecoration: 'none', color: 'inherit' }}
+            disablePadding
           >
-            <ListItemText primary={item.label} />
+            <ListItemButton sx={{ textAlign: 'center' }}>
+              <ListItemText primary={item.label} />
+            </ListItemButton>
           </ListItem>
         ))}
         {currentUser ? (
@@ -85,20 +90,28 @@ const Header = () => {
               component={Link}
               to="/profile"
               sx={{ textDecoration: 'none', color: 'inherit' }}
+              disablePadding
             >
-              <ListItemText primary="Профиль" />
+              <ListItemButton sx={{ textAlign: 'center' }}>
+                <ListItemText primary="Профиль" />
+              </ListItemButton>
             </ListItem>
             {currentUser.role === 'admin' && (
               <ListItem
                 component={Link}
                 to="/admin"
                 sx={{ textDecoration: 'none', color: 'inherit' }}
+                disablePadding
               >
-                <ListItemText primary="Админка" />
+                <ListItemButton sx={{ textAlign: 'center' }}>
+                  <ListItemText primary="Админка" />
+                </ListItemButton>
               </ListItem>
             )}
-            <ListItem button onClick={handleLogout}>
-              <ListItemText primary="Выйти" />
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleLogout} sx={{ textAlign: 'center' }}>
+                <ListItemText primary="Выйти" />
+              </ListItemButton>
             </ListItem>
           </>
         ) : (
@@ -107,15 +120,21 @@ const Header = () => {
               component={Link}
               to="/login"
               sx={{ textDecoration: 'none', color: 'inherit' }}
+              disablePadding
             >
-              <ListItemText primary="Войти" />
+              <ListItemButton sx={{ textAlign: 'center' }}>
+                <ListItemText primary="Войти" />
+              </ListItemButton>
             </ListItem>
             <ListItem
               component={Link}
               to="/register"
               sx={{ textDecoration: 'none', color: 'inherit' }}
+              disablePadding
             >
-              <ListItemText primary="Регистрация" />
+              <ListItemButton sx={{ textAlign: 'center' }}>
+                <ListItemText primary="Регистрация" />
+              </ListItemButton>
             </ListItem>
           </>
         )}
@@ -273,4 +292,4 @@ const Header = () => {
   );
 };
 
-export default Header; // ✅ Добавьте default export
+export default Header;
