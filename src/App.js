@@ -1,5 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Header from './components/Layout/Header/Header';
+import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext/CartContext';
 import HomePage from './pages/Home/HomePage';
 import LoginPage from './pages/Auth/LoginPage';
 import AdminRoute from './components/Common/AdminRoute';
@@ -11,8 +14,11 @@ import AdminLayout from './components/Admin/AdminLayout/AdminLayout';
 
 function App() {
   return (
-    <Router>
-      <Routes>
+    <AuthProvider>
+      <CartProvider>
+        <Router>
+          <Header>
+            <Routes>
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -30,9 +36,13 @@ function App() {
               </Routes>
             </AdminLayout>
           </AdminRoute>
-        } />
-      </Routes>
-    </Router>
+                 } />
+            </Routes>
+          </Header>
+      </Router>
+      </CartProvider>
+    </AuthProvider>
+    
   );
 }
 
