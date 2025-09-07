@@ -1,25 +1,22 @@
-import logo from './logo.svg';
-import './App.css';
+import AdminRoute from './components/Common/AdminRoute';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+// Admin Pages
+import AdminDashboard from './pages/Admin/AdminDashboard/AdminDashboard';
+import AdminProducts from './pages/Admin/AdminProducts/AdminProducts';
+import AdminOrders from './pages/Admin/AdminOrders/AdminOrders';
+import AdminUsers from './pages/Admin/AdminUsers/AdminUsers';
 
-export default App;
+// В компоненте App добавить маршруты:
+<Route path="/admin/*" element={
+  <AdminRoute>
+    <AdminLayout>
+      <Routes>
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="products" element={<AdminProducts />} />
+        <Route path="orders" element={<AdminOrders />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="" element={<Navigate to="dashboard" />} />
+      </Routes>
+    </AdminLayout>
+  </AdminRoute>
+} />
