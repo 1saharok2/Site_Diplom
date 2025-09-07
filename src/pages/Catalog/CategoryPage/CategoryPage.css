@@ -1,16 +1,119 @@
 .categories-page {
   padding: 2rem 0;
+  min-height: 70vh;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
 }
 
 .category-card {
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
+  border: none;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  height: 100%;
 }
 
 .category-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+.category-image-container {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
 }
 
 .category-image {
-  height: 200px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.category-card:hover .category-image {
+  transform: scale(1.08);
+}
+
+.product-count-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.product-count-badge .badge {
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: 20px;
+}
+
+.category-card .card-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 200px);
+}
+
+.category-card .card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.category-card .card-text {
+  color: #6c757d;
+  flex-grow: 1;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.category-card .btn {
+  border-radius: 25px;
+  font-weight: 600;
+  padding: 10px 20px;
+  transition: all 0.3s ease;
+  margin-top: auto;
+}
+
+.category-card .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+  .categories-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+  }
+  
+  .category-image-container {
+    height: 180px;
+  }
+  
+  .category-card .card-body {
+    padding: 1rem;
+  }
+  
+  .categories-page {
+    padding: 1rem 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .categories-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .category-card {
+    margin: 0 10px;
+  }
 }

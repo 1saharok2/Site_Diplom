@@ -4,7 +4,7 @@ export const mockProducts = [
     name: "Смартфон Samsung Galaxy S23",
     price: 69990,
     oldPrice: 79990,
-    image: "https://via.placeholder.com/300x300?text=Samsung+S23",
+    image: "src/assets/Categories/Smartphones.jpg",
     category: "smartphones",
     stock: 15,
     sku: "SM-S23-BLK",

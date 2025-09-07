@@ -21,7 +21,7 @@ import {
 
 const AboutPage = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  //const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const features = [
     {

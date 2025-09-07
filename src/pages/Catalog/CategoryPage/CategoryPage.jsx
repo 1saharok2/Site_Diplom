@@ -13,11 +13,61 @@ import {
 import { getCategoryBySlug, getProductsByCategory } from '../../../services/categoryService';
 import './CategoryPage.css';
 
+
+
+ 
+
+
 const ProductCard = ({ product }) => (
-  <div style={{ border: '1px solid #ccc', padding: '15px', margin: '10px', borderRadius: '5px' }}>
-    <h5>{product.name}</h5>
-    <p>Цена: {product.price} ₽</p>
-    <p>Рейтинг: {product.rating}</p>
+  <div style={{ 
+    border: '1px solid #ddd', 
+    padding: '15px', 
+    margin: '10px', 
+    borderRadius: '10px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    height: '100%'
+  }}>
+    {/* Картинка товара */}
+    <div style={{ 
+      height: '200px', 
+      overflow: 'hidden', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      marginBottom: '15px'
+    }}>
+      <img 
+        src={product.images[0]} 
+        alt={product.name}
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          objectFit: 'cover',
+          borderRadius: '8px'
+        }}
+        onError={(e) => {
+          e.target.src = 'https://via.placeholder.com/300x200/cccccc/969696?text=No+Image';
+        }}
+      />
+    </div>
+    
+    <h5 style={{ marginBottom: '10px', fontSize: '1.1rem' }}>{product.name}</h5>
+    <p style={{ margin: '5px 0', fontSize: '1.2rem', fontWeight: 'bold', color: '#007bff' }}>
+      Цена: {product.price.toLocaleString('ru-RU')} ₽
+    </p>
+    <p style={{ margin: '5px 0' }}>
+      Рейтинг: {product.rating} ⭐
+    </p>
+    {product.oldPrice > product.price && (
+      <p style={{ margin: '5px 0', textDecoration: 'line-through', color: '#6c757d' }}>
+        Старая цена: {product.oldPrice.toLocaleString('ru-RU')} ₽
+      </p>
+    )}
+    {product.discount > 0 && (
+      <p style={{ margin: '5px 0', color: '#dc3545', fontWeight: 'bold' }}>
+        Скидка: {product.discount}%
+      </p>
+    )}
   </div>
 );
 
@@ -167,34 +217,31 @@ const CategoryPage = () => {
       </Row>
 
       {/* Список товаров */}
-      <Row>
-        {filteredAndSortedProducts.length === 0 ? (
-          <Col>
-            <Alert variant="info" className="text-center">
-              <Alert.Heading>Товары не найдены</Alert.Heading>
-              <p>
-                {filterInStock 
-                  ? 'Нет товаров в наличии в этой категории' 
-                  : 'В этой категории пока нет товаров'
-                }
-              </p>
-              <Button 
-                as={Link} 
-                to="/catalog" 
-                variant="outline-primary"
-              >
-                Посмотреть другие категории
-              </Button>
-            </Alert>
-          </Col>
-        ) : (
-          filteredAndSortedProducts.map((product) => (
-            <Col key={product.id} xs={12} sm={6} md={4} lg={3} className="mb-4">
-              <ProductCard product={product} />
-            </Col>
-          ))
-        )}
-      </Row>
+      {/* Список товаров */}
+<div className="products-grid">
+  {filteredAndSortedProducts.length === 0 ? (
+    <Alert variant="info" className="text-center">
+      <Alert.Heading>Товары не найдены</Alert.Heading>
+      <p>
+        {filterInStock 
+          ? 'Нет товаров в наличии в этой категории' 
+          : 'В этой категории пока нет товаров'
+        }
+      </p>
+      <Button 
+        as={Link} 
+        to="/catalog" 
+        variant="outline-primary"
+      >
+        Посмотреть другие категории
+      </Button>
+    </Alert>
+  ) : (
+    filteredAndSortedProducts.map((product) => (
+      <ProductCard key={product.id} product={product} />
+    ))
+  )}
+</div>
 
       {/* Кнопка для мобильных */}
       <div className="d-lg-none text-center mt-4">

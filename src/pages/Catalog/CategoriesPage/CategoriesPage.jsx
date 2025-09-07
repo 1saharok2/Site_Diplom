@@ -58,7 +58,7 @@ const CategoriesPage = () => {
         <p className="lead text-muted">Выберите интересующую вас категорию</p>
       </div>
 
-      <Row>
+      <Col>
         {categories.map((category) => (
           <Col key={category.id} xs={12} sm={6} lg={4} className="mb-4">
             <Card className="category-card h-100 shadow-sm">
@@ -92,7 +92,7 @@ const CategoriesPage = () => {
             </Card>
           </Col>
         ))}
-      </Row>
+      </Col>
 
       {categories.length === 0 && !loading && (
         <div className="text-center mt-5">
