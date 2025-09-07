@@ -1,13 +1,18 @@
+import React from 'react';
+import { Box } from '@mui/material';
+import AdminSidebar from '../AdminLayout/AdminSidebar';
+import AdminHeader from '../AdminLayout/AdminHeader';
+
 const AdminLayout = ({ children }) => {
   return (
-    <div className="admin-layout">
+    <Box sx={{ display: 'flex' }}>
       <AdminSidebar />
-      <div className="admin-content">
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <AdminHeader />
-        <main className="admin-main">
-          {children}
-        </main>
-      </div>
-    </div>
+        {children}
+      </Box>
+    </Box>
   );
 };
+
+export default AdminLayout;
