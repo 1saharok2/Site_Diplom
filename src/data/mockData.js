@@ -19,6 +19,70 @@ export const mockProducts = [
     isActive: true,
     isFeatured: true,
     createdAt: "2024-01-15T10:00:00Z"
+  },
+  {
+    id: 2,
+    name: "Ноутбук ASUS ROG Strix",
+    price: 89990,
+    oldPrice: 99990,
+    image: "/images/products/asus-rog.jpg",
+    category: "laptops",
+    stock: 8,
+    sku: "ASUS-ROG-G15",
+    rating: 4.7,
+    description: "Игровой ноутбук премиум-класса",
+    specifications: {
+      screen: "15.6'' IPS",
+      processor: "Intel Core i7",
+      memory: "16GB DDR5",
+      storage: "1TB SSD",
+      graphics: "NVIDIA RTX 4060"
+    },
+    isActive: true,
+    isFeatured: true,
+    createdAt: "2024-01-20T14:30:00Z"
+  },
+  {
+    id: 3,
+    name: "Наушники Sony WH-1000XM5",
+    price: 29990,
+    oldPrice: 34990,
+    image: "/images/products/sony-xm5.jpg",
+    category: "headphones",
+    stock: 25,
+    sku: "SONY-XM5-BLK",
+    rating: 4.9,
+    description: "Беспроводные наушники с шумоподавлением",
+    specifications: {
+      type: "Накладные",
+      battery: "30 часов",
+      connectivity: "Bluetooth 5.2",
+      weight: "250g"
+    },
+    isActive: true,
+    isFeatured: true,
+    createdAt: "2024-01-25T09:15:00Z"
+  },
+  {
+    id: 4,
+    name: "Apple Watch Series 9",
+    price: 39990,
+    oldPrice: 44990,
+    image: "/images/products/apple-watch.jpg",
+    category: "accessories",
+    stock: 20,
+    sku: "AW-S9-45MM",
+    rating: 4.6,
+    description: "Умные часы премиум-класса",
+    specifications: {
+      screen: "1.9'' Retina",
+      battery: "18 часов",
+      connectivity: "Bluetooth, Wi-Fi",
+      waterResistance: "50m"
+    },
+    isActive: true,
+    isFeatured: false,
+    createdAt: "2024-02-01T11:45:00Z"
   }
 ];
 
@@ -65,6 +129,24 @@ export const mockCategories = [
     description: "Ноутбуки и ультрабуки",
     image: "https://via.placeholder.com/300x200?text=Ноутбуки",
     isActive: true
+  },
+  {
+    id: 3,
+    name: "Наушники",
+    slug: "headphones",
+    description: "Наушники и гарнитуры",
+    image: "/images/categories/headphones.jpg",
+    isActive: true,
+    productsCount: 67
+  },
+  {
+    id: 4,
+    name: "Аксессуары",
+    slug: "accessories",
+    description: "Аксессуары для техники",
+    image: "/images/categories/accessories.jpg",
+    isActive: true,
+    productsCount: 234
   }
 ];
 
