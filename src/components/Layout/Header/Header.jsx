@@ -18,7 +18,7 @@ import {
   useTheme,
   Menu,
   MenuItem,
-  ListItemButton // Добавьте этот импорт
+  ListItemButton
 } from '@mui/material';
 import {
   ShoppingCart,
@@ -59,7 +59,6 @@ const Header = () => {
   const cartItemsCount = cartItems ? cartItems.reduce((total, item) => total + item.quantity, 0) : 0;
 
   const navigationItems = [
-    { label: 'Главная', path: '/' },
     { label: 'Каталог', path: '/catalog' },
     { label: 'О нас', path: '/about' },
     { label: 'Контакты', path: '/contacts' }
@@ -146,23 +145,33 @@ const Header = () => {
     <>
       <AppBar position="static" sx={{ backgroundColor: 'white', color: 'black', boxShadow: 'none', borderBottom: '1px solid #e0e0e0' }}>
         <Toolbar>
+          {/* Логотип Магазин - ТОЛЬКО ЭТА ОБЛАСТЬ КЛИКАБЕЛЬНА */}
           <Typography
             variant="h6"
             component={Link}
             to="/"
             sx={{
-              flexGrow: 1,
               textDecoration: 'none',
               color: 'inherit',
               fontWeight: 'bold',
-              fontSize: '1.5rem'
+              fontSize: '1.5rem',
+              // Ограничиваем область только текстом
+              padding: '8px 16px',
+              margin: '-8px -16px', // Компенсируем padding
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                borderRadius: '4px'
+              }
             }}
           >
             🛍️ Магазин
           </Typography>
 
+          {/* Остальная часть flexGrow для выравнивания */}
+          <Box sx={{ flexGrow: 1 }} />
+
           {!isMobile && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mr: 2 }}>
               {navigationItems.map((item) => (
                 <Button
                   key={item.path}
@@ -183,7 +192,7 @@ const Header = () => {
             </Box>
           )}
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <IconButton
               component={Link}
               to="/cart"

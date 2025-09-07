@@ -9,23 +9,22 @@ export const mockService = {
     
     console.log('Вход с данными:', credentials);
 
-    //const user = mockUsers.find(u => 
-      //u.email === credentials.email && 
-      //u.password === credentials.password);
+    const user = mockUsers.find(u => 
+      u.email === credentials.email && 
+      u.password === credentials.password);
 
-    //if (user) {
+    if (user) {
       return {
         data: {
           user: { 
-            id: 1, 
-            email: "admin@mail.com", 
-            name: "Администратор", 
-            role: "admin" },
+            id: user.id, 
+            email: user.email, 
+            name: user.name, 
+            role: user.role },
           token: 'mock-jwt-token'
         }
       };
-    //}
-
+    }
     throw new Error('Invalid credentials');
   },
 

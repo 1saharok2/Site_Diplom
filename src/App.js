@@ -1,12 +1,16 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { CssBaseline } from '@mui/material';
 import Header from './components/Layout/Header/Header';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext/CartContext';
 import HomePage from './pages/Home/HomePage';
 import LoginPage from './pages/Auth/LoginPage';
 import RegisterPage from './pages/Auth/RegisterPage';
+import ProfilePage from './pages/User/ProfilePage';
 import AdminRoute from './components/Common/AdminRoute';
+import ProtectedRoute from './components/Common/ProtectedRoute';
 import AdminDashboard from './pages/Admin/Dashboard/AdminDashboard';
 import AdminProducts from './pages/Admin/Products/AdminProducts';
 import AdminOrders from './pages/Admin/Orders/AdminOrders';
@@ -14,9 +18,22 @@ import AdminUsers from './pages/Admin/Users/AdminUsers';
 import AdminLayout from './components/Admin/AdminLayout/AdminLayout';
 import './App.css';
 
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#667eea',
+    },
+    secondary: {
+      main: '#764ba2',
+    },
+  },
+});
+
 function App() {
   return (
-    <AuthProvider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline/>
+      <AuthProvider>
       <CartProvider>
         <Router>
           <div className="app">
@@ -58,6 +75,7 @@ function App() {
         </Router>
       </CartProvider>
     </AuthProvider>
+  </ThemeProvider>
   );
 }
 
