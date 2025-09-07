@@ -5,6 +5,8 @@ import { CssBaseline } from '@mui/material';
 import Header from './components/Layout/Header/Header';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext/CartContext';
+import { ProductsProvider } from './context/ProductsContext';
+import { CategoriesProvider } from './context/CategoriesContext';
 import HomePage from './pages/Home/HomePage';
 import LoginPage from './pages/Auth/LoginPage';
 import RegisterPage from './pages/Auth/RegisterPage';
@@ -40,7 +42,9 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline/>
       <AuthProvider>
-      <CartProvider>
+        <ProductsProvider>
+          <CategoriesProvider>
+            <CartProvider>
         <Router>
           <div className="app">
             <Header />
@@ -85,6 +89,8 @@ function App() {
           </div>
         </Router>
       </CartProvider>
+          </CategoriesProvider>
+        </ProductsProvider>
     </AuthProvider>
   </ThemeProvider>
   );
