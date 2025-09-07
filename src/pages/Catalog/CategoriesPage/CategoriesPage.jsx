@@ -1,57 +1,62 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Typography,
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  CardMedia,
-  Button,
-  Chip,
-  CircularProgress,
-  Alert
-} from '@mui/material';
+import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { mockCategories } from '../../../data/mockData'; // Импортируем конкретные категории
+import { getCategories } from '../../../services/categoryService';
+import './CategoriesPage.css';
 
 const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Имитация загрузки данных
-    const timer = setTimeout(() => {
-      setCategories(mockCategories); // Используем конкретные категории из mockData
-      setLoading(false);
-    }, 500);
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const data = await getCategories();
+        setCategories(data);
+      } catch (err) {
+        setError('Ошибка загрузки категорий');
+        console.error('Error fetching categories:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    fetchCategories();
   }, []);
 
   if (loading) {
     return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <Box textAlign="center">
-          <CircularProgress />
-          <Typography variant="body1" sx={{ mt: 2 }}>
-            Загружаем категории...
-          </Typography>
-        </Box>
+      <Container className="text-center mt-5">
+        <Spinner animation="border" role="status" variant="primary">
+          <span className="visually-hidden">Загрузка категорий...</span>
+        </Spinner>
+        <p className="mt-3">Загружаем категории...</p>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="mt-5">
+        <Alert variant="danger">
+          <Alert.Heading>Ошибка!</Alert.Heading>
+          <p>{error}</p>
+          <Button variant="outline-danger" onClick={() => window.location.reload()}>
+            Попробовать снова
+          </Button>
+        </Alert>
       </Container>
     );
   }
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Box textAlign="center" sx={{ mb: 6 }}>
-        <Typography variant="h2" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-          Категории товаров
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          Выберите интересующую вас категорию
-        </Typography>
-      </Box>
+    <Container className="categories-page">
+      <div className="text-center mb-5">
+        <h1 className="display-4 fw-bold text-primary">Категории товаров</h1>
+        <p className="lead text-muted">Выберите интересующую вас категорию</p>
+      </div>
 
 <div className="categories-grid">
   {categories.map((category) => (
@@ -81,17 +86,13 @@ const CategoriesPage = () => {
   ))}
 </div>
 
-      {categories.length === 0 && (
-        <Box textAlign="center" sx={{ mt: 4 }}>
-          <Alert severity="info">
-            <Typography variant="h6" gutterBottom>
-              Категории не найдены
-            </Typography>
-            <Typography>
-              Пока нет доступных категорий товаров
-            </Typography>
+      {categories.length === 0 && !loading && (
+        <div className="text-center mt-5">
+          <Alert variant="info">
+            <Alert.Heading>Категории не найдены</Alert.Heading>
+            <p>Пока нет доступных категорий товаров</p>
           </Alert>
-        </Box>
+        </div>
       )}
     </Container>
   );
