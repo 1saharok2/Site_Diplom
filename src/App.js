@@ -19,6 +19,8 @@ import AdminLayout from './components/Admin/AdminLayout/AdminLayout';
 import CategoriesPage from './pages/Catalog/CategoriesPage/CategoriesPage';
 import CategoryPage from './pages/Catalog/CategoryPage/CategoryPage';
 import ProductPage from './pages/Catalog/ProductPage/ProductPage';
+import AboutPage from './pages/About/AboutPage/AboutPage';
+import ContactsPage from './pages/About/ContactsPage/ContactsPage';
 import './App.css';
 
 const theme = createTheme({
@@ -48,9 +50,9 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
-                <Route path="/catalog" element={<div>Каталог</div>} />
-                <Route path="/about" element={<div>О нас</div>} />
-                <Route path="/contacts" element={<div>Контакты</div>} />
+                <Route path="/catalog" element={<CategoriesPage/>} />
+                <Route path="/about" element={<AboutPage/>} />
+                <Route path="/contacts" element={<ContactsPage/>} />
                 
                 {/* Protected user routes */}
                 <Route path="/profile" element={
