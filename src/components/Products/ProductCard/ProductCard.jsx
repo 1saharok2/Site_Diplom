@@ -32,10 +32,18 @@ const ProductCard = ({ product }) => {
         transition: 'all 0.3s ease',
         overflow: 'hidden'
       }}>
-        {/* Бейджи */}
-        <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 1 }}>
-          {isNew && <Badge bg="success" className="me-1">Новинка</Badge>}
-          {discount > 0 && <Badge bg="danger">-{discount}%</Badge>}
+        {/* Бейджи */} 
+        <div style={{ position: 'static', top: '10px', left: '10px', zIndex: 1 }}>
+          {isNew && (
+            <Badge bg="success" className="me-1" style={{ marginRight: '5px' }}>
+              Скидка
+            </Badge>
+          )}
+          {discount > 0 && (
+            <Badge bg="danger">
+              -{discount}%
+            </Badge>
+          )}
         </div>
 
         {/* Картинка товара */}

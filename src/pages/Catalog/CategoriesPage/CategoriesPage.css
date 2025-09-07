@@ -86,3 +86,14 @@
   color: white;
   text-decoration: none;
 }
+
+.categories-page {
+  padding: 0 20px; /* ← ДОБАВЬТЕ ЭТО */
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+  padding: 20px 0;
+}

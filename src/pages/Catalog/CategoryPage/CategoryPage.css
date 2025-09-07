@@ -87,3 +87,18 @@
     margin: 0 10px;
   }
 }
+
+.category-page {
+  padding: 0 20px; /* ← ДОБАВЬТЕ ЭТО */
+}
+
+.products-grid-container {
+  margin: 2rem 0;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+  padding: 20px 0;
+}
