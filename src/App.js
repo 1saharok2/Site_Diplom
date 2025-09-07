@@ -60,9 +60,9 @@ function App() {
                 } />
 
                 {/* Catalog routes */}
-              <Route path="/catalog" element={<CategoriesPage />} />
-              <Route path="/catalog/:slug" element={<CategoryPage />} />
-              <Route path="/product/:id" element={<ProductPage />} />
+                <Route path="/catalog" element={<CategoriesPage />} />
+                <Route path="/catalog/:slug" element={<CategoryPage />} />
+                <Route path="/product/:id" element={<ProductPage />} />
 
                 {/* Admin routes */}
                 <Route path="/admin/*" element={
