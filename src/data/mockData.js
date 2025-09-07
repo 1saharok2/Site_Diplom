@@ -136,8 +136,7 @@ export const mockCategories = [
     slug: "headphones",
     description: "Наушники и гарнитуры",
     image: "/images/categories/headphones.jpg",
-    isActive: true,
-    productsCount: 67
+    isActive: true
   },
   {
     id: 4,
@@ -145,8 +144,7 @@ export const mockCategories = [
     slug: "accessories",
     description: "Аксессуары для техники",
     image: "/images/categories/accessories.jpg",
-    isActive: true,
-    productsCount: 234
+    isActive: true
   }
 ];
 

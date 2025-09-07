@@ -1,7 +1,5 @@
-// pages/Home/HomePage.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-//import ImageWithFallback from './components/UI/ImageWithFallback';
 import {
   Container,
   Typography,
@@ -23,32 +21,16 @@ import {
   Star,
   Favorite
 } from '@mui/icons-material';
-import { useProducts } from '../../context/ProductsContext';
-import { useCategories } from '../../context/CategoriesContext';
+import { mockProducts, mockCategories } from '../../data/mockData'; // Импортируем конкретные данные
 import { useCart } from '../../context/CartContext/CartContext';
 
 const HomePage = () => {
-  const { products, loading: productsLoading, error: productsError } = useProducts();
-  const { categories, loading: categoriesLoading, error: categoriesError } = useCategories();
   const { addToCart } = useCart();
 
-  const getProductImage = (product) => {
-  // Если изображение уже есть в данных
-  if (product.image && !product.image.includes('placeholder')) {
-    return product.image;
-  }
-  // Иначе используем placeholder
-  return `https://source.unsplash.com/random/300x300?electronics,${product.id}`;
-};
-
-const getCategoryImage = (category) => {
-  if (category.image && !category.image.includes('placeholder')) {
-    return category.image;
-  }
-  return `https://source.unsplash.com/random/400x300?${category.slug}`;
-};
-  // Берем первые 4 товара для показа на главной
-  const featuredProducts = products.slice(0, 4);
+  // Используем конкретные товары из mockData
+  const featuredProducts = mockProducts.slice(0, 4);
+  // Используем конкретные категории из mockData
+  const categories = mockCategories;
 
   const features = [
     {
@@ -76,24 +58,6 @@ const getCategoryImage = (category) => {
   const handleAddToCart = (product) => {
     addToCart(product);
   };
-
-  if (productsLoading || categoriesLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (productsError || categoriesError) {
-    return (
-      <Container sx={{ py: 8 }}>
-        <Alert severity="error">
-          Ошибка при загрузке данных: {productsError || categoriesError}
-        </Alert>
-      </Container>
-    );
-  }
 
   return (
     <Box sx={{ pt: 0 }}>
@@ -156,7 +120,7 @@ const getCategoryImage = (category) => {
                 </Button>
                 <Button
                   component={Link}
-                  to="/about"
+                  to="/categories"
                   variant="outlined"
                   size="large"
                   sx={{
@@ -172,7 +136,7 @@ const getCategoryImage = (category) => {
                     }
                   }}
                 >
-                  О нас
+                  Все категории
                 </Button>
               </Box>
             </Grid>
@@ -185,8 +149,8 @@ const getCategoryImage = (category) => {
               >
                 <Box
                   component="img"
-                  src="https://via.placeholder.com/600x400?text=Премиум+Техника"
-                  alt="Техника"
+                  src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
+                  alt="Магазин электроники"
                   sx={{
                     width: '100%',
                     maxWidth: 500,
