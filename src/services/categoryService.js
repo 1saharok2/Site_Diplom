@@ -1,4 +1,5 @@
 // Mock данные категорий
+//import phone1 from '../../assets/Photos/Phones/free-png.ru-hero_endframe-dtznvlokjeeu_xlarge.png';
 const mockCategories = [
   {
     id: 1,
@@ -8,19 +9,25 @@ const mockCategories = [
     image: '/images/categories/electronics.jpg',
     productCount: 156
   },
-  {
-    id: 2,
-    name: 'Одежда',
-    slug: 'clothing',
-    description: 'Модная одежда для всех возрастов',
-    image: '/images/categories/clothing.jpg',
-    productCount: 234
-  }
+  
 ];
 
 // Mock данные товаров
 const mockProducts = [
   {
+    id: 0,
+    name: 'Смартфон Samsung Galaxy S23 Ultra',
+    price: 89990,
+    oldPrice: 99990,
+    images: ['/images/products/phone1.jpg'],
+    category: 'electronics',
+    rating: 4.5,
+    reviewsCount: 124,
+    isNew: true,
+    discount: 10,
+    inStock: true
+  },
+    {
     id: 1,
     name: 'Смартфон Samsung Galaxy S23 Ultra',
     price: 89990,
@@ -33,38 +40,12 @@ const mockProducts = [
     discount: 10,
     inStock: true
   },
-  {
+    {
     id: 2,
-    name: 'Футболка хлопковая',
-    price: 1990,
-    oldPrice: 2490,
-    images: ['/images/products/tshirt1.jpg'],
-    category: 'clothing',
-    rating: 4.2,
-    reviewsCount: 67,
-    isNew: true,
-    discount: 20,
-    inStock: true
-  },
-    {
-    id: 3,
-    name: 'Смартфон Samsung Galaxy S23 Ultra',
-    price: 89990,
-    oldPrice: 99990,
-    images: ['/images/products/phone1.jpg'],
-    category: 'electronics',
-    rating: 4.5,
-    reviewsCount: 124,
-    isNew: true,
-    discount: 10,
-    inStock: true
-  },
-    {
-    id: 4,
     name: 'Смартфон Apple iphone 16',
     price: 79990,
     oldPrice: 89990,
-    images: ['./src/assets/Photos/Phones/free-png.ru-hero_endframe-dtznvlokjeeu_xlarge.png'],
+    images: ["./images/phones/iphone.png"], 
     category: 'electronics',
     rating: 4.0,
     reviewsCount: 124,
@@ -72,6 +53,20 @@ const mockProducts = [
     discount: 10,
     inStock: true
   },
+  {
+    id: 3,
+    name: 'Смартфон Samsung Galaxy Z Fold5',
+    price: 129900,
+    oldPrice: 149900,
+    images: ['https://via.placeholder.com/400x400/6f42c1/ffffff?text=Z+Fold5'],
+    category: 'electronics', 
+    rating: 4.3,
+    reviewsCount: 89,
+    isNew: true,
+    discount: 13,
+    inStock: true,
+    description: 'Складной смартфон премиум класса'
+  }
 ];
 
 // API функции

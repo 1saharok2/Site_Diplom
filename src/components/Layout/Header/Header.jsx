@@ -273,4 +273,4 @@ const Header = () => {
   );
 };
 
-export default Header; // ✅ Добавьте default export
+export default Header; 

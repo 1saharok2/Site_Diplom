@@ -112,11 +112,11 @@ const CategoryPage = () => {
   return (
     <Container className="category-page">
       {/* Хлебные крошки */}
-      <Breadcrumb className="mb-4">
-        <Breadcrumb.Item as={Link} to="/">Главная</Breadcrumb.Item>
-        <Breadcrumb.Item as={Link} to="/catalog">Каталог</Breadcrumb.Item>
-        <Breadcrumb.Item active>{category.name}</Breadcrumb.Item>
-      </Breadcrumb>
+        <Breadcrumb className="mb-4">
+          <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/" }}>Главная</Breadcrumb.Item>
+          <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/catalog" }}>Каталог</Breadcrumb.Item>
+          <Breadcrumb.Item active>{category.name}</Breadcrumb.Item>
+        </Breadcrumb>
 
       {/* Заголовок категории */}
       <Row className="mb-4">
