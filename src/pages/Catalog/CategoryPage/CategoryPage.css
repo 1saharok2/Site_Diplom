@@ -1,0 +1,16 @@
+.categories-page {
+  padding: 2rem 0;
+}
+
+.category-card {
+  transition: transform 0.2s;
+}
+
+.category-card:hover {
+  transform: translateY(-5px);
+}
+
+.category-image {
+  height: 200px;
+  object-fit: cover;
+}

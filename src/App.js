@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Layout/Header/Header';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext/CartContext';
@@ -12,18 +12,10 @@ import AdminOrders from './pages/Admin/Orders/AdminOrders';
 import AdminUsers from './pages/Admin/Users/AdminUsers';
 import AdminLayout from './components/Admin/AdminLayout/AdminLayout';
 
-// Временные компоненты
-const CategoriesPage = () => <div>Категории (в разработке)</div>;
-
-const CategoryPage = () => {
-  const { slug } = useParams(); // Теперь useParams импортирован
-  return <div>Категория: {slug} (в разработке)</div>;
-};
-
-const ProductPage = () => {
-  const { id } = useParams(); // Теперь useParams импортирован
-  return <div>Товар ID: {id} (в разработке)</div>;
-};
+// Правильные импорты для вашей структуры папок
+import CategoriesPage from './pages/Catalog/CategoriesPage/CategoriesPage.jsx';
+import CategoryPage from './pages/Catalog/CategoryPage/CategoryPage.jsx';
+import ProductPage from './pages/Catalog/ProductPage/ProductPage.jsx';
 
 function App() {
   return (
@@ -31,7 +23,7 @@ function App() {
       <CartProvider>
         <Router>
           <div>
-          
+            <Header />
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<HomePage />} />

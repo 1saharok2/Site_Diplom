@@ -13,18 +13,7 @@ const HomePage = () => {
 
   return(
     <div>
-      <Header/>
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
 
-
-        {/* Дополнительный контент страницы */}
-        <Box sx={{ mt: 6 }}>
-          <Typography variant="h4" component="h2" gutterBottom>
-            Популярные категории
-          </Typography>
-          {/* Здесь можно добавить сетку товаров или категорий */}
-        </Box>
-      </Container>
     </div>       
   );
 }
