@@ -11,9 +11,9 @@ import AdminProducts from './pages/Admin/Products/AdminProducts';
 import AdminOrders from './pages/Admin/Orders/AdminOrders';
 import AdminUsers from './pages/Admin/Users/AdminUsers';
 import AdminLayout from './components/Admin/AdminLayout/AdminLayout';
-import CategoriesPage from './pages/Catalog/CategoriesPage/CategoriesPage.jsx';
-import CategoryPage from './pages/Catalog/CategoryPage/CategoryPage.jsx';
-import ProductPage from './pages/Catalog/ProductPage/ProductPage.jsx';
+import CategoriesPage from './pages/Catalog/CategoriesPage/CategoriesPage';
+import CategoryPage from './pages/Catalog/CategoryPage/CategoryPage';
+import ProductPage from './pages/Catalog/ProductPage/ProductPage';
 
 function App() {
   return (
