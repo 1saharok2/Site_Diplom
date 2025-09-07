@@ -12,64 +12,8 @@ import {
 } from 'react-bootstrap';
 import { getCategoryBySlug, getProductsByCategory } from '../../../services/categoryService';
 import './CategoryPage.css';
+import ProductCard from '../../../components/Products/ProductCard/ProductCard';
 
-
-
- 
-
-
-const ProductCard = ({ product }) => (
-  <div style={{ 
-    border: '1px solid #ddd', 
-    padding: '15px', 
-    margin: '10px', 
-    borderRadius: '10px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-    height: '100%'
-  }}>
-    {/* Картинка товара */}
-    <div style={{ 
-      height: '200px', 
-      overflow: 'hidden', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      marginBottom: '15px'
-    }}>
-      <img 
-        src={product.images[0]} 
-        alt={product.name}
-        style={{ 
-          width: '100%', 
-          height: '100%', 
-          objectFit: 'cover',
-          borderRadius: '8px'
-        }}
-        onError={(e) => {
-          e.target.src = 'https://via.placeholder.com/300x200/cccccc/969696?text=No+Image';
-        }}
-      />
-    </div>
-    
-    <h5 style={{ marginBottom: '10px', fontSize: '1.1rem' }}>{product.name}</h5>
-    <p style={{ margin: '5px 0', fontSize: '1.2rem', fontWeight: 'bold', color: '#007bff' }}>
-      Цена: {product.price.toLocaleString('ru-RU')} ₽
-    </p>
-    <p style={{ margin: '5px 0' }}>
-      Рейтинг: {product.rating} ⭐
-    </p>
-    {product.oldPrice > product.price && (
-      <p style={{ margin: '5px 0', textDecoration: 'line-through', color: '#6c757d' }}>
-        Старая цена: {product.oldPrice.toLocaleString('ru-RU')} ₽
-      </p>
-    )}
-    {product.discount > 0 && (
-      <p style={{ margin: '5px 0', color: '#dc3545', fontWeight: 'bold' }}>
-        Скидка: {product.discount}%
-      </p>
-    )}
-  </div>
-);
 
 const CategoryPage = () => {
   const { slug } = useParams();
@@ -162,97 +106,82 @@ const CategoryPage = () => {
   return (
     <Container className="category-page">
       {/* Хлебные крошки */}
-        <Breadcrumb className="mb-4">
-          <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/" }}>Главная</Breadcrumb.Item>
-          <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/catalog" }}>Каталог</Breadcrumb.Item>
-          <Breadcrumb.Item active>{category.name}</Breadcrumb.Item>
-        </Breadcrumb>
+      <Breadcrumb className="mb-4">
+        <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/" }}>Главная</Breadcrumb.Item>
+        <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/catalog" }}>Каталог</Breadcrumb.Item>
+        <Breadcrumb.Item active>{category.name}</Breadcrumb.Item>
+      </Breadcrumb>
 
       {/* Заголовок категории */}
-<div className="products-grid-container">
-  {filteredAndSortedProducts.length === 0 ? (
-    <div className="no-products-alert">
-      <h4>Товары не найдены</h4>
-      <p>
-        {filterInStock 
-          ? 'Нет товаров в наличии в этой категории' 
-          : 'В этой категории пока нет товаров'
-        }
-      </p>
-      <Link to="/catalog" className="back-to-categories-btn">
-        Посмотреть другие категории
-      </Link>
-    </div>
-  ) : (
-    <div className="products-grid">
-      {filteredAndSortedProducts.map((product) => (
-        <ProductCard key={product.id} product={product} />
-      ))}
-    </div>
-  )}
-</div>
+      <Row className="mb-4">
+        <Col>
+          <h1 className="display-5 fw-bold">{category.name}</h1>
+          <p className="lead text-muted">{category.description}</p>
+          <p className="text-primary fw-semibold">
+            Найдено товаров: {filteredAndSortedProducts.length}
+          </p>
+        </Col>
+      </Row>
 
       {/* Фильтры и сортировка */}
-     <div className="filters-container">
-  <div className="filter-group">
-    <select 
-      value={sortBy} 
-      onChange={(e) => setSortBy(e.target.value)}
-      className="form-select"
-    >
-      <option value="name">По названию</option>
-      <option value="price-asc">Цена по возрастанию</option>
-      <option value="price-desc">Цена по убыванию</option>
-      <option value="rating">По рейтингу</option>
-      <option value="newest">Сначала новинки</option>
-    </select>
-  </div>
+      <div className="filters-container">
+        <div className="filter-group">
+          <select 
+            value={sortBy} 
+            onChange={(e) => setSortBy(e.target.value)}
+            className="form-select"
+          >
+            <option value="name">По названию</option>
+            <option value="price-asc">Цена по возрастанию</option>
+            <option value="price-desc">Цена по убыванию</option>
+            <option value="rating">По рейтингу</option>
+            <option value="newest">Сначала новинки</option>
+          </select>
+        </div>
 
-  <div className="filter-group">
-    <label className="switch">
-      <input
-        type="checkbox"
-        id="stock-filter"
-        checked={filterInStock}
-        onChange={(e) => setFilterInStock(e.target.checked)}
-      />
-      <span className="slider"></span>
-      <span className="switch-label">Только в наличии</span>
-    </label>
-  </div>
+        <div className="filter-group">
+          <label className="switch">
+            <input
+              type="checkbox"
+              id="stock-filter"
+              checked={filterInStock}
+              onChange={(e) => setFilterInStock(e.target.checked)}
+            />
+            <span className="slider"></span>
+            <span className="switch-label">Только в наличии</span>
+          </label>
+        </div>
 
-  <div className="filter-group back-button">
-    <Link to="/catalog" className="btn-back">
-      ← Все категории
-    </Link>
-  </div>
-</div>
+        <div className="filter-group back-button">
+          <Link to="/catalog" className="btn-back">
+            ← Все категории
+          </Link>
+        </div>
+      </div>
 
-      {/* Список товаров */}
-
-{/* Список товаров */}
-<div className="products-container">
-  {filteredAndSortedProducts.length === 0 ? (
-    <div className="no-products">
-      <h4>Товары не найдены</h4>
-      <p>
-        {filterInStock 
-          ? 'Нет товаров в наличии в этой категории' 
-          : 'В этой категории пока нет товаров'
-        }
-      </p>
-      <Link to="/catalog" className="back-btn">
-        ← Вернуться к категориям
-      </Link>
-    </div>
-  ) : (
-    <div className="products-grid">
-      {filteredAndSortedProducts.map((product) => (
-        <ProductCard key={product.id} product={product} />
-      ))}
-    </div>
-  )}
-</div>
+      {/* Список товаров - ТОЛЬКО ОДИН РАЗ! */}
+      <div className="products-grid-container">
+        {filteredAndSortedProducts.length === 0 ? (
+          <div className="no-products-alert">
+            <h4>Товары не найдены</h4>
+            <p>
+              {filterInStock 
+                ? 'Нет товаров в наличии в этой категории' 
+                : 'В этой категории пока нет товаров'
+              }
+            </p>
+            <Link to="/catalog" className="back-to-categories-btn">
+              Посмотреть другие категории
+            </Link>
+          </div>
+        ) : (
+          <div className="products-grid">
+            {filteredAndSortedProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Кнопка для мобильных */}
       <div className="d-lg-none text-center mt-4">

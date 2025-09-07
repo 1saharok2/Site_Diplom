@@ -96,3 +96,8 @@
   color: #ffd700;
   font-weight: 600;
 }
+
+.product-card-wrapper {
+  width: 100%;
+  height: 100%;
+}
