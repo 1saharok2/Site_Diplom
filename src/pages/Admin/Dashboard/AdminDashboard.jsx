@@ -1,147 +1,138 @@
-// src/pages/Admin/Dashboard/AdminDashboard.jsx
+// pages/Admin/Dashboard/AdminDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Grid,
+  Card,
+  CardContent,
   Typography,
   Box,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  CircularProgress
+  LinearProgress
 } from '@mui/material';
-//import { adminService } from '../../../services/adminService';
+import {
+  ShoppingCart,
+  Inventory,
+  People,
+  AttachMoney
+} from '@mui/icons-material';
+import { adminService } from '../../../services/adminService';
+
+const StatCard = ({ title, value, icon, color, progress }) => (
+  <Card>
+    <CardContent>
+      <Box display="flex" alignItems="center" justifyContent="space-between">
+        <Box>
+          <Typography color="textSecondary" gutterBottom variant="h6">
+            {title}
+          </Typography>
+          <Typography variant="h4" component="div">
+            {value}
+          </Typography>
+          {progress && (
+            <Box sx={{ mt: 2 }}>
+              <LinearProgress variant="determinate" value={progress} />
+            </Box>
+          )}
+        </Box>
+        <Box color={color}>
+          {icon}
+        </Box>
+      </Box>
+    </CardContent>
+  </Card>
+);
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState(null);
-  const [recentOrders, setRecentOrders] = useState([]);
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalProducts: 0,
+    totalUsers: 0,
+    totalSales: 0,
+    recentOrders: []
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
+    const fetchStats = async () => {
+      try {
+        const response = await adminService.getDashboardStats();
+        setStats(response.data);
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      // Mock данные вместо API запросов
-      setStats({
-        totalSales: 1240500,
-        totalOrders: 156,
-        totalProducts: 89,
-        totalUsers: 342
-      });
-
-      setRecentOrders([
-        { id: 1, customer: 'Иван Иванов', total: 69990, status: 'completed', date: '2024-01-15' },
-        { id: 2, customer: 'Мария Петрова', total: 139980, status: 'processing', date: '2024-01-14' },
-        { id: 3, customer: 'Алексей Смирнов', total: 45990, status: 'shipped', date: '2024-01-14' }
-      ]);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed': return 'success';
-      case 'processing': return 'warning';
-      case 'shipped': return 'info';
-      default: return 'default';
-    }
-  };
-
   if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    );
+    return <div>Загрузка...</div>;
   }
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Панель управления
+      <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
+        Дашборд
       </Typography>
 
-      {/* Статистика простым списком */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="h5" color="primary" gutterBottom>
-              {stats?.totalSales?.toLocaleString()} ₽
-            </Typography>
-            <Typography variant="body2">Общие продажи</Typography>
-          </Paper>
+          <StatCard
+            title="Всего заказов"
+            value={stats.totalOrders}
+            icon={<ShoppingCart sx={{ fontSize: 40 }} />}
+            color="primary.main"
+          />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="h5" color="secondary" gutterBottom>
-              {stats?.totalOrders}
-            </Typography>
-            <Typography variant="body2">Всего заказов</Typography>
-          </Paper>
+          <StatCard
+            title="Товары"
+            value={stats.totalProducts}
+            icon={<Inventory sx={{ fontSize: 40 }} />}
+            color="success.main"
+          />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="h5" color="success.main" gutterBottom>
-              {stats?.totalProducts}
-            </Typography>
-            <Typography variant="body2">Товаров в каталоге</Typography>
-          </Paper>
+          <StatCard
+            title="Пользователи"
+            value={stats.totalUsers}
+            icon={<People sx={{ fontSize: 40 }} />}
+            color="warning.main"
+          />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="h5" color="info.main" gutterBottom>
-              {stats?.totalUsers}
-            </Typography>
-            <Typography variant="body2">Зарегистрированных пользователей</Typography>
-          </Paper>
+          <StatCard
+            title="Общие продажи"
+            value={`${stats.totalSales.toLocaleString()} ₽`}
+            icon={<AttachMoney sx={{ fontSize: 40 }} />}
+            color="error.main"
+          />
         </Grid>
       </Grid>
 
-      {/* Последние заказы */}
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Последние заказы
-        </Typography>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Клиент</TableCell>
-                <TableCell>Сумма</TableCell>
-                <TableCell>Статус</TableCell>
-                <TableCell>Дата</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {recentOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell>#{order.id}</TableCell>
-                  <TableCell>{order.customer}</TableCell>
-                  <TableCell>{order.total.toLocaleString()} ₽</TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={order.status} 
-                      color={getStatusColor(order.status)}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>{order.date}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+      <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid item xs={12} md={8}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Последние заказы
+              </Typography>
+              {/* Таблица последних заказов */}
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Быстрые действия
+              </Typography>
+              {/* Быстрые действия */}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

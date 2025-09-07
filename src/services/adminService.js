@@ -28,4 +28,10 @@ export const adminService = {
 
   // Dashboard
   getDashboardStats: USE_MOCK_API ? mockService.getDashboardStats : () => api.get('/dashboard/stats'),
+
+  // Users
+  getUsers: USE_MOCK_API ? mockService.getUsers : () => api.get('/admin/users'),
+  getUser: USE_MOCK_API ? mockService.getUser : (id) => api.get(`/admin/users/${id}`),
+  updateUser: USE_MOCK_API ? mockService.updateUser : (id, data) => api.put(`/admin/users/${id}`, data),
+  deleteUser: USE_MOCK_API ? mockService.deleteUser : (id) => api.delete(`/admin/users/${id}`),
 };

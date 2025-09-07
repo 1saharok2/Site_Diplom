@@ -39,8 +39,14 @@ const LoginPage = () => {
     const result = await login(credentials);
     
     if (result.success) {
-      navigate(result.user.role === 'admin' ? '/admin' : '/profile');
+      const redirectPath = sessionStorage.getItem('redirectAfterLogin');
+    if (redirectPath) {
+      sessionStorage.removeItem('redirectAfterLogin');
+      navigate(redirectPath);
     } else {
+      navigate(result.user.role === 'admin' ? '/admin' : '/profile');
+    }
+  } else {
       setError(result.error);
     }
     setLoading(false);

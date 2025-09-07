@@ -27,7 +27,7 @@ import {
   ExitToApp
 } from '@mui/icons-material';
 import { useAuth } from '../../../context/AuthContext';
-import { useCart } from '../../../context/CartContext/CartContext';
+import { useCart } from '../../../context/CartContext';
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -164,7 +164,7 @@ const Header = () => {
               }
             }}
           >
-            🛍️ Магазин
+            🛍️ Электроник
           </Typography>
 
           {/* Остальная часть flexGrow для выравнивания */}
@@ -300,6 +300,5 @@ const Header = () => {
     </>
   );
 };
-
 
 export default Header;
