@@ -58,41 +58,33 @@ const CategoriesPage = () => {
         <p className="lead text-muted">Выберите интересующую вас категорию</p>
       </div>
 
-      <Col>
-        {categories.map((category) => (
-          <Col key={category.id} xs={12} sm={6} lg={4} className="mb-4">
-            <Card className="category-card h-100 shadow-sm">
-              <div className="category-image-container">
-                <Card.Img 
-                  variant="top" 
-                  src={category.image || '/images/placeholder.jpg'} 
-                  alt={category.name}
-                  className="category-image"
-                />
-                <div className="product-count-badge">
-                  <span className="badge bg-primary">{category.productCount} товаров</span>
-                </div>
-              </div>
-              
-              <Card.Body className="d-flex flex-column">
-                <Card.Title className="text-center mb-3">{category.name}</Card.Title>
-                <Card.Text className="text-muted flex-grow-1">
-                  {category.description}
-                </Card.Text>
-                <Button 
-                  as={Link} 
-                  to={`/catalog/${category.slug}`}
-                  variant="primary"
-                  size="lg"
-                  className="mt-auto"
-                >
-                  Смотреть товары
-                </Button>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Col>
+<div className="categories-grid">
+  {categories.map((category) => (
+    <div key={category.id} className="category-card">
+      <div className="category-image-container">
+        <img 
+          src={category.image} 
+          alt={category.name}
+          className="category-image"
+        />
+        <div className="product-count-badge">
+          <span className="badge bg-primary">{category.productCount} товаров</span>
+        </div>
+      </div>
+      
+      <div className="card-body-content">
+        <h5 className="category-title">{category.name}</h5>
+        <p className="category-description">{category.description}</p>
+        <Link 
+          to={`/catalog/${category.slug}`}
+          className="btn btn-primary view-products-btn"
+        >
+          Смотреть товары
+        </Link>
+      </div>
+    </div>
+  ))}
+</div>
 
       {categories.length === 0 && !loading && (
         <div className="text-center mt-5">

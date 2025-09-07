@@ -180,41 +180,40 @@ const CategoryPage = () => {
       </Row>
 
       {/* Фильтры и сортировка */}
-      <Row className="mb-4">
-        <Col md={6} lg={4}>
-          <Form.Select 
-            value={sortBy} 
-            onChange={(e) => setSortBy(e.target.value)}
-            className="mb-2"
-          >
-            <option value="name">По названию</option>
-            <option value="price-asc">Цена по возрастанию</option>
-            <option value="price-desc">Цена по убыванию</option>
-            <option value="rating">По рейтингу</option>
-            <option value="newest">Сначала новинки</option>
-          </Form.Select>
-        </Col>
-        <Col md={6} lg={4}>
-          <Form.Check
-            type="switch"
-            id="stock-filter"
-            label="Только в наличии"
-            checked={filterInStock}
-            onChange={(e) => setFilterInStock(e.target.checked)}
-            className="mt-2"
-          />
-        </Col>
-        <Col lg={4} className="d-none d-lg-block text-end">
-          <Button 
-            as={Link} 
-            to="/catalog" 
-            variant="outline-secondary"
-            size="sm"
-          >
-            ← Все категории
-          </Button>
-        </Col>
-      </Row>
+     <div className="filters-container">
+  <div className="filter-group">
+    <select 
+      value={sortBy} 
+      onChange={(e) => setSortBy(e.target.value)}
+      className="form-select"
+    >
+      <option value="name">По названию</option>
+      <option value="price-asc">Цена по возрастанию</option>
+      <option value="price-desc">Цена по убыванию</option>
+      <option value="rating">По рейтингу</option>
+      <option value="newest">Сначала новинки</option>
+    </select>
+  </div>
+
+  <div className="filter-group">
+    <label className="switch">
+      <input
+        type="checkbox"
+        id="stock-filter"
+        checked={filterInStock}
+        onChange={(e) => setFilterInStock(e.target.checked)}
+      />
+      <span className="slider"></span>
+      <span className="switch-label">Только в наличии</span>
+    </label>
+  </div>
+
+  <div className="filter-group back-button">
+    <Link to="/catalog" className="btn-back">
+      ← Все категории
+    </Link>
+  </div>
+</div>
 
       {/* Список товаров */}
       {/* Список товаров */}
