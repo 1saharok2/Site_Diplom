@@ -1,4 +1,4 @@
-import AdminRoute from './components/Common/AdminRoute';
+import AdminRoute from '../components/Common/AdminRoute';
 
 // Admin Pages
 import AdminDashboard from './pages/Admin/AdminDashboard/AdminDashboard';
