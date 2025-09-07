@@ -1,6 +1,7 @@
 // pages/Home/HomePage.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
+//import ImageWithFallback from './components/UI/ImageWithFallback';
 import {
   Container,
   Typography,
@@ -31,6 +32,21 @@ const HomePage = () => {
   const { categories, loading: categoriesLoading, error: categoriesError } = useCategories();
   const { addToCart } = useCart();
 
+  const getProductImage = (product) => {
+  // Если изображение уже есть в данных
+  if (product.image && !product.image.includes('placeholder')) {
+    return product.image;
+  }
+  // Иначе используем placeholder
+  return `https://source.unsplash.com/random/300x300?electronics,${product.id}`;
+};
+
+const getCategoryImage = (category) => {
+  if (category.image && !category.image.includes('placeholder')) {
+    return category.image;
+  }
+  return `https://source.unsplash.com/random/400x300?${category.slug}`;
+};
   // Берем первые 4 товара для показа на главной
   const featuredProducts = products.slice(0, 4);
 
