@@ -1,3 +1,8 @@
+.categories-page {
+  padding: 0 20px;
+  min-height: 80vh;
+}
+
 .categories-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -12,6 +17,9 @@
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   padding: 15px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .category-card:hover {
@@ -23,6 +31,8 @@
   position: relative;
   height: 200px;
   overflow: hidden;
+  flex-shrink: 0;
+  border-radius: 10px;
 }
 
 .category-image {
@@ -47,10 +57,14 @@
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .card-body-content {
-  padding: 20px;
+  padding: 15px 10px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
 .category-title {
@@ -59,7 +73,14 @@
   margin-bottom: 10px;
   color: #2c3e50;
   text-align: center;
+  min-height: 3rem;
+  line-height: 1.4;
   padding: 0 10px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  display: block;
+  overflow: hidden;
 }
 
 .category-description {
@@ -67,45 +88,21 @@
   margin-bottom: 15px;
   line-height: 1.5;
   text-align: center;
+  flex-grow: 1;
+  min-height: 4.5rem;
+  font-size: 0.95rem;
   padding: 0 10px;
-}
-
-/* Стили ТОЛЬКО для страницы категорий */
-.category-page .category-header {
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-  color: white; /* ← Белый текст для синего фона */
-}
-
-.category-page .category-title {
-  color: white; /* ← Белый заголовок */
-}
-
-.category-page .category-description {
-  color: rgba(255, 255, 255, 0.9); /* ← Белое описание */
-}
-
-.category-page .products-count {
-  color: white; /* ← Белый текст счетчика */
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* Стили для страницы всех категорий (если нужно) */
-.categories-page .category-card {
-  background: white; /* ← Белый фон карточек */
-}
-
-.categories-page .category-title {
-  color: #2c3e50; /* ← Темный текст для белого фона */
-}
-
-.categories-page .category-description {
-  color: #6c757d; /* ← Серый текст для белого фона */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  display: block;
+  overflow: hidden;
 }
 
 .view-products-btn {
   display: block;
   width: 100%;
-  padding: 10px 20px;
+  padding: 12px 20px;
   background: #007bff;
   color: white;
   text-align: center;
@@ -113,6 +110,10 @@
   text-decoration: none;
   font-weight: 600;
   transition: all 0.3s ease;
+  margin-top: auto;
+  flex-shrink: 0;
+  border: none;
+  font-size: 0.95rem;
 }
 
 .view-products-btn:hover {
@@ -120,15 +121,115 @@
   transform: translateY(-2px);
   color: white;
   text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
-.categories-page {
-  padding: 0 20px; /* ← ДОБАВЬТЕ ЭТО */
+/* Стили ТОЛЬКО для страницы категорий */
+.category-page .category-header {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
 }
 
-.categories-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 25px;
-  padding: 20px 0;
+.categories-page .category-title {
+  color: #2c3e50;
+  padding: 0 10px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  display: block;
+  overflow: hidden;
+}
+.categories-page .category-description {
+  color: #6c757d;
+  padding: 0 10px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  display: block;
+  overflow: hidden;
+}
+.category-page .products-count {
+  color: white;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Стили для страницы всех категорий */
+.categories-page .category-card {
+  background: white;
+}
+
+.categories-page .category-title {
+  color: #2c3e50;
+  padding: 0 5px;
+}
+
+.categories-page .category-description {
+  color: #6c757d;
+  padding: 0 5px;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+  .categories-page {
+    padding: 0 15px;
+  }
+  
+  .categories-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .category-card {
+    padding: 12px;
+  }
+  
+  .category-image-container {
+    height: 160px;
+  }
+  
+  .category-title {
+    font-size: 1.1rem;
+    min-height: 2.8rem;
+    padding: 0 8px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+  
+  .category-description {
+    font-size: 0.9rem;
+    min-height: 4rem;
+    padding: 0 8px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+  
+  .card-body-content {
+    padding: 12px 8px;
+  }
+  
+  .view-products-btn {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Стили для загрузки и ошибок */
+.text-center.mt-5 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.alert {
+  border-radius: 15px;
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.alert-heading {
+  font-weight: 700;
 }
