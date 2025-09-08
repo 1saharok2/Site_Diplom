@@ -1,0 +1,14 @@
+.footer {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+}
+
+.footer-link:hover {
+  opacity: 1 !important;
+  transform: translateX(4px);
+  transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
