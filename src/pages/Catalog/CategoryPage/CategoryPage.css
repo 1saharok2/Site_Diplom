@@ -1,30 +1,277 @@
-/* Стили для сетки товаров */
-.products-grid-container {
-  margin: 2rem 0;
+/* Стили для хлебных крошек */
+.breadcrumb-custom {
+  padding: 15px 0;
+  margin-bottom: 1.5rem;
+}
+
+.breadcrumb-custom .breadcrumb-item {
+  font-size: 0.95rem;
+}
+
+.breadcrumb-custom .breadcrumb-item a {
+  color: #007bff;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.breadcrumb-custom .breadcrumb-item a:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+.breadcrumb-custom .breadcrumb-item.active {
+  color: #6c757d;
+  font-weight: 600;
+}
+
+/* Заголовок категории */
+.category-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  border-radius: 15px;
+  margin-bottom: 2rem;
+  color: white;
+  text-align: center;
+}
+
+.category-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.category-description {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.products-count {
+  font-size: 1.1rem;
+  background: rgba(255,255,255,0.2);
+  padding: 8px 16px;
+  border-radius: 25px;
+  display: inline-block;
+  backdrop-filter: blur(10px);
+}
+
+/* Контейнер фильтров */
+.filters-section {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  border: 1px solid #e9ecef;
+}
+
+.filters-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.form-select-custom {
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.form-select-custom:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+  outline: none;
+}
+
+/* Стили для switch */
+.switch-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 10px;
+  background: white;
+  border-radius: 10px;
+  border: 2px solid #e9ecef;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #28a745;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.switch-label {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.95rem;
+}
+
+/* Кнопка назад */
+.back-button {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-back-custom {
+  padding: 12px 24px;
+  background: #6c757d;
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-back-custom:hover {
+  background: #5a6268;
+  color: white;
+  text-decoration: none;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 15px rgba(108,117,125,0.3);
+}
+
+/* Адаптивность */
+@media (max-width: 992px) {
+  .filters-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .back-button {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .category-header {
+    padding: 3.5rem;
+  }
+  
+  .category-title {
+    font-size: 2rem;
+  }
+  
+  .category-description {
+    font-size: 1.1rem;
+  }
+  
+  .filters-section {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .category-title {
+    font-size: 1.75rem;
+  }
+  
+  .filters-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .switch-container {
+    justify-content: space-between;
+  }
+}
+
+/* Контейнер товаров */
+.products-section {
+  margin: 2rem 20px;
 }
 
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 25px;
-  padding: 20px 0;
+  width: 100%;
 }
 
-.product-card {
-  transition: all 0.3s ease;
-  border: none;
-  border-radius: 15px;
+/* Стили карточек товаров */
+.products-grid .product-card {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.products-grid .product-card .card-title {
+  min-height: 48px;
+  display: -webkit-box;
+  display: box;              /* стандартное свойство */
+  -webkit-line-clamp: 2;
+  line-clamp: 2;             /* стандартное свойство */
+  -webkit-box-orient: vertical;
+  box-orient: vertical;      /* стандартное свойство */
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  height: 100%;
 }
 
-.product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Стили для сообщения "нет товаров" */
+/* Сообщение "нет товаров" */
 .no-products-alert {
   text-align: center;
   padding: 3rem;
@@ -37,11 +284,13 @@
 .no-products-alert h4 {
   color: #6c757d;
   margin-bottom: 1rem;
+  font-weight: 600;
 }
 
 .no-products-alert p {
   color: #6c757d;
   margin-bottom: 1.5rem;
+  font-size: 1.1rem;
 }
 
 .back-to-categories-btn {
@@ -57,12 +306,13 @@
 
 .back-to-categories-btn:hover {
   background: #0056b3;
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.05);
   color: white;
   text-decoration: none;
+  box-shadow: 0 6px 15px rgba(0,123,255,0.3);
 }
 
-/* Адаптивность для товаров */
+/* Адаптивность сетки */
 @media (max-width: 1200px) {
   .products-grid {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -86,19 +336,4 @@
     padding: 2rem;
     margin: 0 10px;
   }
-}
-
-.category-page {
-  padding: 0 20px; /* ← ДОБАВЬТЕ ЭТО */
-}
-
-.products-grid-container {
-  margin: 2rem 0;
-}
-
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 25px;
-  padding: 20px 0;
 }
