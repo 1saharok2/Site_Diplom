@@ -5,7 +5,6 @@
 /* Герой секция */
 .hero-section {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   padding: 100px 20px;
   text-align: center;
 }
@@ -125,6 +124,39 @@
 .feature-item p {
   color: #666;
   line-height: 1.6;
+}
+
+/* Добавьте эти стили для Material-UI компонентов */
+.hero-title {
+  font-weight: bold;
+  font-size: 3rem;
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.hero-description {
+  margin-bottom: 30px;
+  opacity: 0.9;
+  font-weight: 300;
+}
+
+.cta-button {
+  background: white;
+  color: #667eea;
+}
+
+.cta-button:hover {
+  background: #f8f9fa;
+  transform: translateY(-2px);
+}
+
+.cta-button-secondary {
+  border-color: white;
+  color: white;
+}
+
+.cta-button-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* Адаптивность */

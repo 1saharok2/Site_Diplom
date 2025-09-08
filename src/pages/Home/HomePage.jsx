@@ -8,8 +8,7 @@ import {
   Card,
   CardContent,
   Button,
-  Chip,
-  TextField
+  Chip
 } from '@mui/material';
 import {
   ShoppingBasket,
@@ -19,15 +18,12 @@ import {
   Star,
   Favorite
 } from '@mui/icons-material';
-import { mockProducts, mockCategories } from '../../data/mockData'; // Импортируем конкретные данные
+import { mockProducts, mockCategories } from '../../data/mockData';
 import { useCart } from '../../context/CartContext';
 
 const HomePage = () => {
   const { addToCart } = useCart();
-
-  // Используем конкретные товары из mockData
   const featuredProducts = mockProducts.slice(0, 4);
-  // Используем конкретные категории из mockData
   const categories = mockCategories;
 
   const features = [
@@ -59,118 +55,118 @@ const HomePage = () => {
 
   return (
     <Box sx={{ pt: 0 }}>
-      
-      {/* Герой секция */}
-<Box
-  sx={{
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: 'white',
-    py: { xs: 8, md: 12 },
-    position: 'relative',
-    overflow: 'hidden'
-  }}
->
-  <Container maxWidth="lg">
-    <Grid container spacing={4} alignItems="center">
-      {/* Текстовый блок - занимает 6 колонок */}
-      <Grid item xs={12} md={6}>
-        <Typography
-          variant="h1"
-          component="h1"
-          sx={{
-            fontWeight: 'bold',
-            fontSize: { xs: '2.5rem', md: '3.5rem' },
-            mb: 3,
-            lineHeight: 1.2
-          }}
-        >
-          Добро пожаловать в наш магазин
-        </Typography>
-        <Typography
-          variant="h5"
-          sx={{
-            mb: 4,
-            opacity: 0.9,
-            fontWeight: 300
-          }}
-        >
-          Откройте для себя лучшие товары по выгодным ценам. 
-          Техника, аксессуары и многое другое с гарантией качества.
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          <Button
-            component={Link}
-            to="/catalog"
-            variant="contained"
-            size="large"
-            sx={{
-              py: 2,
-              px: 4,
-              fontSize: '1.1rem',
-              fontWeight: 'bold',
-              backgroundColor: 'white',
-              color: 'primary.main',
-              '&:hover': {
-                backgroundColor: '#f8f9fa',
-                transform: 'translateY(-2px)'
-              }
-            }}
-          >
-            Перейти к покупкам
-          </Button>
-          <Button
-            component={Link}
-            to="/categories"
-            variant="outlined"
-            size="large"
-            sx={{
-              py: 2,
-              px: 4,
-              fontSize: '1.1rem',
-              fontWeight: 'bold',
-              borderColor: 'white',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                borderColor: 'white'
-              }
-            }}
-          >
-            Все категории
-          </Button>
-        </Box>
-      </Grid>
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          py: { xs: 2, md: 8 },
+          margin: 0,
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 }, pt: { xs: 2, md: 4 } }}>
+          <Grid container spacing={4} alignItems="center" sx={{ margin: 0 }}>
+            <Grid item xs={12} md={6} sx={{ padding: 0 }}>
+              <Typography
+                variant="h1"
+                component="h1"
+                sx={{
+                  fontWeight: 'bold',
+                  fontSize: { xs: '2.2rem', md: '3.2rem' },
+                  mb: 3,
+                  lineHeight: 1.2,
+                  padding: 0,
+                  margin: 0
+                }}
+              >
+                Добро пожаловать в наш магазин
+              </Typography>
+              <Typography
+                variant="h5"
+                sx={{
+                  mb: 4,
+                  opacity: 0.9,
+                  fontWeight: 300,
+                  fontSize: { xs: '1.1rem', md: '1.4rem' }
+                }}
+              >
+                Откройте для себя лучшие товары по выгодным ценам. 
+                Техника, аксессуары и многое другое с гарантией качества.
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Button
+                  component={Link}
+                  to="/catalog"
+                  variant="contained"
+                  size="large"
+                  sx={{
+                    py: 1.5,
+                    px: 3,
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    backgroundColor: 'white',
+                    color: 'primary.main',
+                    '&:hover': {
+                      backgroundColor: '#f8f9fa',
+                      transform: 'translateY(-2px)'
+                    }
+                  }}
+                >
+                  Перейти к покупкам
+                </Button>
+                <Button
+                  component={Link}
+                  to="/categories"
+                  variant="outlined"
+                  size="large"
+                  sx={{
+                    py: 1.5,
+                    px: 3,
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    borderColor: 'white',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      borderColor: 'white'
+                    }
+                  }}
+                >
+                  Все категории
+                </Button>
+              </Box>
+            </Grid>
 
-      {/* Блок с фотографией - занимает 6 колонок и центрируется */}
-      <Grid item xs={12} md={6}>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: '100%',
-            height: '100%',
-            minHeight: 400
-          }}
-        >
-          <Box
-            component="img"
-            src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
-            alt="Магазин электроники"
-            sx={{
-              width: '100%',
-              maxWidth: 500,
-              height: 'auto',
-              borderRadius: 3,
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
-              objectFit: 'cover'
-            }}
-          />
-        </Box>
-      </Grid>
-    </Grid>
-  </Container>
-</Box>
+            <Grid item xs={12} md={6} sx={{ padding: 0 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: '100%',
+                  height: '100%',
+                  minHeight: 350
+                }}
+              >
+                <Box
+                  component="img"
+                  src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
+                  alt="Магазин электроники"
+                  sx={{
+                    width: '100%',
+                    maxWidth: 450,
+                    height: 'auto',
+                    borderRadius: 3,
+                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+                    objectFit: 'cover'
+                  }}
+                />
+              </Box>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
 
       {/* Преимущества */}
       <Container sx={{ py: 8 }}>

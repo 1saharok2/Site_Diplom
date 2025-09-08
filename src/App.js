@@ -36,7 +36,13 @@ function App() {
           <CategoriesProvider>
             <CartProvider>
         <Router>
-          <div className="app">
+          <div className="app" style={{
+            display: "flex",
+            flexDirection: 'column',
+            minHeight: '100vh',
+            margin: 0,
+            padding: 0
+          }}>
             <Header />
             <main className="main-content">
               <Routes>
