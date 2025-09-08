@@ -11,6 +11,7 @@ import { AdminDashboard, AdminProducts, AdminOrders, AdminUsers, AdminCategories
 import { CategoriesPage, CategoryPage, ProductPage } from './pages/Catalog';
 import { AboutPage, ContactsPage } from './pages/About';
 import { ProfilePage, OrdersPage, WishlistPage } from './pages/User';
+import { SearchPage } from './pages';
 import { HomePage, CartPage, CheckoutPage, OrderSuccessPage } from './pages';
 import './App.css';
 
@@ -46,6 +47,7 @@ function App() {
                 <Route path="/about" element={<AboutPage/>} />
                 <Route path="/contacts" element={<ContactsPage/>} />
                 <Route path="/cart" element={<CartPage />} />
+                <Route path="/search" element={<SearchPage />} />
                 
                 {/* Checkout */}
                 <Route path="/checkout" element={

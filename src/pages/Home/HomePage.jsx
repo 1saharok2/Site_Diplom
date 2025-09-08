@@ -9,9 +9,7 @@ import {
   CardContent,
   Button,
   Chip,
-  TextField,
-  CircularProgress,
-  Alert
+  TextField
 } from '@mui/material';
 import {
   ShoppingBasket,
@@ -61,108 +59,129 @@ const HomePage = () => {
 
   return (
     <Box sx={{ pt: 0 }}>
+      
       {/* Герой секция */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
-          py: { xs: 8, md: 12 },
-          position: 'relative',
-          overflow: 'hidden'
-        }}
-      >
-        <Container maxWidth="lg">
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={6}>
-              <Typography
-                variant="h1"
-                component="h1"
-                sx={{
-                  fontWeight: 'bold',
-                  fontSize: { xs: '2.5rem', md: '3.5rem' },
-                  mb: 3,
-                  lineHeight: 1.2
-                }}
-              >
-                Добро пожаловать в наш магазин
-              </Typography>
-              <Typography
-                variant="h5"
-                sx={{
-                  mb: 4,
-                  opacity: 0.9,
-                  fontWeight: 300
-                }}
-              >
-                Откройте для себя лучшие товары по выгодным ценам. 
-                Техника, аксессуары и многое другое с гарантией качества.
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Button
-                  component={Link}
-                  to="/catalog"
-                  variant="contained"
-                  size="large"
-                  sx={{
-                    py: 2,
-                    px: 4,
-                    fontSize: '1.1rem',
-                    fontWeight: 'bold',
-                    backgroundColor: 'white',
-                    color: 'primary.main',
-                    '&:hover': {
-                      backgroundColor: '#f8f9fa',
-                      transform: 'translateY(-2px)'
-                    }
-                  }}
-                >
-                  Перейти к покупкам
-                </Button>
-                <Button
-                  component={Link}
-                  to="/categories"
-                  variant="outlined"
-                  size="large"
-                  sx={{
-                    py: 2,
-                    px: 4,
-                    fontSize: '1.1rem',
-                    fontWeight: 'bold',
-                    borderColor: 'white',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      borderColor: 'white'
-                    }
-                  }}
-                >
-                  Все категории
-                </Button>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  position: 'relative',
-                  textAlign: 'center'
-                }}
-              >
-                <Box
-                  component="img"
-                  src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
-                  alt="Магазин электроники"
-                  sx={{
-                    width: '100%',
-                    maxWidth: 500,
-                    borderRadius: 3,
-                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)'
-                  }}
-                />
-              </Box>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
+<Box
+  sx={{
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    py: { xs: 8, md: 12 },
+    mt: -8,
+    position: 'relative',
+    overflow: 'hidden',
+  }}
+>
+  <Container maxWidth="lg">
+    <Grid container spacing={4} alignItems="center" justifyContent="center">
+      {/* Текстовый контент */}
+      <Grid item xs={12} md={5}>
+        <Typography
+          variant="h1"
+          component="h1"
+          sx={{
+            fontWeight: 'bold',
+            fontSize: { xs: '2.5rem', md: '3.5rem' },
+            mb: 3,
+            lineHeight: 1.2,
+            textAlign: { xs: 'center', md: 'center' }
+          }}
+        >
+          Добро пожаловать в наш магазин
+        </Typography>
+        <Typography
+          variant="h5"
+          sx={{
+            mb: 4,
+            opacity: 0.9,
+            fontWeight: 300,
+            textAlign: { xs: 'center', md: 'center' }
+          }}
+        >
+          Откройте для себя лучшие товары по выгодным ценам. 
+          Техника, аксессуары и многое другое с гарантией качества.
+        </Typography>
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 2, 
+          flexWrap: 'wrap', 
+          alignItems: 'center',
+          justifyContent: { xs: 'center', md: 'center' }
+        }}>
+          <Button
+            component={Link}
+            to="/catalog"
+            variant="contained"
+            size="large"
+            sx={{
+              py: 2,
+              px: 4,
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              backgroundColor: 'white',
+              color: 'primary.main',
+              '&:hover': {
+                backgroundColor: '#f8f9fa',
+                transform: 'translateY(-2px)'
+              },
+            }}
+          >
+            Перейти к покупкам
+          </Button>
+          
+           <Button
+            component={Link}
+            to="/categories"
+            variant="outlined"
+            size="large"
+            sx={{
+              py: 2,
+              px: 4,
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              borderColor: 'white',
+              color: 'white',
+              ml: 'auto', 
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderColor: 'white'
+              }
+            }}
+          >
+            Все категории
+          </Button>
+        </Box>
+      </Grid>
+      
+      {/* Бокс с фотографией - центрированный */}
+      <Grid item xs={12} md={7}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%',
+            height: '100%'
+          }}
+        >
+          <Box
+            component="img"
+            src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
+            alt="Магазин электроники"
+            sx={{
+              width: '90%',
+              maxWidth: 650,
+              height: 'auto',
+              borderRadius: 3,
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+              display: 'block',
+              mx: 'auto'
+            }}
+          />
+        </Box>
+      </Grid>
+    </Grid>
+  </Container>
+</Box>
 
       {/* Преимущества */}
       <Container sx={{ py: 8 }}>
