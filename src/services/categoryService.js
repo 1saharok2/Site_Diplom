@@ -1,11 +1,27 @@
-// Mock данные категорий
+import React from 'react';
+// Импортируем все изображений категорий
+import smartphonesImg from '../assets/Categories/Smartphones.jpg';
+
+// Импорты изображений телефонов
+import googlePixel8Pro from '../assets/products/Phones/Google_Pixel_8_Pro.png';
+import huaweiP60Pro from '../assets/products/Phones/Huawei P60 Pro.png';
+import iphone from '../assets/products/Phones/iphone.png';
+import nothingPhone2 from '../assets/products/Phones/Nothing Phone 2.png';
+import onePlus12 from '../assets/products/Phones/OnePlus 12.png';
+import oppoFindX6 from '../assets/products/Phones/Oppo Find X6.png';
+import realmeGT3 from '../assets/products/Phones/Realme GT 3.png';
+import samsungGalaxyS23Ultra from '../assets/products/Phones/Samsung Galaxy S23 Ultra.png';
+import vivoX90Pro from '../assets/products/Phones/Vivo X90 Pro.png';
+import xiaomiRedmiNote13 from '../assets/products/Phones/Xiaomi Redmi Note 13.png';
+
+
 const mockCategories = [
   {
     id: 1,
     name: 'Смартфоны',
     slug: 'smartphones',
     description: 'Смартфоны, кнопочные телефоны и аксессуары',
-    image: '/src/assets/Categories/Smartphones.jpg',
+    image: smartphonesImg, 
     productCount: 156
   },
   {
@@ -74,7 +90,7 @@ const mockProducts = [
     name: 'Смартфон Apple iPhone 16',
     price: 79990,
     oldPrice: 84900,
-    images: ['src/assets/Photos/Phones/iphone.png'],
+    images: [iphone],
     category: 'smartphones',
     rating: 4.0,
     reviewsCount: 128,
@@ -88,7 +104,7 @@ const mockProducts = [
     name: 'Смартфон Samsung Galaxy S23 Ultra',
     price: 89900,
     oldPrice: 99900,
-    images: ['https://via.placeholder.com/400x400/1428a0/ffffff?text=Galaxy+S23'],
+    images: [samsungGalaxyS23Ultra],
     category: 'smartphones',
     rating: 4.5,
     reviewsCount: 256,
@@ -102,7 +118,7 @@ const mockProducts = [
     name: 'Смартфон Xiaomi Redmi Note 13',
     price: 24990,
     oldPrice: 29990,
-    images: ['https://via.placeholder.com/400x400/ff6900/ffffff?text=Redmi+Note+13'],
+    images: [xiaomiRedmiNote13],
     category: 'smartphones',
     rating: 4.2,
     reviewsCount: 189,
@@ -111,105 +127,104 @@ const mockProducts = [
     inStock: true,
     description: 'Бюджетный смартфон с отличной камерой'
   },
-
   {
-  id: 4,
-  name: 'Смартфон Google Pixel 8 Pro',
-  price: 89990,
-  oldPrice: 99990,
-  images: ['https://via.placeholder.com/400x400/4285f4/ffffff?text=Pixel+8+Pro'],
-  category: 'smartphones',
-  rating: 4.7,
-  reviewsCount: 89,
-  isNew: true,
-  discount: 10,
-  inStock: true,
-  description: 'Флагман от Google с искуственным интеллектом'
-},
-{
-  id: 5,
-  name: 'Смартфон OnePlus 12',
-  price: 69990,
-  oldPrice: 79990,
-  images: ['https://via.placeholder.com/400x400/eb0029/ffffff?text=OnePlus+12'],
-  category: 'smartphones',
-  rating: 4.6,
-  reviewsCount: 156,
-  isNew: true,
-  discount: 12,
-  inStock: true,
-  description: 'Мощный смартфон с быстрой зарядкой'
-},
-{
-  id: 6,
-  name: 'Смартфон Huawei P60 Pro',
-  price: 84990,
-  oldPrice: 94990,
-  images: ['https://via.placeholder.com/400x400/ff0000/ffffff?text=Huawei+P60'],
-  category: 'smartphones',
-  rating: 4.5,
-  reviewsCount: 78,
-  isNew: false,
-  discount: 11,
-  inStock: true,
-  description: 'Премиальный смартфон с лучшей камерой'
-},
-{
-  id: 7,
-  name: 'Смартфон Realme GT 3',
-  price: 39990,
-  oldPrice: 49990,
-  images: ['https://via.placeholder.com/400x400/ff6a00/ffffff?text=Realme+GT+3'],
-  category: 'smartphones',
-  rating: 4.3,
-  reviewsCount: 234,
-  isNew: true,
-  discount: 20,
-  inStock: true,
-  description: 'Игровой смартфон с мощным процессором'
-},
-{
-  id: 8,
-  name: 'Смартфон Vivo X90 Pro',
-  price: 79990,
-  oldPrice: 89990,
-  images: ['https://via.placeholder.com/400x400/5c2d91/ffffff?text=Vivo+X90+Pro'],
-  category: 'smartphones',
-  rating: 4.4,
-  reviewsCount: 67,
-  isNew: true,
-  discount: 11,
-  inStock: true,
-  description: 'Смартфон с инновационной камерой'
-},
-{
-  id: 9,
-  name: 'Смартфон Oppo Find X6',
-  price: 74990,
-  oldPrice: 84990,
-  images: ['https://via.placeholder.com/400x400/1485ff/ffffff?text=Oppo+Find+X6'],
-  category: 'smartphones',
-  rating: 4.5,
-  reviewsCount: 92,
-  isNew: true,
-  discount: 12,
-  inStock: true,
-  description: 'Стильный флагман с AMOLED дисплеем'
-},
-{
-  id: 10,
-  name: 'Смартфон Nothing Phone (2)',
-  price: 54990,
-  oldPrice: 64990,
-  images: ['https://via.placeholder.com/400x400/000000/ffffff?text=Nothing+Phone'],
-  category: 'smartphones',
-  rating: 4.2,
-  reviewsCount: 187,
-  isNew: true,
-  discount: 15,
-  inStock: true,
-  description: 'Уникальный дизайн с светодиодной подсветкой'
-},
+    id: 4,
+    name: 'Смартфон Google Pixel 8 Pro',
+    price: 89990,
+    oldPrice: 99990,
+    images: [googlePixel8Pro],
+    category: 'smartphones',
+    rating: 4.7,
+    reviewsCount: 89,
+    isNew: true,
+    discount: 10,
+    inStock: true,
+    description: 'Флагман от Google с искуственным интеллектом'
+  },
+  {
+    id: 5,
+    name: 'Смартфон OnePlus 12',
+    price: 69990,
+    oldPrice: 79990,
+    images: [onePlus12],
+    category: 'smartphones',
+    rating: 4.6,
+    reviewsCount: 156,
+    isNew: true,
+    discount: 12,
+    inStock: true,
+    description: 'Мощный смартфон с быстрой зарядкой'
+  },
+  {
+    id: 6,
+    name: 'Смартфон Huawei P60 Pro',
+    price: 84990,
+    oldPrice: 94990,
+    images: [huaweiP60Pro],
+    category: 'smartphones',
+    rating: 4.5,
+    reviewsCount: 78,
+    isNew: false,
+    discount: 11,
+    inStock: true,
+    description: 'Премиальный смартфон с лучшей камерой'
+  },
+  {
+    id: 7,
+    name: 'Смартфон Realme GT 3',
+    price: 39990,
+    oldPrice: 49990,
+    images: [realmeGT3],
+    category: 'smartphones',
+    rating: 4.3,
+    reviewsCount: 234,
+    isNew: true,
+    discount: 20,
+    inStock: true,
+    description: 'Игровой смартфон с мощным процессором'
+  },
+  {
+    id: 8,
+    name: 'Смартфон Vivo X90 Pro',
+    price: 79990,
+    oldPrice: 89990,
+    images: [vivoX90Pro],
+    category: 'smartphones',
+    rating: 4.4,
+    reviewsCount: 67,
+    isNew: true,
+    discount: 11,
+    inStock: true,
+    description: 'Смартфон с инновационной камерой'
+  },
+  {
+    id: 9,
+    name: 'Смартфон Oppo Find X6',
+    price: 74990,
+    oldPrice: 84990,
+    images: [oppoFindX6],
+    category: 'smartphones',
+    rating: 4.5,
+    reviewsCount: 92,
+    isNew: true,
+    discount: 12,
+    inStock: true,
+    description: 'Стильный флагман с AMOLED дисплеем'
+  },
+  {
+    id: 10,
+    name: 'Смартфон Nothing Phone (2)',
+    price: 54990,
+    oldPrice: 64990,
+    images: [nothingPhone2],
+    category: 'smartphones',
+    rating: 4.2,
+    reviewsCount: 187,
+    isNew: true,
+    discount: 15,
+    inStock: true,
+    description: 'Уникальный дизайн с светодиодной подсветкой'
+  },
 {
   id: 11,
   name: 'Смартфон Motorola Edge 40',

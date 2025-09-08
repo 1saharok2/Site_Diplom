@@ -74,7 +74,12 @@ const CategoriesPage = () => {
                 alt={category.name}
                 className="category-image"
                 onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/300x200/007bff/ffffff?text=Категория';
+                  // Fallback для локальных изображений
+                  if (category.image.includes('/src/assets/')) {
+                    e.target.src = `https://via.placeholder.com/400x300/007bff/ffffff?text=${encodeURIComponent(category.name)}`;
+                  } else {
+                    e.target.src = 'https://via.placeholder.com/400x300/6c757d/ffffff?text=Изображение';
+                  }
                 }}
               />
               <div className="product-count-badge">
