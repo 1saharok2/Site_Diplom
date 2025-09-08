@@ -70,6 +70,38 @@
   padding: 0 10px;
 }
 
+/* Стили ТОЛЬКО для страницы категорий */
+.category-page .category-header {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white; /* ← Белый текст для синего фона */
+}
+
+.category-page .category-title {
+  color: white; /* ← Белый заголовок */
+}
+
+.category-page .category-description {
+  color: rgba(255, 255, 255, 0.9); /* ← Белое описание */
+}
+
+.category-page .products-count {
+  color: white; /* ← Белый текст счетчика */
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Стили для страницы всех категорий (если нужно) */
+.categories-page .category-card {
+  background: white; /* ← Белый фон карточек */
+}
+
+.categories-page .category-title {
+  color: #2c3e50; /* ← Темный текст для белого фона */
+}
+
+.categories-page .category-description {
+  color: #6c757d; /* ← Серый текст для белого фона */
+}
+
 .view-products-btn {
   display: block;
   width: 100%;
