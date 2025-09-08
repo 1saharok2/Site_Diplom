@@ -8,6 +8,7 @@
     "@hookform/resolvers": "^5.2.1",
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.2",
+    "@supabase/supabase-js": "^2.57.2",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
@@ -35,7 +36,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "server": "json-server --watch db.json --port 3001",
+    "server": "nodemon backend/server.js",
     "dev": "concurrently \"npm run server\" \"npm start\"",
     "db:seed": "node backend/seeds/seed.js"
   },
@@ -58,6 +59,7 @@
     ]
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "json-server": "^1.0.0-beta.3",
     "nodemon": "^3.1.10"
   }

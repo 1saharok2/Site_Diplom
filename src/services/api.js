@@ -1,32 +1,37 @@
-import axios from 'axios';
+const API_BASE = 'http://localhost:5000/api';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+export const apiService = {
+  // Products
+  getProducts: () => fetch(`${API_BASE}/products`).then(res => res.json()),
+  
+  getProduct: (id) => fetch(`${API_BASE}/products/${id}`).then(res => res.json()),
+  
+  // Categories
+  getCategories: () => fetch(`${API_BASE}/categories`).then(res => res.json()),
+  
+  // Auth
+  login: (credentials) => 
+    fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials)
+    }).then(res => res.json()),
+  
+  register: (userData) =>
+    fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    }).then(res => res.json()),
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userData');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
-
-export default api;
+  // Cart & Orders
+  createOrder: (orderData, token) =>
+    fetch(`${API_BASE}/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(orderData)
+    }).then(res => res.json())
+};
