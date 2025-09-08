@@ -1,10 +1,24 @@
+/* Ссылка-обертка для всей карточки */
+.product-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.product-card-link:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Контейнер карточки */
 .product-card-wrapper {
   width: 100%;
   height: 100%;
-  max-width: 350px; /* ← Добавил максимальную ширину */
-  margin: 0 auto; /* ← Центрирование */
+  max-width: 350px; /* Ограничение ширины */
+  margin: 0 auto; /* Центрирование */
 }
 
+/* Карточка */
 .product-card {
   background: white;
   border-radius: 15px;
@@ -15,6 +29,7 @@
   display: flex;
   flex-direction: column;
   margin: 0 10px;
+  cursor: pointer; /* чтобы было видно, что кликабельно */
 }
 
 .product-card:hover {
@@ -22,6 +37,7 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* Блок с картинкой */
 .product-image-container {
   position: relative;
   height: 250px;
@@ -44,6 +60,7 @@
   transform: scale(1.05);
 }
 
+/* Бейджи */
 .product-badges {
   position: absolute;
   top: 15px;
@@ -53,6 +70,7 @@
   gap: 5px;
 }
 
+/* Информация */
 .product-info {
   padding: 20px;
   flex-grow: 1;
@@ -88,7 +106,7 @@
   margin-left: 5px;
 }
 
-/* Стили для цен */
+/* Цены */
 .price-container {
   margin-bottom: 1rem;
 }
@@ -115,6 +133,7 @@
   font-weight: 600;
 }
 
+/* Кнопки */
 .product-actions {
   margin-top: auto;
   padding-top: 25px;
@@ -125,27 +144,26 @@
   gap: 10px;
 }
 
-.btn-cart {
+.btn-cart,
+.btn-wishlist,
+.btn-out-of-stock {
   border-radius: 20px;
   font-weight: 600;
   padding: 8px 16px;
 }
 
 .btn-wishlist {
-  border-radius: 20px;
-  font-weight: 600;
   padding: 6px 12px;
 }
 
 .btn-out-of-stock {
-  border-radius: 20px;
   width: 100%;
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
   .product-card-wrapper {
-    max-width: 320px; /* ← Для планшетов */
+    max-width: 320px;
   }
   
   .product-image-container {
@@ -172,7 +190,7 @@
 
 @media (max-width: 576px) {
   .product-card-wrapper {
-    max-width: 100%; /* ← На мобильных занимает всю ширину */
+    max-width: 100%;
   }
   
   .product-card {

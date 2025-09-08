@@ -48,6 +48,8 @@ function App() {
                 <Route path="/contacts" element={<ContactsPage/>} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/search" element={<SearchPage />} />
+                <Route path="/" element={<CategoriesPage />} />
+                <Route path="/product/:id" element={<ProductPage />} />
                 
                 {/* Checkout */}
                 <Route path="/checkout" element={
