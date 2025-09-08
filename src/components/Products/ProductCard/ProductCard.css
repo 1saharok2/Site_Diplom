@@ -1,6 +1,8 @@
 .product-card-wrapper {
   width: 100%;
   height: 100%;
+  max-width: 350px; /* ← Добавил максимальную ширину */
+  margin: 0 auto; /* ← Центрирование */
 }
 
 .product-card {
@@ -142,6 +144,10 @@
 
 /* Адаптивность */
 @media (max-width: 768px) {
+  .product-card-wrapper {
+    max-width: 320px; /* ← Для планшетов */
+  }
+  
   .product-image-container {
     height: 220px;
   }
@@ -165,6 +171,10 @@
 }
 
 @media (max-width: 576px) {
+  .product-card-wrapper {
+    max-width: 100%; /* ← На мобильных занимает всю ширину */
+  }
+  
   .product-card {
     margin: 0 5px;
   }
