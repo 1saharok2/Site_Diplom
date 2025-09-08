@@ -231,10 +231,11 @@
   color: #007bff;
   background: none;
   border-bottom: 3px solid #007bff;
+  
 }
 
 .tab-content {
-  padding: 2rem 0;
+  padding: 2rem;
 }
 
 .tab-content h4 {
