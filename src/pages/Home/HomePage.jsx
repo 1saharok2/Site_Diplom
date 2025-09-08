@@ -66,15 +66,14 @@ const HomePage = () => {
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: 'white',
     py: { xs: 8, md: 12 },
-    mt: -8,
     position: 'relative',
-    overflow: 'hidden',
+    overflow: 'hidden'
   }}
 >
   <Container maxWidth="lg">
-    <Grid container spacing={4} alignItems="center" justifyContent="center">
-      {/* Текстовый контент */}
-      <Grid item xs={12} md={5}>
+    <Grid container spacing={4} alignItems="center">
+      {/* Текстовый блок - занимает 6 колонок */}
+      <Grid item xs={12} md={6}>
         <Typography
           variant="h1"
           component="h1"
@@ -82,8 +81,7 @@ const HomePage = () => {
             fontWeight: 'bold',
             fontSize: { xs: '2.5rem', md: '3.5rem' },
             mb: 3,
-            lineHeight: 1.2,
-            textAlign: { xs: 'center', md: 'center' }
+            lineHeight: 1.2
           }}
         >
           Добро пожаловать в наш магазин
@@ -93,20 +91,13 @@ const HomePage = () => {
           sx={{
             mb: 4,
             opacity: 0.9,
-            fontWeight: 300,
-            textAlign: { xs: 'center', md: 'center' }
+            fontWeight: 300
           }}
         >
           Откройте для себя лучшие товары по выгодным ценам. 
           Техника, аксессуары и многое другое с гарантией качества.
         </Typography>
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 2, 
-          flexWrap: 'wrap', 
-          alignItems: 'center',
-          justifyContent: { xs: 'center', md: 'center' }
-        }}>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <Button
             component={Link}
             to="/catalog"
@@ -122,13 +113,12 @@ const HomePage = () => {
               '&:hover': {
                 backgroundColor: '#f8f9fa',
                 transform: 'translateY(-2px)'
-              },
+              }
             }}
           >
             Перейти к покупкам
           </Button>
-          
-           <Button
+          <Button
             component={Link}
             to="/categories"
             variant="outlined"
@@ -140,7 +130,6 @@ const HomePage = () => {
               fontWeight: 'bold',
               borderColor: 'white',
               color: 'white',
-              ml: 'auto', 
               '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 borderColor: 'white'
@@ -151,16 +140,17 @@ const HomePage = () => {
           </Button>
         </Box>
       </Grid>
-      
-      {/* Бокс с фотографией - центрированный */}
-      <Grid item xs={12} md={7}>
+
+      {/* Блок с фотографией - занимает 6 колонок и центрируется */}
+      <Grid item xs={12} md={6}>
         <Box
           sx={{
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             width: '100%',
-            height: '100%'
+            height: '100%',
+            minHeight: 400
           }}
         >
           <Box
@@ -168,13 +158,12 @@ const HomePage = () => {
             src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
             alt="Магазин электроники"
             sx={{
-              width: '90%',
-              maxWidth: 650,
+              width: '100%',
+              maxWidth: 500,
               height: 'auto',
               borderRadius: 3,
               boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
-              display: 'block',
-              mx: 'auto'
+              objectFit: 'cover'
             }}
           />
         </Box>
