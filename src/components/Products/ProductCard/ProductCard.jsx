@@ -1,8 +1,9 @@
 import React from 'react';
 import { Card, Button, Badge } from 'react-bootstrap';
 import { FaHeart, FaShoppingCart, FaStar } from 'react-icons/fa';
-import { Link } from 'react-router-dom'; // ← ДОБАВЬ ЭТОТ ИМПОРТ
+import { Link } from 'react-router-dom';
 import './ProductCard.css';
+
 
 const ProductCard = ({ product }) => {
   const {

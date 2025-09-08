@@ -1,0 +1,309 @@
+.product-page {
+  padding: 20px 0;
+  min-height: 80vh;
+}
+
+/* Хлебные крошки */
+.breadcrumb {
+  background: none;
+  padding: 0;
+  margin-bottom: 2rem;
+}
+
+.breadcrumb-item a {
+  color: #6c757d;
+  text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+  color: #007bff;
+}
+
+.breadcrumb-item.active {
+  color: #495057;
+}
+
+/* Галерея */
+.product-gallery {
+  position: relative;
+}
+
+.main-image-container {
+  position: relative;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f8f9fa;
+}
+
+.main-product-image {
+  width: 100%;
+  height: 400px;
+  object-fit: contain;
+  padding: 20px;
+}
+
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.prev-btn {
+  left: 10px;
+}
+
+.next-btn {
+  right: 10px;
+}
+
+.new-badge,
+.discount-badge {
+  position: absolute;
+  top: 10px;
+  font-size: 0.9rem;
+  padding: 5px 10px;
+}
+
+.new-badge {
+  left: 10px;
+  background: #28a745 !important;
+}
+
+.discount-badge {
+  right: 10px;
+  background: #dc3545 !important;
+}
+
+/* Миниатюры */
+.thumbnails {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+
+.thumbnail {
+  width: 80px;
+  height: 80px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.thumbnail.active {
+  border-color: #007bff;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Информация о товаре */
+.product-info {
+  padding: 0 2rem;
+}
+
+.product-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.rating-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.stars {
+  display: flex;
+  gap: 2px;
+}
+
+.rating-value {
+  font-weight: 600;
+  color: #495057;
+}
+
+.reviews-count {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* Цены */
+.price-section {
+  margin-bottom: 1.5rem;
+}
+
+.current-price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #dc3545;
+  margin-right: 1rem;
+}
+
+.old-price {
+  font-size: 1.5rem;
+  color: #6c757d;
+  text-decoration: line-through;
+}
+
+/* Наличие */
+.availability {
+  margin-bottom: 2rem;
+}
+
+/* Количество и кнопки */
+.action-section {
+  margin-bottom: 2rem;
+}
+
+.quantity-selector {
+  margin-bottom: 1rem;
+}
+
+.quantity-selector label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.quantity-selector .form-select {
+  width: 100px;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.add-to-cart-btn {
+  padding: 12px 24px;
+  font-weight: 600;
+}
+
+.wishlist-btn,
+.share-btn {
+  padding: 10px 20px;
+}
+
+/* Описание */
+.short-description {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.short-description p {
+  margin: 0;
+  color: #6c757d;
+  line-height: 1.6;
+}
+
+/* Табы */
+.product-tabs {
+  margin-top: 2rem;
+}
+
+.product-tabs .nav-link {
+  color: #6c757d;
+  font-weight: 500;
+  padding: 1rem 1.5rem;
+}
+
+.product-tabs .nav-link.active {
+  color: #007bff;
+  background: none;
+  border-bottom: 3px solid #007bff;
+}
+
+.tab-content {
+  padding: 2rem 0;
+}
+
+.tab-content h4 {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+}
+
+/* Характеристики */
+.specs-table {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 1rem;
+}
+
+.spec-row {
+  display: contents;
+}
+
+.spec-name {
+  font-weight: 600;
+  color: #495057;
+  padding: 0.5rem 0;
+}
+
+.spec-value {
+  color: #6c757d;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* Адаптивность */
+@media (max-width: 992px) {
+  .product-info {
+    padding: 0 1rem;
+  }
+  
+  .product-title {
+    font-size: 1.5rem;
+  }
+  
+  .current-price {
+    font-size: 1.5rem;
+  }
+  
+  .old-price {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-gallery,
+  .product-info {
+    padding: 0;
+  }
+  
+  .main-product-image {
+    height: 300px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .specs-table {
+    grid-template-columns: 1fr;
+  }
+  
+  .spec-name {
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 0.25rem;
+  }
+}
