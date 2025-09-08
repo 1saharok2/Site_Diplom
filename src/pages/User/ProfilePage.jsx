@@ -10,18 +10,34 @@ import {
   Button,
   Alert,
   Grid,
-  Card,
-  CardContent,
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
-import { Edit, Save, Cancel } from '@mui/icons-material';
+import {
+  Edit,
+  Save,
+  Cancel,
+  History,
+  Favorite,
+  RateReview,
+  LocationOn,
+  Payment,
+  Security
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 const ProfilePage = () => {
   const { currentUser, updateProfile } = useAuth();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: currentUser?.name || '',
     email: currentUser?.email || '',
-    phone: currentUser?.phone || ''
+    phone: currentUser?.phone || '',
+    address: currentUser?.address || ''
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -30,7 +46,8 @@ const ProfilePage = () => {
     setFormData({
       name: currentUser?.name || '',
       email: currentUser?.email || '',
-      phone: currentUser?.phone || ''
+      phone: currentUser?.phone || '',
+      address: currentUser?.address || ''
     });
     setIsEditing(true);
   };
@@ -62,6 +79,51 @@ const ProfilePage = () => {
     setLoading(false);
   };
 
+  const quickActions = [
+    {
+      icon: <History />,
+      title: 'История заказов',
+      description: 'Просмотр ваших предыдущих заказов',
+      onClick: () => navigate('/orders'),
+      color: 'primary.main'
+    },
+    {
+      icon: <Favorite />,
+      title: 'Избранные товары',
+      description: 'Ваши сохраненные товары',
+      onClick: () => navigate('/wishlist'),
+      color: 'error.main'
+    },
+    {
+      icon: <RateReview />,
+      title: 'Мои отзывы',
+      description: 'Просмотр и управление отзывами',
+      onClick: () => navigate('/reviews'),
+      color: 'warning.main'
+    },
+    {
+      icon: <LocationOn />,
+      title: 'Адреса доставки',
+      description: 'Управление адресами доставки',
+      onClick: () => navigate('/addresses'),
+      color: 'success.main'
+    },
+    {
+      icon: <Payment />,
+      title: 'Способы оплаты',
+      description: 'Управление платежными методами',
+      onClick: () => navigate('/payment-methods'),
+      color: 'info.main'
+    },
+    {
+      icon: <Security />,
+      title: 'Безопасность',
+      description: 'Смена пароля и настройки безопасности',
+      onClick: () => navigate('/security'),
+      color: 'secondary.main'
+    }
+  ];
+
   if (!currentUser) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
@@ -71,12 +133,13 @@ const ProfilePage = () => {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
         Личный кабинет
       </Typography>
 
       <Grid container spacing={3}>
+        {/* Основная информация профиля */}
         <Grid item xs={12} md={8}>
           <Paper elevation={3} sx={{ p: 3 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -147,12 +210,23 @@ const ProfilePage = () => {
                   onChange={handleChange}
                   margin="normal"
                 />
+                <TextField
+                  fullWidth
+                  label="Адрес"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  margin="normal"
+                  multiline
+                  rows={3}
+                />
               </Box>
             ) : (
               <Box>
                 <Typography><strong>Имя:</strong> {currentUser.name}</Typography>
                 <Typography><strong>Email:</strong> {currentUser.email}</Typography>
                 <Typography><strong>Телефон:</strong> {currentUser.phone || 'Не указан'}</Typography>
+                <Typography><strong>Адрес:</strong> {currentUser.address || 'Не указан'}</Typography>
                 <Typography><strong>Роль:</strong> {currentUser.role}</Typography>
                 <Typography>
                   <strong>Дата регистрации:</strong>{' '}
@@ -161,36 +235,114 @@ const ProfilePage = () => {
               </Box>
             )}
           </Paper>
+
+          {/* Статистика */}
+          <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
+            <Typography variant="h5" gutterBottom>
+              Статистика
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={6} md={3}>
+                <Box textAlign="center">
+                  <Typography variant="h4" color="primary.main">
+                    5
+                  </Typography>
+                  <Typography variant="body2">Заказов</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <Box textAlign="center">
+                  <Typography variant="h4" color="secondary.main">
+                    12
+                  </Typography>
+                  <Typography variant="body2">Избранное</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <Box textAlign="center">
+                  <Typography variant="h4" color="success.main">
+                    3
+                  </Typography>
+                  <Typography variant="body2">Отзывов</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <Box textAlign="center">
+                  <Typography variant="h4" color="warning.main">
+                    2
+                  </Typography>
+                  <Typography variant="body2">Адреса</Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </Paper>
         </Grid>
 
+        {/* Быстрые действия */}
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Статистика
-              </Typography>
-              <Typography>Заказов: 0</Typography>
-              <Typography>Избранное: 0</Typography>
-              <Typography>Отзывы: 0</Typography>
-            </CardContent>
-          </Card>
+          <Paper elevation={3} sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom>
+              Быстрые действия
+            </Typography>
+            
+            <List>
+              {quickActions.map((action, index) => (
+                <React.Fragment key={index}>
+                  <ListItem 
+                    button 
+                    onClick={action.onClick}
+                    sx={{
+                      borderRadius: 1,
+                      mb: 1,
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        backgroundColor: 'action.hover',
+                        transform: 'translateX(4px)'
+                      }
+                    }}
+                  >
+                    <ListItemIcon sx={{ color: action.color }}>
+                      {action.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={action.title}
+                      secondary={action.description}
+                    />
+                  </ListItem>
+                  {index < quickActions.length - 1 && <Divider />}
+                </React.Fragment>
+              ))}
+            </List>
+          </Paper>
 
-          <Card sx={{ mt: 2 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Быстрые действия
-              </Typography>
-              <Button fullWidth variant="outlined" sx={{ mb: 1 }}>
-                История заказов
-              </Button>
-              <Button fullWidth variant="outlined" sx={{ mb: 1 }}>
-                Избранные товары
-              </Button>
-              <Button fullWidth variant="outlined">
-                Написать отзыв
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Недавняя активность */}
+          <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Недавняя активность
+            </Typography>
+            <List>
+              <ListItem>
+                <ListItemText
+                  primary="Заказ #12345"
+                  secondary="15 января 2024 - 12 500 ₽"
+                />
+              </ListItem>
+              <Divider />
+              <ListItem>
+                <ListItemText
+                  primary="Добавлен в избранное"
+                  secondary="14 января 2024 - Смартфон Samsung"
+                />
+              </ListItem>
+              <Divider />
+              <ListItem>
+                <ListItemText
+                  primary="Оставлен отзыв"
+                  secondary="13 января 2024 - Ноутбук ASUS"
+                />
+              </ListItem>
+            </List>
+          </Paper>
         </Grid>
       </Grid>
     </Container>

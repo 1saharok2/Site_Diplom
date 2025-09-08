@@ -3,31 +3,15 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import Header from './components/Layout/Header/Header';
-import { AuthProvider } from './context/AuthContext';
-import { CartProvider } from './context/CartContext';
-import { ProductsProvider } from './context/ProductsContext';
-import { CategoriesProvider } from './context/CategoriesContext';
-import HomePage from './pages/Home/HomePage';
-import LoginPage from './pages/Auth/LoginPage';
-import RegisterPage from './pages/Auth/RegisterPage';
-import ProfilePage from './pages/User/ProfilePage';
-import AdminRoute from './components/Common/AdminRoute';
-import ProtectedRoute from './components/Common/ProtectedRoute';
-import AdminDashboard from './pages/Admin/Dashboard/AdminDashboard';
-import AdminProducts from './pages/Admin/Products/AdminProducts';
-import AdminOrders from './pages/Admin/Orders/AdminOrders';
-import AdminUsers from './pages/Admin/Users/AdminUsers';
 import AdminLayout from './components/Admin/AdminLayout/AdminLayout';
-import AdminCategories from './pages/Admin/Categories/AdminCategories';
-import CategoriesPage from './pages/Catalog/CategoriesPage/CategoriesPage';
-import CategoryPage from './pages/Catalog/CategoryPage/CategoryPage';
-import ProductPage from './pages/Catalog/ProductPage/ProductPage';
-import AboutPage from './pages/About/AboutPage/AboutPage';
-import ContactsPage from './pages/About/ContactsPage/ContactsPage';
-import CartPage from './pages/Cart/CartPage';
-import CheckoutPage from './pages/Checkout/CheckoutPage';
-import OrderSuccessPage from './pages/OrderSuccess/OrderSuccessPage';
-import ProtectedCheckoutRoute from './components/Common/ProtectedCheckoutRoute';
+import { AdminRoute, ProtectedRoute, ProtectedCheckoutRoute } from './components/Common';
+import { AuthProvider, CartProvider, ProductsProvider, CategoriesProvider } from './context';
+import { LoginPage, RegisterPage } from './pages/Auth';
+import { AdminDashboard, AdminProducts, AdminOrders, AdminUsers, AdminCategories } from './pages/Admin';
+import { CategoriesPage, CategoryPage, ProductPage } from './pages/Catalog';
+import { AboutPage, ContactsPage } from './pages/About';
+import { ProfilePage, OrdersPage, WishlistPage } from './pages/User';
+import { HomePage, CartPage, CheckoutPage, OrderSuccessPage } from './pages';
 import './App.css';
 
 const theme = createTheme({
@@ -40,7 +24,6 @@ const theme = createTheme({
     },
   },
 });
-
 
 function App() {
   return (
@@ -76,6 +59,21 @@ function App() {
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <ProfilePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/orders" element={
+                  <ProtectedRoute>
+                    <OrdersPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/wishlist" element={
+                  <ProtectedRoute>
+                    <WishlistPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/reviews" element={
+                  <ProtectedRoute>
+                    <div>Мои отзывы</div>
                   </ProtectedRoute>
                 } />
 
