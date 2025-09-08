@@ -1,122 +1,204 @@
-/* Стили для хлебных крошек */
-.breadcrumb-custom {
-  padding: 15px 0;
-  margin-bottom: 1.5rem;
-}
-
-.breadcrumb-custom .breadcrumb-item {
-  font-size: 0.95rem;
-}
-
-.breadcrumb-custom .breadcrumb-item a {
-  color: #007bff;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.breadcrumb-custom .breadcrumb-item a:hover {
-  color: #0056b3;
-  text-decoration: underline;
-}
-
-.breadcrumb-custom .breadcrumb-item.active {
-  color: #6c757d;
-  font-weight: 600;
-}
-
 /* Заголовок категории */
 .category-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem;
-  border-radius: 15px;
-  margin-bottom: 2rem;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  padding: 3rem 2rem;
+  border-radius: 20px;
+  margin: 0 20px 2.5rem 20px; /* ← Добавлены отступы по бокам */
   color: white;
   text-align: center;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.category-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 0.8; }
 }
 
 .category-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  letter-spacing: -0.5px;
+  position: relative;
+  z-index: 2;
+  color: #f8f9fa;
 }
 
 .category-description {
-  font-size: 1.2rem;
-  opacity: 0.9;
-  margin-bottom: 1rem;
-  line-height: 1.5;
+  font-size: 1.3rem;
+  opacity: 0.95;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  font-weight: 400;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  z-index: 2;
+  color: #f8f9fa;
 }
 
 .products-count {
-  font-size: 1.1rem;
-  background: rgba(255,255,255,0.2);
-  padding: 8px 16px;
-  border-radius: 25px;
+  font-size: 1.2rem;
+  background: rgba(255,255,255,0.15);
+  padding: 12px 24px;
+  border-radius: 30px;
   display: inline-block;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255,255,255,0.2);
+  font-weight: 600;
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.products-count:hover {
+  background: rgba(255,255,255,0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+/* Анимация появления */
+.category-header {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: slideUpFadeIn 0.8s ease forwards;
+}
+
+@keyframes slideUpFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Задержка для элементов */
+.category-title {
+  animation: fadeInUp 0.8s ease 0.2s forwards;
+  opacity: 0;
+}
+
+.category-description {
+  animation: fadeInUp 0.8s ease 0.4s forwards;
+  opacity: 0;
+}
+
+.products-count {
+  animation: fadeInUp 0.8s ease 0.6s forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Контейнер фильтров */
 .filters-section {
-  background: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin-bottom: 2rem;
-  border: 1px solid #e9ecef;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 2rem;
+  border-radius: 20px;
+  margin: 0 20px 2.5rem 20px;
+  border: 1px solid rgba(0,123,255,0.1);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
 }
 
-.filters-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  align-items: center;
+.filters-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 2rem;
+  border-radius: 20px;
+  margin: 0 20px 2.5rem 20px;
+  border: 1px solid rgba(0,123,255,0.1);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .filter-label {
-  font-weight: 600;
+  font-weight: 700;
   color: #2c3e50;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   margin-bottom: 0.5rem;
-  font-size: 0.95rem;
 }
 
 .form-select-custom {
-  padding: 12px 16px;
-  border: 2px solid #e9ecef;
-  border-radius: 10px;
+  padding: 14px 18px;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
   font-size: 1rem;
+  font-weight: 500;
   transition: all 0.3s ease;
   background: white;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23007bff' viewBox='0 0 16 16'%3E%3Cpath d='M8 12L2 6h12L8 12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  background-size: 16px;
+  padding-right: 45px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.form-select-custom:hover {
+  border-color: #007bff;
+  box-shadow: 0 0 15px rgba(0,123,255,0.15);
+  transform: translateY(-2px);
 }
 
 .form-select-custom:focus {
   border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+  box-shadow: 0 0 0 4px rgba(0,123,255,0.1);
   outline: none;
 }
-
 /* Стили для switch */
 .switch-container {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 10px;
+  gap: 1rem;
+  padding: 15px 20px;
   background: white;
-  border-radius: 10px;
+  border-radius: 15px;
   border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.switch-container:hover {
+  border-color: #28a745;
+  box-shadow: 0 6px 20px rgba(40,167,69,0.15);
+  transform: translateY(-2px);
 }
 
 .switch {
   position: relative;
   display: inline-block;
-  width: 50px;
-  height: 24px;
+  width: 60px;
+  height: 28px;
 }
 
 .switch input {
@@ -134,14 +216,14 @@
   bottom: 0;
   background-color: #ccc;
   transition: .4s;
-  border-radius: 24px;
+  border-radius: 28px;
 }
 
 .slider:before {
   position: absolute;
   content: "";
-  height: 18px;
-  width: 18px;
+  height: 22px;
+  width: 22px;
   left: 3px;
   bottom: 3px;
   background-color: white;
@@ -150,17 +232,142 @@
 }
 
 input:checked + .slider {
-  background-color: #28a745;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
 }
 
 input:checked + .slider:before {
-  transform: translateX(26px);
+  transform: translateX(32px);
 }
 
 .switch-label {
   font-weight: 600;
   color: #2c3e50;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.switch-container:hover .switch-label {
+  color: #28a745;
+}
+
+/* Кнопка назад */
+.back-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-back-custom {
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 4px 15px rgba(108,117,125,0.25);
+  border: none;
+  cursor: pointer;
+}
+
+.btn-back-custom:hover {
+  background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(108,117,125,0.35);
+  color: white;
+  text-decoration: none;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filters-section {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.filter-group {
+  animation: fadeIn 0.8s ease-out;
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+  .filters-container {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  
+  .back-button {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .filters-section {
+    padding: 1.5rem;
+    margin: 0 15px 2rem 15px;
+  }
+  
+  .filters-container {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+  
+  .back-button {
+    grid-column: span 1;
+  }
+  
+  .form-select-custom {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+  
+  .switch-container {
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .filters-section {
+    padding: 1.2rem;
+    margin: 0 10px 1.5rem 10px;
+    border-radius: 15px;
+  }
+  
+  .filter-label {
+    font-size: 0.9rem;
+  }
+  
+  .btn-back-custom {
+    padding: 12px 20px;
+    font-size: 0.9rem;
+  }
+  
+  .switch {
+    width: 50px;
+    height: 24px;
+  }
+  
+  .slider:before {
+    height: 18px;
+    width: 18px;
+  }
+  
+  input:checked + .slider:before {
+    transform: translateX(26px);
+  }
 }
 
 /* Кнопка назад */
@@ -204,15 +411,22 @@ input:checked + .slider:before {
 
 @media (max-width: 768px) {
   .category-header {
-    padding: 3.5rem;
+    padding: 2.5rem 1.5rem;
+    margin: 0 10px 2rem 10px;
   }
   
   .category-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
   
   .category-description {
     font-size: 1.1rem;
+    padding: 0 10px;
+  }
+  
+  .products-count {
+    font-size: 1.1rem;
+    padding: 10px 20px;
   }
   
   .filters-section {
@@ -222,7 +436,16 @@ input:checked + .slider:before {
 
 @media (max-width: 576px) {
   .category-title {
-    font-size: 1.75rem;
+    font-size: 1.8rem;
+  }
+  
+  .category-description {
+    font-size: 1rem;
+  }
+  
+  .products-count {
+    font-size: 1rem;
+    padding: 8px 16px;
   }
   
   .filters-container {
@@ -256,11 +479,8 @@ input:checked + .slider:before {
 .products-grid .product-card .card-title {
   min-height: 48px;
   display: -webkit-box;
-  display: box;              /* стандартное свойство */
   -webkit-line-clamp: 2;
-  line-clamp: 2;             /* стандартное свойство */
   -webkit-box-orient: vertical;
-  box-orient: vertical;      /* стандартное свойство */
   overflow: hidden;
 }
 
@@ -336,4 +556,29 @@ input:checked + .slider:before {
     padding: 2rem;
     margin: 0 10px;
   }
+}
+
+/* Hover эффекты для select */
+.form-select-custom:hover {
+  border-color: #5a67d8;
+  box-shadow: 0 0 8px rgba(102,126,234,0.3);
+}
+
+/* Hover для switch-container */
+.switch-container:hover {
+  border-color: #28a745;
+  box-shadow: 0 4px 12px rgba(40,167,69,0.2);
+}
+
+/* Hover для карточек товаров */
+.products-grid .product-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+/* Добавим тень и hover для кнопки "Посмотреть другие категории" */
+.back-to-categories-btn:hover {
+  box-shadow: 0 8px 20px rgba(0,123,255,0.3);
+  transform: translateY(-3px) scale(1.05);
 }
