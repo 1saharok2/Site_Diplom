@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import Header from './components/Layout/Header/Header';
+import Footer from './components/Layout/Footer/Footer';
 import AdminLayout from './components/Admin/AdminLayout/AdminLayout';
 import { AdminRoute, ProtectedRoute, ProtectedCheckoutRoute } from './components/Common';
 import { AuthProvider, CartProvider, ProductsProvider, CategoriesProvider } from './context';
@@ -101,6 +102,7 @@ function App() {
                 } />
               </Routes>
             </main>
+            <Footer/>
           </div>
         </Router>
       </CartProvider>

@@ -412,58 +412,6 @@ const HomePage = () => {
           </Button>
         </Box>
       </Container>
-
-      {/* CTA секция */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #2d3748 0%, #4a5568 100%)',
-          color: 'white',
-          py: 8
-        }}
-      >
-        <Container>
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={8}>
-              <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold' }}>
-                Подпишитесь на рассылку
-              </Typography>
-              <Typography variant="h6" sx={{ opacity: 0.9, mb: 3 }}>
-                Получайте первыми информацию о новых поступлениях и специальных предложениях
-              </Typography>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <TextField
-                  placeholder="Ваш email"
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    flexGrow: 1,
-                    backgroundColor: 'white',
-                    borderRadius: 1,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 1
-                    }
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  size="large"
-                  sx={{
-                    px: 4,
-                    backgroundColor: 'primary.main',
-                    '&:hover': {
-                      backgroundColor: 'primary.dark'
-                    }
-                  }}
-                >
-                  Подписаться
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
     </Box>
   );
 };
