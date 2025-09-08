@@ -19,19 +19,7 @@ const ProductCard = ({ product }) => {
   return (
     <div className="product-card-wrapper">
       <Card className="product-card">
-        {/* Бейджи */}
-        <div className="product-badges">
-          {isNew && (
-            <Badge bg="success" className="product-badge">
-              Новинка
-            </Badge>
-          )}
-          {discount > 0 && (
-            <Badge bg="danger" className="product-badge">
-              -{discount}%
-            </Badge>
-          )}
-        </div>
+
 
         {/* Картинка товара */}
         <div className="product-image-container">

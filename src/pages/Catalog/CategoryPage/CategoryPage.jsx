@@ -2,18 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   Container, 
-  Row, 
-  Col, 
   Spinner, 
   Alert, 
-  Form, 
   Button, 
   Breadcrumb 
 } from 'react-bootstrap';
 import { getCategoryBySlug, getProductsByCategory } from '../../../services/categoryService';
 import './CategoryPage.css';
 import ProductCard from '../../../components/Products/ProductCard/ProductCard';
-
 
 const CategoryPage = () => {
   const { slug } = useParams();
@@ -105,62 +101,62 @@ const CategoryPage = () => {
 
   return (
     <Container className="category-page">
-      {/* Хлебные крошки */}
-      <Breadcrumb className="mb-4">
-        <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/" }}>Главная</Breadcrumb.Item>
-        <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/catalog" }}>Каталог</Breadcrumb.Item>
-        <Breadcrumb.Item active>{category.name}</Breadcrumb.Item>
-      </Breadcrumb>
+
 
       {/* Заголовок категории */}
-      <Row className="mb-4">
-        <Col>
-          <h1 className="display-5 fw-bold">{category.name}</h1>
-          <p className="lead text-muted">{category.description}</p>
-          <p className="text-primary fw-semibold">
-            Найдено товаров: {filteredAndSortedProducts.length}
-          </p>
-        </Col>
-      </Row>
-
-      {/* Фильтры и сортировка */}
-      <div className="filters-container">
-        <div className="filter-group">
-          <select 
-            value={sortBy} 
-            onChange={(e) => setSortBy(e.target.value)}
-            className="form-select"
-          >
-            <option value="name">По названию</option>
-            <option value="price-asc">Цена по возрастанию</option>
-            <option value="price-desc">Цена по убыванию</option>
-            <option value="rating">По рейтингу</option>
-            <option value="newest">Сначала новинки</option>
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <label className="switch">
-            <input
-              type="checkbox"
-              id="stock-filter"
-              checked={filterInStock}
-              onChange={(e) => setFilterInStock(e.target.checked)}
-            />
-            <span className="slider"></span>
-            <span className="switch-label">Только в наличии</span>
-          </label>
-        </div>
-
-        <div className="filter-group back-button">
-          <Link to="/catalog" className="btn-back">
-            ← Все категории
-          </Link>
+      <div className="category-header">
+        <h1 className="category-title">{category.name}</h1>
+        <p className="category-description">{category.description}</p>
+        <div className="products-count">
+          Найдено товаров: {filteredAndSortedProducts.length}
         </div>
       </div>
 
-      {/* Список товаров - ТОЛЬКО ОДИН РАЗ! */}
-      <div className="products-grid-container">
+      {/* Фильтры и сортировка */}
+      <div className="filters-section">
+        <div className="filters-container">
+          <div className="filter-group">
+            <label className="filter-label" htmlFor="sort-select">Сортировка</label>
+            <select 
+              id="sort-select"
+              aria-label="Сортировка товаров"
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)}
+              className="form-select-custom"
+            >
+              <option value="name">По названию</option>
+              <option value="price-asc">Цена по возрастанию</option>
+              <option value="price-desc">Цена по убыванию</option>
+              <option value="rating">По рейтингу</option>
+              <option value="newest">Сначала новинки</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <div className="switch-container">
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  id="stock-filter"
+                  checked={filterInStock}
+                  onChange={(e) => setFilterInStock(e.target.checked)}
+                />
+                <span className="slider"></span>
+              </label>
+              <span className="switch-label">Только в наличии</span>
+            </div>
+          </div>
+
+          <div className="filter-group back-button">
+            <Link to="/catalog" className="btn-back-custom">
+              ← Все категории
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Список товаров */}
+      <div className="products-section">
         {filteredAndSortedProducts.length === 0 ? (
           <div className="no-products-alert">
             <h4>Товары не найдены</h4>
