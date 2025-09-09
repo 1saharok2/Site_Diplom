@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fa';
 import { getProductById } from '../../../services/categoryService';
 import './ProductPage.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -19,6 +20,7 @@ const ProductPage = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isInWishlist, setIsInWishlist] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -57,14 +59,13 @@ const ProductPage = () => {
   };
 
   const handleAddToCart = () => {
-    // Логика добавления в корзину
+    setIsInCart(true);
+    setTimeout(() => setIsInCart(false), 600);
     console.log('Добавлено в корзину:', { product, quantity });
-    // Здесь можно добавить вызов контекста корзины или Redux
   };
 
   const handleToggleWishlist = () => {
     setIsInWishlist(!isInWishlist);
-    // Логика добавления/удаления из избранного
   };
 
   if (loading) {
@@ -179,30 +180,41 @@ const ProductPage = () => {
         <Col lg={6} className="product-info">
           <h1 className="product-title">{product.name}</h1>
 
-          {/* Рейтинг и отзывы */}
-          <div className="rating-section">
-            <div className="stars">
-              {[...Array(5)].map((_, index) => (
-                <FaStar 
-                  key={index}
-                  color={index < Math.floor(product.rating) ? '#ffc107' : '#e4e5e9'}
-                />
-              ))}
+          {/* Рейтинг и цена на одном уровне */}
+          <div className="rating-price-container">
+            {/* Рейтинг и отзывы */}
+            <div className="rating-section">
+              <div className="stars-container">
+                <div className="stars">
+                  {[...Array(5)].map((_, index) => (
+                    <FaStar 
+                      key={index}
+                      color={index < Math.floor(product.rating) ? '#ffc107' : '#e4e5e9'}
+                      size={16}
+                    />
+                  ))}
+                </div>
+                <span className="rating-value">{product.rating}</span>
+              </div>
+              <span className="reviews-count">({product.reviewsCount} отзывов)</span>
             </div>
-            <span className="rating-value">{product.rating}</span>
-            <span className="reviews-count">({product.reviewsCount} отзывов)</span>
-          </div>
 
-          {/* Цена */}
-          <div className="price-section">
-            <span className="current-price">
-              {product.price.toLocaleString('ru-RU')} ₽
-            </span>
-            {product.oldPrice > product.price && (
-              <span className="old-price">
-                {product.oldPrice.toLocaleString('ru-RU')} ₽
+            {/* Цена */}
+            <div className="price-section">
+              <span className="current-price">
+                {product.price.toLocaleString('ru-RU')} ₽
               </span>
-            )}
+              {product.oldPrice > product.price && (
+                <>
+                  <span className="old-price">
+                    {product.oldPrice.toLocaleString('ru-RU')} ₽
+                  </span>
+                  <div className="price-saving">
+                    Экономия {((product.oldPrice - product.price) / product.oldPrice * 100).toFixed(0)}%
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Наличие */}
@@ -211,47 +223,33 @@ const ProductPage = () => {
               {product.inStock ? 'В наличии' : 'Нет в наличии'}
             </Badge>
             {product.inStock && (
-              <span className="stock-text ms-2">Доставка завтра</span>
+              <span className="stock-text">Доставка завтра</span>
             )}
           </div>
 
-          {/* Количество и кнопки */}
+          {/* Кнопки действий - БЕЗ quantity-selector */}
           <div className="action-section">
-            <div className="quantity-selector">
-              <Form.Label htmlFor="quantity">Количество:</Form.Label>
-              <Form.Select 
-                id="quantity"
-                value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value))}
-                style={{ width: '100px' }}
-                disabled={!product.inStock}
-              >
-                {[...Array(Math.min(product.inStock ? 10 : 0, 10))].map((_, i) => (
-                  <option key={i + 1} value={i + 1}>{i + 1}</option>
-                ))}
-              </Form.Select>
-            </div>
-
             <div className="action-buttons">
-              <Button 
-                variant="primary" 
-                size="lg" 
-                disabled={!product.inStock}
-                className="add-to-cart-btn"
-                onClick={handleAddToCart}
-              >
-                <FaShoppingCart className="me-2" />
-                Добавить в корзину
-              </Button>
-              
-              <Button 
-                variant={isInWishlist ? "danger" : "outline-secondary"} 
-                className="wishlist-btn"
-                onClick={handleToggleWishlist}
-              >
-                {isInWishlist ? <FaHeart className="me-2" /> : <FaRegHeart className="me-2" />}
-                {isInWishlist ? 'В избранном' : 'В избранное'}
-              </Button>
+              <div className="product-page-buttons">
+                <Button 
+                  variant="primary" 
+                  size="lg" 
+                  disabled={!product.inStock}
+                  className={`add-to-cart-btn ${isInCart ? 'added' : ''}`}
+                  onClick={handleAddToCart}
+                >
+                  <FaShoppingCart className="me-2" />
+                  {isInCart ? 'Добавлено!' : 'Добавить в корзину'}
+                </Button>
+                
+                <Button 
+                  variant={isInWishlist ? "danger" : "outline-secondary"} 
+                  className={`wishlist-btn ${isInWishlist ? 'added' : ''}`}
+                  onClick={handleToggleWishlist}
+                >
+                  {isInWishlist ? <FaHeart /> : <FaRegHeart />}
+                </Button>
+              </div>
 
               <Button variant="outline-secondary" className="share-btn">
                 <FaShare className="me-2" />

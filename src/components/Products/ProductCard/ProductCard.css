@@ -146,7 +146,8 @@
   justify-content: space-between;
 }
 
-.btn-cart {
+/* ✅ ИСПРАВЛЕНО: Добавлен .product-card к селекторам */
+.product-card .btn-cart {
   border-radius: 25px;
   font-weight: 600;
   padding: 12px 20px;
@@ -160,7 +161,7 @@
   min-width: 120px;
 }
 
-.btn-cart::before {
+.product-card .btn-cart::before {
   content: '';
   position: absolute;
   top: 0;
@@ -171,22 +172,23 @@
   transition: left 0.5s ease;
 }
 
-.btn-cart:hover {
+.product-card .btn-cart:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
   background: linear-gradient(45deg, #0056b3, #004085);
 }
 
-.btn-cart:hover::before {
+.product-card .btn-cart:hover::before {
   left: 100%;
 }
 
-.btn-cart:active {
+.product-card .btn-cart:active {
   transform: translateY(0);
   box-shadow: 0 3px 10px rgba(0, 123, 255, 0.3);
 }
 
-.btn-wishlist {
+/* ✅ ИСПРАВЛЕНО: Добавлен .product-card к селекторам */
+.product-card .btn-wishlist {
   border-radius: 50%;
   width: 50px;
   height: 50px;
@@ -202,7 +204,7 @@
   flex-shrink: 0;
 }
 
-.btn-wishlist:hover {
+.product-card .btn-wishlist:hover {
   border-color: #dc3545;
   background: #fff5f5;
   color: #dc3545;
@@ -210,21 +212,20 @@
   box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
 }
 
-.btn-wishlist:active {
+.product-card .btn-wishlist:active {
   transform: scale(0.95);
 }
 
-
 /* Анимация сердца */
-.btn-wishlist .fa-heart {
+.product-card .btn-wishlist .fa-heart {
   transition: all 0.3s ease;
 }
 
-.btn-wishlist:hover .fa-heart {
+.product-card .btn-wishlist:hover .fa-heart {
   color: #dc3545;
 }
 
-.btn-out-of-stock {
+.product-card .btn-out-of-stock {
   border-radius: 25px;
   font-weight: 600;
   padding: 12px 20px;
@@ -234,7 +235,6 @@
   color: #6c757d;
   opacity: 0.7;
 }
-
 
 /* Адаптивность */
 @media (max-width: 768px) {
@@ -283,11 +283,11 @@
 }
 
 /* Эффект при наведении на всю карточку - подсветка кнопок */
-.product-card:hover .btn-cart {
+.product-card:hover .product-card .btn-cart {
   box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
 }
 
-.product-card:hover .btn-wishlist {
+.product-card:hover .product-card .btn-wishlist {
   border-color: #007bff;
   color: #007bff;
 }
@@ -299,18 +299,18 @@
     gap: 10px;
   }
   
-  .btn-cart {
+  .product-card .btn-cart {
     padding: 10px 16px;
     font-size: 0.9rem;
   }
   
-  .btn-wishlist {
+  .product-card .btn-wishlist {
     width: 45px;
     height: 45px;
     justify-self: center;
   }
   
-  .btn-out-of-stock {
+  .product-card .btn-out-of-stock {
     padding: 10px 16px;
     font-size: 0.9rem;
   }
@@ -321,18 +321,18 @@
     grid-template-columns: 1fr auto;
   }
   
-  .btn-cart {
+  .product-card .btn-cart {
     padding: 8px 14px;
     font-size: 0.85rem;
   }
   
-  .btn-wishlist {
+  .product-card .btn-wishlist {
     width: 40px;
     height: 40px;
     align-self: center;
   }
   
-  .btn-wishlist svg {
+  .product-card .btn-wishlist svg {
     width: 16px;
     height: 16px;
   }
@@ -351,7 +351,7 @@
   }
 }
 
-.btn-cart.added {
+.product-card .btn-cart.added {
   animation: cartBounce 0.6s ease;
   background: linear-gradient(45deg, #28a745, #20c997);
 }
@@ -369,7 +369,7 @@
   }
 }
 
-.btn-wishlist.added {
+.product-card .btn-wishlist.added {
   animation: heartPulse 0.4s ease;
   border-color: #dc3545;
   background: #dc3545;
