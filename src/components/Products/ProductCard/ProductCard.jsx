@@ -25,7 +25,6 @@ const ProductCard = ({ product }) => {
     e.stopPropagation();
     setIsInCart(true);
     setTimeout(() => setIsInCart(false), 600);
-    // Здесь добавьте логику добавления в корзину
     console.log('Добавлено в корзину:', product);
   };
 
@@ -33,7 +32,6 @@ const ProductCard = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
     setIsInWishlist(!isInWishlist);
-    // Здесь добавьте логику добавления в избранное
     console.log(isInWishlist ? 'Удалено из избранного' : 'Добавлено в избранное', product);
   };
 

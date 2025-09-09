@@ -28,19 +28,45 @@
   position: relative;
 }
 
-.main-image-container {
-  position: relative;
+/* Стили для карусели продукта */
+.product-carousel {
   margin-bottom: 1rem;
   border-radius: 10px;
   overflow: hidden;
+}
+
+.product-carousel .carousel-inner {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.product-carousel .carousel-item {
+  height: 400px; /* Фиксированная высота как у main-product-image */
+}
+
+.main-image-container {
+  position: relative;
+  height: 100%;
   background: #f8f9fa;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.image-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
 .main-product-image {
-  width: 100%;
-  height: 400px;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
-  padding: 20px;
 }
 
 .nav-btn {
@@ -98,16 +124,28 @@
   overflow: hidden;
   cursor: pointer;
   flex-shrink: 0;
+  background: #f8f9fa;
 }
 
 .thumbnail.active {
   border-color: #007bff;
 }
 
-.thumbnail img {
+.thumbnail-wrapper {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+}
+
+.thumbnail img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 /* Информация о товаре */
@@ -229,7 +267,7 @@
   gap: 1rem;
 }
 
-/* Новые стили для кнопок */
+/* Новые стили для кнопки */
 .product-page-buttons {
   display: flex;
   gap: 12px;
@@ -237,11 +275,11 @@
   margin-bottom: 1rem;
 }
 
-/* Стили для кнопок ТОЛЬКО на этой странице */
+/* ИСПРАВЛЕННЫЕ СТИЛИ ДЛЯ КНОПКИ */
 .product-page .add-to-cart-btn {
   border-radius: 25px;
   font-weight: 600;
-  padding: 12px 24px;
+  padding: 14px 28px;
   border: none;
   background: linear-gradient(45deg, #007bff, #0056b3);
   box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
@@ -252,8 +290,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 50px;
+  min-height: 50px;
   text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Уменьшение иконки */
+.product-page .add-to-cart-btn .fa-shopping-cart {
+  font-size: 0.9em;
+  margin-right: 0.5rem;
 }
 
 .product-page .add-to-cart-btn::before {
@@ -286,6 +331,22 @@
 .product-page .add-to-cart-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ДОБАВЛЕНО: Стили для добавленной кнопки при наведении */
+.product-page .add-to-cart-btn.added:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+  background: linear-gradient(45deg, #218838, #1e7e34);
+}
+
+.product-page .add-to-cart-btn.added:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.product-page .add-to-cart-btn.added:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
 }
 
 .product-page .wishlist-btn {
@@ -357,6 +418,7 @@
 .product-page .add-to-cart-btn.added {
   animation: cartBounce 0.6s ease;
   background: linear-gradient(45deg, #28a745, #20c997);
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
 }
 
 @keyframes heartPulse {
@@ -472,8 +534,12 @@
     padding: 0;
   }
   
-  .main-product-image {
+  .product-carousel .carousel-item {
     height: 300px;
+  }
+  
+  .image-wrapper {
+    padding: 15px;
   }
   
   .action-buttons {
@@ -485,8 +551,8 @@
   }
   
   .product-page .add-to-cart-btn {
-    padding: 10px 20px;
-    height: 45px;
+    padding: 12px 22px;
+    min-height: 45px;
     font-size: 0.9rem;
   }
   
@@ -523,6 +589,23 @@
     border-bottom: 1px solid #e9ecef;
     padding-bottom: 0.25rem;
   }
+  
+  .thumbnail {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .product-carousel .carousel-control-prev,
+  .product-carousel .carousel-control-next {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .product-carousel .carousel-control-prev-icon,
+  .product-carousel .carousel-control-next-icon {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 @media (max-width: 576px) {
@@ -531,9 +614,15 @@
   }
   
   .product-page .add-to-cart-btn {
-    padding: 8px 16px;
-    height: 40px;
+    padding: 10px 18px;
+    min-height: 40px;
     font-size: 0.8rem;
+  }
+  
+  /* Уменьшение иконки на мобильных */
+  .product-page .add-to-cart-btn .fa-shopping-cart {
+    font-size: 0.8em;
+    margin-right: 0.3rem;
   }
   
   .product-page .wishlist-btn {
@@ -560,6 +649,35 @@
   
   .stars-container {
     flex-wrap: wrap;
+  }
+  
+  .product-carousel .carousel-item {
+    height: 250px;
+  }
+  
+  .image-wrapper {
+    padding: 10px;
+  }
+  
+  .thumbnail {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .thumbnail-wrapper {
+    padding: 3px;
+  }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 400px) {
+  .product-carousel .carousel-item {
+    height: 220px;
+  }
+  
+  .thumbnail {
+    width: 50px;
+    height: 50px;
   }
 }
 
@@ -641,12 +759,55 @@
   }
 }
 
-/* Убираем старые стили */
-.add-to-cart-btn.old,
-.wishlist-btn.old,
-.share-btn.old,
-.rating-section.old,
-.price-section.old,
-.availability.old {
-  display: none;
+/* Индикаторы карусели */
+.product-carousel .carousel-indicators {
+  bottom: 10px;
+  margin: 0;
+}
+
+.product-carousel .carousel-indicators button {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin: 0 5px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: none;
+}
+
+.product-carousel .carousel-indicators button.active {
+  background-color: #fff;
+}
+
+/* Стрелки карусели */
+.product-carousel .carousel-control-prev,
+.product-carousel .carousel-control-next {
+  width: 40px;
+  height: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.product-carousel .carousel-control-prev {
+  left: 10px;
+}
+
+.product-carousel .carousel-control-next {
+  right: 10px;
+}
+
+.product-carousel .carousel-control-prev:hover,
+.product-carousel .carousel-control-next:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.product-carousel .carousel-control-prev-icon,
+.product-carousel .carousel-control-next-icon {
+  filter: invert(1);
+  width: 20px;
+  height: 20px;
 }

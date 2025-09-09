@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   Container, Row, Col, Image, Button, Badge, Tabs, Tab, Alert,
-  Spinner, Form
+  Spinner, Form, Carousel
 } from 'react-bootstrap';
 import { 
   FaHeart, FaShoppingCart, FaStar, FaShare, 
@@ -113,45 +113,40 @@ const ProductPage = () => {
       </nav>
 
       <Row>
-        {/* Галерея изображений */}
+          {/* Галерея изображений с каруселью */}
         <Col lg={6} className="product-gallery">
-          <div className="main-image-container">
-            <Image 
-              src={product.images[selectedImageIndex]} 
-              alt={product.name}
-              className="main-product-image"
-              fluid
-              onError={(e) => {
-                e.target.src = 'https://via.placeholder.com/600x600/8767c2/ffffff?text=Нет+изображения';
-              }}
-            />
-            
-            {product.images.length > 1 && (
-              <>
-                <Button 
-                  variant="light" 
-                  className="nav-btn prev-btn"
-                  onClick={handlePrevImage}
-                >
-                  <FaChevronLeft />
-                </Button>
-                <Button 
-                  variant="light" 
-                  className="nav-btn next-btn"
-                  onClick={handleNextImage}
-                >
-                  <FaChevronRight />
-                </Button>
-              </>
-            )}
-
-            {product.isNew && (
-              <Badge bg="success" className="new-badge">Новинка</Badge>
-            )}
-            {product.discount > 0 && (
-              <Badge bg="danger" className="discount-badge">-{product.discount}%</Badge>
-            )}
-          </div>
+          <Carousel 
+            activeIndex={selectedImageIndex} 
+            onSelect={setSelectedImageIndex}
+            interval={null}
+            indicators={product.images.length > 1}
+            className="product-carousel"
+          >
+            {product.images.map((image, index) => (
+              <Carousel.Item key={index}>
+                <div className="main-image-container">
+                  <div className="image-wrapper">
+                    <Image 
+                      src={image} 
+                      alt={product.name}
+                      className="main-product-image"
+                      fluid
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/600x600/8767c2/ffffff?text=Нет+изображения';
+                      }}
+                    />
+                  </div>
+                  
+                  {product.isNew && (
+                    <Badge bg="success" className="new-badge">Новинка</Badge>
+                  )}
+                  {product.discount > 0 && (
+                    <Badge bg="danger" className="discount-badge">-{product.discount}%</Badge>
+                  )}
+                </div>
+              </Carousel.Item>
+            ))}
+          </Carousel>
 
           {/* Миниатюры */}
           {product.images.length > 1 && (
@@ -162,14 +157,16 @@ const ProductPage = () => {
                   className={`thumbnail ${index === selectedImageIndex ? 'active' : ''}`}
                   onClick={() => setSelectedImageIndex(index)}
                 >
-                  <Image 
-                    src={image} 
-                    alt={`${product.name} ${index + 1}`}
-                    fluid
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/80x80/8767c2/ffffff?text=Img';
-                    }}
-                  />
+                  <div className="thumbnail-wrapper">
+                    <Image 
+                      src={image} 
+                      alt={`${product.name} ${index + 1}`}
+                      fluid
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/80x80/8767c2/ffffff?text=Img';
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>

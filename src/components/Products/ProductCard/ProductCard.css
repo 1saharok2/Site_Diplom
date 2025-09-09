@@ -2,7 +2,6 @@
 .product-card-link {
   text-decoration: none;
   color: inherit;
-  display: block;
 }
 
 .product-card-link:hover {
@@ -76,12 +75,13 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  padding: 10px 10px;
 }
 
 .product-name {
   font-size: 1.1rem;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin: 5% 0;
   color: #2c3e50;
   line-height: 1.4;
   height: 50px;
@@ -115,7 +115,7 @@
   font-size: 1.4rem;
   font-weight: 700;
   color: #dc3545;
-  display: block;
+  display: flex;
   margin-bottom: 5px;
 }
 
@@ -123,7 +123,7 @@
   font-size: 1.1rem;
   color: #6c757d;
   text-decoration: line-through;
-  display: block;
+  display: flex;
   margin-bottom: 5px;
 }
 
@@ -144,9 +144,10 @@
   gap: 12px;
   align-items: center;
   justify-content: space-between;
+  margin: 5% 0;
 }
 
-/* ✅ ИСПРАВЛЕНО: Добавлен .product-card к селекторам */
+/* Кнопка "В корзину" - занимает всё доступное пространство */
 .product-card .btn-cart {
   border-radius: 25px;
   font-weight: 600;
@@ -157,8 +158,11 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  flex: 1;
+  flex: 1; /* Занимает всё доступное пространство */
   min-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .product-card .btn-cart::before {
@@ -187,7 +191,7 @@
   box-shadow: 0 3px 10px rgba(0, 123, 255, 0.3);
 }
 
-/* ✅ ИСПРАВЛЕНО: Добавлен .product-card к селекторам */
+/* Кнопка "В избранное" - фиксированной ширины */
 .product-card .btn-wishlist {
   border-radius: 50%;
   width: 50px;
@@ -201,7 +205,7 @@
   color: #6c757d;
   transition: all 0.3s ease;
   position: relative;
-  flex-shrink: 0;
+  flex-shrink: 0; /* Не сжимается */
 }
 
 .product-card .btn-wishlist:hover {
@@ -297,6 +301,7 @@
   .action-buttons {
     grid-template-columns: 1fr;
     gap: 10px;
+    display: flex;
   }
   
   .product-card .btn-cart {
@@ -374,4 +379,20 @@
   border-color: #dc3545;
   background: #dc3545;
   color: white;
+}
+
+.action-buttons {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+.btn-cart {
+  flex: 1 !important;
+}
+
+.btn-wishlist {
+  flex-shrink: 0 !important;
 }
