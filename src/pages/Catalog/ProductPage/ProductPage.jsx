@@ -9,8 +9,9 @@ import {
   FaChevronLeft, FaChevronRight, FaRegHeart
 } from 'react-icons/fa';
 import { getProductById } from '../../../services/categoryService';
-import './ProductPage.css';
+import './ProductPage_css/ProductPage.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import ProductTabs from "C:/Users/Admin/Documents/GitHub/Site_Diplom/src/pages/Catalog/ProductPage/ProductsTabs.jsx";
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -290,53 +291,10 @@ const ProductPage = () => {
           </div>
         </Col>
       </Row>
-
-      {/* Детальная информация */}
+            {/* Детальная информация */}
       <Row className="mt-5">
         <Col>
-          <Tabs defaultActiveKey="description" className="product-tabs">
-            <Tab eventKey="description" title="Описание">
-              <div className="tab-content">
-                <h4>Подробное описание</h4>
-                <p>{product.fullDescription || product.description}</p>
-              </div>
-            </Tab>
-            
-            <Tab eventKey="specifications" title="Характеристики">
-              <div className="tab-content">
-                <h4>Технические характеристики</h4>
-                <div className="specs-table">
-                  <div className="spec-row">
-                    <span className="spec-name">Категория:</span>
-                    <span className="spec-value">{product.category}</span>
-                  </div>
-                  <div className="spec-row">
-                    <span className="spec-name">Рейтинг:</span>
-                    <span className="spec-value">{product.rating}/5</span>
-                  </div>
-                  <div className="spec-row">
-                    <span className="spec-name">Отзывы:</span>
-                    <span className="spec-value">{product.reviewsCount}</span>
-                  </div>
-                  <div className="spec-row">
-                    <span className="spec-name">Артикул:</span>
-                    <span className="spec-value">#{product.id}</span>
-                  </div>
-                </div>
-              </div>
-            </Tab>
-
-            <Tab eventKey="reviews" title="Отзывы">
-              <div className="tab-content">
-                <h4>Отзывы покупателей</h4>
-                {product.reviewsCount > 0 ? (
-                  <p>Система отзывов будет реализована позже</p>
-                ) : (
-                  <p>Пока нет отзывов об этом товаре</p>
-                )}
-              </div>
-            </Tab>
-          </Tabs>
+          <ProductTabs product={product} />
         </Col>
       </Row>
     </Container>
