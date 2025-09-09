@@ -1,0 +1,55 @@
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  width: 250px;
+  background: #2c3e50;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid #34495e;
+}
+
+.admin-sidebar-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.admin-sidebar-nav {
+  flex: 1;
+  padding: 10px 0;
+}
+
+.admin-nav-item {
+  display: block;
+  padding: 12px 20px;
+  color: white;
+  text-decoration: none;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.admin-nav-item:hover {
+  background: #34495e;
+}
+
+.admin-sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid #34495e;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 20px;
+  background: #f8f9fa;
+}

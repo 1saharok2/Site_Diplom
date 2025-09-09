@@ -1,37 +1,62 @@
 import { apiService } from './api';
-import { mockService } from './mockService';
 
-const USE_MOCK_API = true;
+const API_BASE = 'http://localhost:5000/api';
 
 export const adminService = {
-  // Auth
-  login: USE_MOCK_API ? mockService.login : (credentials) => apiService.post('/auth/login', credentials),
-  
   // Products
-  getProducts: USE_MOCK_API ? mockService.getProducts : (params) => apiService.get('/products', { params }),
-  getProduct: USE_MOCK_API ? mockService.getProduct : (id) => apiService.get(`/products/${id}`),
-  createProduct: USE_MOCK_API ? mockService.createProduct : (data) => apiService.post('/products', data),
-  updateProduct: USE_MOCK_API ? mockService.updateProduct : (id, data) => apiService.put(`/products/${id}`, data),
-  deleteProduct: USE_MOCK_API ? mockService.deleteProduct : (id) => apiService.delete(`/products/${id}`),
+  getProducts: () => 
+    fetch(`${API_BASE}/admin/products`).then(res => res.json()),
+
+  createProduct: (productData) =>
+    fetch(`${API_BASE}/admin/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(productData)
+    }).then(res => res.json()),
+
+  updateProduct: (id, productData) =>
+    fetch(`${API_BASE}/admin/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(productData)
+    }).then(res => res.json()),
+
+  deleteProduct: (id) =>
+    fetch(`${API_BASE}/admin/products/${id}`, {
+      method: 'DELETE'
+    }).then(res => res.json()),
 
   // Orders
-  getOrders: USE_MOCK_API ? mockService.getOrders : (params) => apiService.get('/orders', { params }),
-  getOrder: USE_MOCK_API ? mockService.getOrder : (id) => apiService.get(`/orders/${id}`),
-  updateOrderStatus: USE_MOCK_API ? mockService.updateOrderStatus : (id, status) => apiService.patch(`/orders/${id}`, { status }),
+  getOrders: async () => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/orders`);
+      if (!response.ok) throw new Error('Ошибка загрузки заказов');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      return [];
+    }
+  },
+
+  updateOrderStatus: async (orderId, status) => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      if (!response.ok) throw new Error('Ошибка обновления статуса');
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      throw error;
+    }
+  },
 
   // Categories
-  getCategories: USE_MOCK_API ? mockService.getCategories : () => apiService.get('/categories'),
-  getCategory: USE_MOCK_API ? mockService.getCategory : (id) => apiService.get(`/categories/${id}`),
-  createCategory: USE_MOCK_API ? mockService.createCategory : (data) => apiService.post('/categories', data),
-  updateCategory: USE_MOCK_API ? mockService.updateCategory : (id, data) => apiService.put(`/categories/${id}`, data),
-  deleteCategory: USE_MOCK_API ? mockService.deleteCategory : (id) => apiService.delete(`/categories/${id}`),
-
-  // Dashboard
-  getDashboardStats: USE_MOCK_API ? mockService.getDashboardStats : () => apiService.get('/dashboard/stats'),
+  getCategories: () => apiService.getCategories(),
 
   // Users
-  getUsers: USE_MOCK_API ? mockService.getUsers : () => apiService.get('/admin/users'),
-  getUser: USE_MOCK_API ? mockService.getUser : (id) => apiService.get(`/admin/users/${id}`),
-  updateUser: USE_MOCK_API ? mockService.updateUser : (id, data) => apiService.put(`/admin/users/${id}`, data),
-  deleteUser: USE_MOCK_API ? mockService.deleteUser : (id) => apiService.delete(`/admin/users/${id}`),
+  getUsers: () =>
+    fetch(`${API_BASE}/admin/users`).then(res => res.json())
 };

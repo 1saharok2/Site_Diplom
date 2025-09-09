@@ -13,7 +13,7 @@ import {
   DialogActions,
   TextField,
   MenuItem,
-  Chip
+  Snackbar
 } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -22,24 +22,36 @@ import ProductTable from '../../../components/Admin/Products/ProductTable';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]); // ← ДОБАВЬТЕ ЭТО
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '' });
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories(); // ← ДОБАВЬТЕ ВЫЗОВ ФУНКЦИИ
   }, []);
 
   const fetchProducts = async () => {
     try {
-      const response = await adminService.getProducts();
-      setProducts(response.data);
+      const products = await adminService.getProducts();
+      setProducts(products);
+      setLoading(false);
     } catch (error) {
       setError('Ошибка при загрузке товаров');
-    } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const categoriesData = await adminService.getCategories();
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
     }
   };
 
@@ -48,6 +60,7 @@ const AdminProducts = () => {
       try {
         await adminService.deleteProduct(id);
         setProducts(products.filter(p => p.id !== id));
+        showSnackbar('Товар удален'); // ← ПЕРЕМЕСТИТЕ СЮДА
       } catch (error) {
         setError('Ошибка при удалении товара');
       }
@@ -69,18 +82,28 @@ const AdminProducts = () => {
     setEditingProduct(null);
   };
 
+  const showSnackbar = (message) => {
+    setSnackbar({ open: true, message });
+  };
+
   const handleSubmit = async (formData) => {
     try {
       if (editingProduct) {
         await adminService.updateProduct(editingProduct.id, formData);
+        showSnackbar('Товар обновлен'); // ← ПЕРЕМЕСТИТЕ СЮДА
       } else {
         await adminService.createProduct(formData);
+        showSnackbar('Товар создан'); // ← ПЕРЕМЕСТИТЕ СЮДА
       }
       fetchProducts();
       handleDialogClose();
     } catch (error) {
       setError('Ошибка при сохранении товара');
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
   if (loading) return <CircularProgress />;
@@ -118,19 +141,28 @@ const AdminProducts = () => {
         onClose={handleDialogClose}
         onSubmit={handleSubmit}
         product={editingProduct}
+        categories={categories}
+      />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        message={snackbar.message}
       />
     </Box>
   );
 };
 
-const ProductDialog = ({ open, onClose, onSubmit, product }) => {
+const ProductDialog = ({ open, onClose, onSubmit, product, categories }) => {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
     description: '',
-    category: '',
+    category_slug: '',
+    brand: '',
     stock: '',
-    image: ''
+    images: []
   });
 
   useEffect(() => {
@@ -139,9 +171,20 @@ const ProductDialog = ({ open, onClose, onSubmit, product }) => {
         name: product.name || '',
         price: product.price || '',
         description: product.description || '',
-        category: product.category || '',
+        category_slug: product.category_slug || '',
+        brand: product.brand || '',
         stock: product.stock || '',
-        image: product.image || ''
+        images: product.images || []
+      });
+    } else {
+      setFormData({
+        name: '',
+        price: '',
+        description: '',
+        category_slug: '',
+        brand: '',
+        stock: '',
+        images: []
       });
     }
   }, [product]);
@@ -188,15 +231,23 @@ const ProductDialog = ({ open, onClose, onSubmit, product }) => {
             fullWidth
             label="Категория"
             select
-            value={formData.category}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            value={formData.category_slug}
+            onChange={(e) => setFormData({ ...formData, category_slug: e.target.value })}
             margin="normal"
           >
-            <MenuItem value="smartphones">Смартфоны</MenuItem>
-            <MenuItem value="laptops">Ноутбуки</MenuItem>
-            <MenuItem value="headphones">Наушники</MenuItem>
-            <MenuItem value="accessories">Аксессуары</MenuItem>
+            {categories.map(category => (
+              <MenuItem key={category.slug} value={category.slug}>
+                {category.name}
+              </MenuItem>
+            ))}
           </TextField>
+          <TextField
+            fullWidth
+            label="Бренд"
+            value={formData.brand}
+            onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+            margin="normal"
+          />
           <TextField
             fullWidth
             label="Количество на складе"
@@ -207,10 +258,14 @@ const ProductDialog = ({ open, onClose, onSubmit, product }) => {
           />
           <TextField
             fullWidth
-            label="URL изображения"
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+            label="URL изображений (через запятую)"
+            value={formData.images.join(', ')}
+            onChange={(e) => setFormData({ 
+              ...formData, 
+              images: e.target.value.split(',').map(url => url.trim()).filter(url => url) 
+            })}
             margin="normal"
+            helperText="Введите URL изображений через запятую"
           />
         </DialogContent>
         <DialogActions>

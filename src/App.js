@@ -35,89 +35,97 @@ function App() {
         <ProductsProvider>
           <CategoriesProvider>
             <CartProvider>
-        <Router>
-          <div className="app" style={{
-            display: "flex",
-            flexDirection: 'column',
-            minHeight: '100vh',
-            margin: 0,
-            padding: 0
-          }}>
-            <Header />
-            <main className="main-content">
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<HomePage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/catalog" element={<CategoriesPage/>} />
-                <Route path="/about" element={<AboutPage/>} />
-                <Route path="/contacts" element={<ContactsPage/>} />
-                <Route path="/cart" element={<CartPage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/" element={<CategoriesPage />} />
-                <Route path="/product/:id" element={<ProductPage />} />
-                
-                {/* Checkout */}
-                <Route path="/checkout" element={
-                  <ProtectedCheckoutRoute>
-                    <CheckoutPage />
-                  </ProtectedCheckoutRoute>
-                } />
-                <Route path="/order-success" element={<OrderSuccessPage />} />
+              <Router>
+                <div className="app" style={{
+                  display: "flex",
+                  flexDirection: 'column',
+                  minHeight: '100vh',
+                  margin: 0,
+                  padding: 0
+                }}>
+                  {/* Header не показываем на админских страницах */}
+                  <Routes>
+                    <Route path="/admin/*" element={null} />
+                    <Route path="*" element={<Header />} />
+                  </Routes>
+                  
+                  <main className="main-content">
+                    <Routes>
+                      {/* Public routes */}
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/register" element={<RegisterPage />} />
+                      <Route path="/catalog" element={<CategoriesPage/>} />
+                      <Route path="/about" element={<AboutPage/>} />
+                      <Route path="/contacts" element={<ContactsPage/>} />
+                      <Route path="/cart" element={<CartPage />} />
+                      <Route path="/search" element={<SearchPage />} />
+                      <Route path="/catalog/:slug" element={<CategoryPage />} />
+                      <Route path="/product/:id" element={<ProductPage />} />
+                      
+                      {/* Checkout */}
+                      <Route path="/checkout" element={
+                        <ProtectedCheckoutRoute>
+                          <CheckoutPage />
+                        </ProtectedCheckoutRoute>
+                      } />
+                      <Route path="/order-success" element={<OrderSuccessPage />} />
 
-                {/* Protected user routes */}
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/orders" element={
-                  <ProtectedRoute>
-                    <OrdersPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/wishlist" element={
-                  <ProtectedRoute>
-                    <WishlistPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/reviews" element={
-                  <ProtectedRoute>
-                    <div>Мои отзывы</div>
-                  </ProtectedRoute>
-                } />
+                      {/* Protected user routes */}
+                      <Route path="/profile" element={
+                        <ProtectedRoute>
+                          <ProfilePage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/orders" element={
+                        <ProtectedRoute>
+                          <OrdersPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/wishlist" element={
+                        <ProtectedRoute>
+                          <WishlistPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/reviews" element={
+                        <ProtectedRoute>
+                          <div>Мои отзывы</div>
+                        </ProtectedRoute>
+                      } />
 
-                {/* Catalog routes */}
-                <Route path="/catalog" element={<CategoriesPage />} />
-                <Route path="/catalog/:slug" element={<CategoryPage />} />
-                <Route path="/product/:id" element={<ProductPage />} />
+                      {/* Admin routes */}
+                      <Route path="/admin/*" element={
+                        <AdminRoute>
+                          <AdminLayout>
+                            <Routes>
+                              <Route path="dashboard" element={<AdminDashboard />} />
+                              <Route path="products" element={<AdminProducts />} />
+                              <Route path="orders" element={<AdminOrders />} />
+                              <Route path="users" element={<AdminUsers />} />
+                              <Route path="categories" element={<AdminCategories />} />
+                              <Route path="" element={<Navigate to="dashboard" />} />
+                            </Routes>
+                          </AdminLayout>
+                        </AdminRoute>
+                      } />
 
-                {/* Admin routes */}
-                <Route path="/admin/*" element={
-                  <AdminRoute>
-                    <AdminLayout>
-                      <Routes>
-                        <Route path="dashboard" element={<AdminDashboard />} />
-                        <Route path="products" element={<AdminProducts />} />
-                        <Route path="orders" element={<AdminOrders />} />
-                        <Route path="users" element={<AdminUsers />} />
-                        <Route path="categories" element={<AdminCategories />} />
-                        <Route path="" element={<Navigate to="dashboard" />} />
-                      </Routes>
-                    </AdminLayout>
-                  </AdminRoute>
-                } />
-              </Routes>
-            </main>
-            <Footer/>
-          </div>
-        </Router>
-      </CartProvider>
+                      {/* Redirect to home for unknown routes */}
+                      <Route path="*" element={<Navigate to="/" />} />
+                    </Routes>
+                  </main>
+                  
+                  {/* Footer не показываем на админских страницах */}
+                  <Routes>
+                    <Route path="/admin/*" element={null} />
+                    <Route path="*" element={<Footer />} />
+                  </Routes>
+                </div>
+              </Router>
+            </CartProvider>
           </CategoriesProvider>
         </ProductsProvider>
-    </AuthProvider>
-  </ThemeProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
