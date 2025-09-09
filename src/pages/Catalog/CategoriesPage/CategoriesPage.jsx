@@ -66,29 +66,30 @@ const CategoriesPage = () => {
       </div>
 
       <div className="categories-grid">
-        {categories.map((category) => (
-          <div key={category.id} className="category-card">
-            <div className="category-image-container">
-              <img 
-                src={category.image} 
-                alt={category.name}
-                className="category-image"
-                onError={(e) => {
-                  // Fallback для локальных изображений
-                  if (category.image.includes('/src/assets/')) {
-                    e.target.src = `https://via.placeholder.com/400x300/007bff/ffffff?text=${encodeURIComponent(category.name)}`;
-                  } else {
-                    e.target.src = 'https://via.placeholder.com/400x300/6c757d/ffffff?text=Изображение';
-                  }
-                }}
-              />
-              <div className="product-count-badge">
-                <span className="badge bg-primary">
-                  {category.productCount} {getProductCountText(category.productCount)}
-                </span>
-              </div>
-            </div>
-            
+            {categories.map((category) => (
+              <div key={category.id} className="category-card">
+                <Link to={`/catalog/${category.slug}`} className="category-image-link">
+                  <div className="category-image-container">
+                    <img 
+                      src={category.image} 
+                      alt={category.name}
+                      className="category-image"
+                      onError={(e) => {
+                        // Fallback для локальных изображений
+                        if (category.image.includes('/src/assets/')) {
+                          e.target.src = `https://via.placeholder.com/400x300/007bff/ffffff?text=${encodeURIComponent(category.name)}`;
+                        } else {
+                          e.target.src = 'https://via.placeholder.com/400x300/6c757d/ffffff?text=Изображение';
+                        }
+                      }}
+                    />
+                    <div className="product-count-badge">
+                      <span className="badge bg-primary">
+                        {category.productCount} {getProductCountText(category.productCount)}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
             <div className="card-body-content">
               <h5 className="category-title" title={category.name}>
                 {category.name}
