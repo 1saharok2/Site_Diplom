@@ -1,0 +1,57 @@
+/* Плавные анимации */
+.admin-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Стили для карточек */
+.admin-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Стили для таблиц */
+.admin-table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.admin-table .MuiTableHead-root {
+  background: linear-gradient(45deg, #1976d2, #2196f3);
+}
+
+.admin-table .MuiTableHead-root .MuiTableCell-root {
+  color: white;
+  font-weight: 600;
+}
+
+/* Кнопки действий */
+.admin-action-btn {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+}
+
+/* Загрузка */
+.admin-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 16px;
+  }
+  
+  .admin-card {
+    margin-bottom: 16px;
+  }
+}

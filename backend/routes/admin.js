@@ -1,26 +1,24 @@
 const express = require('express');
 const supabase = require('../config/supabase');
+const { processProductForDb, processProductFromDb } = require('../utils/productUtils');
+const { saveProductImages, getProductImages, deleteProductImages } = require('../utils/imageUtils');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const router = express.Router();
 
 router.get('/stats', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    // Получаем количество пользователей
     const { count: usersCount } = await supabase
       .from('users')
       .select('*', { count: 'exact' });
 
-    // Получаем количество товаров
     const { count: productsCount } = await supabase
       .from('products')
       .select('*', { count: 'exact' });
 
-    // Получаем количество заказов
     const { count: ordersCount } = await supabase
       .from('orders')
       .select('*', { count: 'exact' });
 
-    // Получаем последние заказы
     const { data: recentOrders } = await supabase
       .from('orders')
       .select('*')
@@ -40,25 +38,25 @@ router.get('/stats', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
-// Получить всех пользователей (только для админов)
 router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { data: users, error } = await supabase
       .from('users')
-      .select('id, email, first_name, last_name, role, created_at')
+      .select('id, email, first_name, last_name, role, is_active, created_at')
       .order('created_at', { ascending: false });
+    
+      if (error) {
+        console.error('Supabase error:', error);
+        return res.status(500).json({ error: 'Ошибка получения пользователей' });
+      }
 
-    if (error) throw error;
+    
+      res.json(users || []);
 
-    res.json({ 
-      success: true,
-      users: users || [] 
-    });
-
-  } catch (error) {
-    console.error('Get users error:', error);
-    res.status(500).json({ error: 'Ошибка получения пользователей' });
-  }
+    } catch (error) {
+      console.error('Get users error:', error);
+      res.status(500).json({ error: 'Ошибка получения пользователей' });
+    }
 });
 
 // Изменить роль пользователя (только для админов)
@@ -95,35 +93,38 @@ router.put('/users/:id/role', authenticateToken, requireAdmin, async (req, res) 
   }
 });
 
-// Получить все продукты (админская версия)
+// Получить все продукты
 router.get('/products', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    console.log('Запрос товаров для админки');
-    
     const { data: products, error } = await supabase
       .from('products')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Ошибка загрузки товаров:', error);
-      return res.status(500).json({ error: 'Ошибка загрузки товаров' });
-    }
+    if (error) throw error;
 
-    console.log(`Отправлено товаров: ${products?.length || 0}`);
-    res.json(products || []);
-    
+    const productsWithImages = await Promise.all(
+      products.map(async (product) => {
+        const images = await getProductImages(product.id);
+        return {
+          ...product,
+          images: images.map(img => img.image_url)
+        };
+      })
+    );
+
+    res.json(productsWithImages);
+
   } catch (error) {
-    console.error('Ошибка сервера:', error);
-    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    console.error('Error getting products:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Получить один товар (для админки)
+// Получить один товар 
 router.get('/products/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(`Запрос товара для админки ID: ${id}`);
     
     const { data: product, error } = await supabase
       .from('products')
@@ -140,7 +141,8 @@ router.get('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
       return res.status(404).json({ error: 'Товар не найден' });
     }
 
-    res.json(product);
+    const processedProduct = processProductFromDb(product);
+    res.json(processedProduct);
     
   } catch (error) {
     console.error('Ошибка сервера:', error);
@@ -149,55 +151,123 @@ router.get('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
 });
 
 // Создать новый продукт
-router.post('/products', requireAdmin, async (req, res) => {
+router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const productData = req.body;
-    const { data, error } = await supabase
+    const images = productData.images || [];
+    delete productData.images;
+
+    const { data: product, error } = await supabase
       .from('products')
-      .insert(productData)
-      .select()
+      .insert({
+        ...productData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select('*')
       .single();
 
     if (error) throw error;
-    res.status(201).json(data);
+
+    if (images.length > 0) {
+      await saveProductImages(product.id, images);
+    }
+
+    const productWithImages = await getProductWithImages(product.id);
+    res.status(201).json(productWithImages);
+
   } catch (error) {
+    console.error('Error creating product:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 // Обновить продукт
-router.put('/products/:id', requireAdmin, async (req, res) => {
+router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const productData = req.body;
-    
-    const { data, error } = await supabase
+    const images = productData.images || [];
+    delete productData.images; // Удаляем images из основного продукта
+
+    // Обновляем продукт
+    const { data: product, error } = await supabase
       .from('products')
-      .update(productData)
+      .update({
+        ...productData,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
-      .select()
+      .select('*')
       .single();
 
     if (error) throw error;
-    res.json(data);
+
+    if (images.length > 0) {
+      await saveProductImages(id, images);
+    }
+
+    const productWithImages = await getProductWithImages(id);
+    res.json(productWithImages);
+
   } catch (error) {
+    console.error('Error updating product:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
+// Вспомогательная функция для получения продукта с изображениями
+async function getProductWithImages(productId) {
+  try {
+    // Получаем продукт
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .single();
+
+    if (productError) throw productError;
+    if (!product) return null;
+
+    // Получаем изображения продукта
+    const { data: images, error: imagesError } = await supabase
+      .from('product_images')
+      .select('image_url, is_main, sort_order')
+      .eq('product_id', productId)
+      .order('sort_order', { ascending: true });
+
+    if (imagesError) throw imagesError;
+
+    // Формируем ответ с массивом URL изображений
+    return {
+      ...product,
+      images: images.map(img => img.image_url) || []
+    };
+
+  } catch (error) {
+    console.error('Error getting product with images:', error);
+    throw error;
+  }
+}
+
 // Удалить продукт
-router.delete('/products/:id', requireAdmin, async (req, res) => {
+router.delete('/products/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    
+
+    await deleteProductImages(id);
+
     const { error } = await supabase
       .from('products')
       .delete()
       .eq('id', id);
 
     if (error) throw error;
-    res.json({ message: 'Product deleted successfully' });
+
+    res.json({ message: 'Товар и его изображения успешно удалены' });
+
   } catch (error) {
+    console.error('Error deleting product:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -234,6 +304,52 @@ router.put('/orders/:id', requireAdmin, async (req, res) => {
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/stats', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    // Получаем количество заказов
+    const { count: ordersCount } = await supabase
+      .from('orders')
+      .select('*', { count: 'exact' });
+
+    // Получаем количество товаров
+    const { count: productsCount } = await supabase
+      .from('products')
+      .select('*', { count: 'exact' });
+
+    // Получаем количество пользователей
+    const { count: usersCount } = await supabase
+      .from('users')
+      .select('*', { count: 'exact' });
+
+    // Получаем общую сумму продаж
+    const { data: salesData } = await supabase
+      .from('orders')
+      .select('total_amount')
+      .eq('status', 'delivered');
+
+    const totalSales = salesData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+
+    // Получаем последние 5 заказов
+    const { data: recentOrders } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    res.json({
+      orders: ordersCount || 0,
+      products: productsCount || 0,
+      users: usersCount || 0,
+      sales: totalSales,
+      recentOrders: recentOrders || []
+    });
+
+  } catch (error) {
+    console.error('Admin stats error:', error);
+    res.status(500).json({ error: 'Ошибка получения статистики' });
   }
 });
 

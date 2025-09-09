@@ -1,37 +1,75 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import './AdminLayout.css';
+import React, { useState } from 'react';
+import {
+  Box,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Notifications as NotificationsIcon,
+  AccountCircle as AccountIcon
+} from '@mui/icons-material';
+import Sidebar from '../Sidebar';
 
 const AdminLayout = ({ children }) => {
-  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    window.location.href = '/login';
+  };
 
   return (
-    <div className="admin-layout">
-      <aside className="admin-sidebar">
-        <div className="admin-sidebar-header">
-          <h2>Админ Панель</h2>
-        </div>
-        <nav className="admin-sidebar-nav">
-          <Link to="/admin/dashboard" className="admin-nav-item">Дашборд</Link>
-          <Link to="/admin/products" className="admin-nav-item">Товары</Link>
-          <Link to="/admin/orders" className="admin-nav-item">Заказы</Link>
-          <Link to="/admin/users" className="admin-nav-item">Пользователи</Link>
-          <Link to="/admin/categories" className="admin-nav-item">Категории</Link>
-        </nav>
-        <div className="admin-sidebar-footer">
-          <button 
-            onClick={() => navigate('/')} 
-            className="admin-nav-item"
-          >
-            ← На сайт
-          </button>
-        </div>
-      </aside>
-      
-      <main className="admin-main">
-        {children}
-      </main>
-    </div>
+    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+      {/* Сайдбар */}
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onLogout={handleLogout}
+      />
+
+      {/* Основной контент */}
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        {/* Шапка для мобильных */}
+        <AppBar 
+          position="static" 
+          elevation={0}
+          sx={{ 
+            display: { xs: 'block', md: 'none' },
+            mb: 2
+          }}
+        >
+          <Toolbar>
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" sx={{ flexGrow: 1 }}>
+              Админ Панель
+            </Typography>
+            <IconButton color="inherit">
+              <NotificationsIcon />
+            </IconButton>
+            <IconButton color="inherit">
+              <AccountIcon />
+            </IconButton>
+          </Toolbar>
+        </AppBar>
+
+        {/* Контент */}
+        <Box sx={{ 
+          maxWidth: 1200,
+          margin: '0 auto'
+        }}>
+          {children}
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
