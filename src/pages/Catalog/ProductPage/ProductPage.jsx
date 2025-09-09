@@ -11,7 +11,7 @@ import {
 import { getProductById } from '../../../services/categoryService';
 import './ProductPage_css/ProductPage.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import ProductTabs from "C:/Users/Admin/Documents/GitHub/Site_Diplom/src/pages/Catalog/ProductPage/ProductsTabs.jsx";
+import ProductTabs from "./ProductsTabs.jsx";
 
 const ProductPage = () => {
   const { id } = useParams();
