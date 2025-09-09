@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Button, Spinner, Alert } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getCategories } from '../../../services/categoryService';
 import './CategoriesPage.css';
 
@@ -8,6 +8,7 @@ const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -31,6 +32,11 @@ const CategoriesPage = () => {
     if (count % 10 === 1 && count % 100 !== 11) return 'товар';
     if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'товара';
     return 'товаров';
+  };
+
+  // Обработчик клика по всей карточке
+  const handleCardClick = (categorySlug) => {
+    navigate(`/catalog/${categorySlug}`);
   };
 
   if (loading) {
@@ -66,30 +72,33 @@ const CategoriesPage = () => {
       </div>
 
       <div className="categories-grid">
-            {categories.map((category) => (
-              <div key={category.id} className="category-card">
-                <Link to={`/catalog/${category.slug}`} className="category-image-link">
-                  <div className="category-image-container">
-                    <img 
-                      src={category.image} 
-                      alt={category.name}
-                      className="category-image"
-                      onError={(e) => {
-                        // Fallback для локальных изображений
-                        if (category.image.includes('/src/assets/')) {
-                          e.target.src = `https://via.placeholder.com/400x300/007bff/ffffff?text=${encodeURIComponent(category.name)}`;
-                        } else {
-                          e.target.src = 'https://via.placeholder.com/400x300/6c757d/ffffff?text=Изображение';
-                        }
-                      }}
-                    />
-                    <div className="product-count-badge">
-                      <span className="badge bg-primary">
-                        {category.productCount} {getProductCountText(category.productCount)}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
+        {categories.map((category) => (
+          <div 
+            key={category.id} 
+            className="category-card"
+            onClick={() => handleCardClick(category.slug)}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="category-image-container">
+              <img 
+                src={category.image} 
+                alt={category.name}
+                className="category-image"
+                onError={(e) => {
+                  if (category.image.includes('/src/assets/')) {
+                    e.target.src = `https://via.placeholder.com/400x300/007bff/ffffff?text=${encodeURIComponent(category.name)}`;
+                  } else {
+                    e.target.src = 'https://via.placeholder.com/400x300/6c757d/ffffff?text=Изображение';
+                  }
+                }}
+              />
+              <div className="product-count-badge">
+                <span className="badge bg-primary">
+                  {category.productCount} {getProductCountText(category.productCount)}
+                </span>
+              </div>
+            </div>
+            
             <div className="card-body-content">
               <h5 className="category-title" title={category.name}>
                 {category.name}
@@ -97,12 +106,16 @@ const CategoriesPage = () => {
               <p className="category-description" title={category.description}>
                 {category.description || 'Описание категории появится скоро'}
               </p>
-              <Link 
-                to={`/catalog/${category.slug}`}
+              
+              <div 
                 className="btn btn-primary view-products-btn"
+                onClick={(e) => {
+                  e.stopPropagation(); // Останавливаем всплытие события
+                  navigate(`/catalog/${category.slug}`);
+                }}
               >
                 Смотреть товары
-              </Link>
+              </div>
             </div>
           </div>
         ))}
