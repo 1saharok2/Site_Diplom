@@ -20,26 +20,51 @@ export const adminService = {
 
   // Products
   getProducts: () => 
-    fetch(`${API_BASE}/admin/products`).then(res => res.json()),
+    fetch(`${API_BASE}/admin/products`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    }).then(res => {
+      if (!res.ok) throw new Error('Ошибка загрузки товаров');
+      return res.json();
+    }),
 
   createProduct: (productData) =>
     fetch(`${API_BASE}/admin/products`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      },
       body: JSON.stringify(productData)
-    }).then(res => res.json()),
+    }).then(res => {
+      if (!res.ok) throw new Error('Ошибка создания товара');
+      return res.json();
+    }),
 
   updateProduct: (id, productData) =>
     fetch(`${API_BASE}/admin/products/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      },
       body: JSON.stringify(productData)
-    }).then(res => res.json()),
+    }).then(res => {
+      if (!res.ok) throw new Error('Ошибка обновления товара');
+      return res.json();
+    }),
 
   deleteProduct: (id) =>
     fetch(`${API_BASE}/admin/products/${id}`, {
-      method: 'DELETE'
-    }).then(res => res.json()),
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    }).then(res => {
+      if (!res.ok) throw new Error('Ошибка удаления товара');
+      return res.json();
+    }),
 
   // Orders
   getOrders: async () => {
@@ -72,6 +97,70 @@ export const adminService = {
   getCategories: () => apiService.getCategories(),
 
   // Users
-  getUsers: () =>
-    fetch(`${API_BASE}/admin/users`).then(res => res.json())
+  getUsers: async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        console.warn('Токен не найден');
+        return []; // Возвращаем пустой массив
+      }
+
+      const response = await fetch(`${API_BASE}/admin/users`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      // Проверяем статус ответа
+      if (!response.ok) {
+        console.error('HTTP error:', response.status);
+        return []; // Возвращаем пустой массив при ошибке
+      }
+      
+      const data = await response.json();
+      console.log('Raw response data:', data);
+      
+      // ✅ УНИВЕРСАЛЬНЫЙ ПАРСЕР ДЛЯ ЛЮБОГО ФОРМАТА ОТВЕТА
+      if (Array.isArray(data)) {
+        return data;
+      } else if (data && Array.isArray(data.users)) {
+        return data.users;
+      } else if (data && Array.isArray(data.data)) {
+        return data.data;
+      } else if (data && data.success && Array.isArray(data.result)) {
+        return data.result;
+      }
+      
+      // Если ни один формат не подошел
+      console.warn('Неизвестный формат ответа:', data);
+      return [];
+      
+    } catch (error) {
+      console.error('Network error:', error);
+      return []; // Всегда возвращаем массив
+    }
+  },
+
+  updateUserRole: async (userId, role) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE}/admin/users/${userId}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ role })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Update role error:', error);
+      throw error;
+    }
+  }
 };

@@ -1,6 +1,6 @@
 // context/ProductsContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { productService } from '../services/productService';
+import { apiService } from '../services/api';
 
 const ProductsContext = createContext();
 
@@ -14,88 +14,78 @@ export const useProducts = () => {
 
 export const ProductsProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
-    category: '',
-    search: '',
-    sort: '',
-    minPrice: '',
-    maxPrice: ''
-  });
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchProducts();
+    fetchInitialData();
   }, []);
 
-  const fetchProducts = async (params = {}) => {
+  const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const response = await productService.getProducts(params);
-      setProducts(response.data);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getProduct = async (id) => {
-    try {
-      const response = await productService.getProduct(id);
-      return response.data;
+      const [productsData, categoriesData] = await Promise.all([
+        apiService.getProducts(),
+        apiService.getCategories()
+      ]);
+      
+      setProducts(productsData || []);
+      setCategories(categoriesData || []);
     } catch (error) {
-      throw new Error(error.message);
-    }
-  };
-
-  const searchProducts = async (searchTerm) => {
-    try {
-      setLoading(true);
-      const response = await productService.searchProducts(searchTerm);
-      setProducts(response.data);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
+      setError('Ошибка загрузки данных');
+      console.error('Fetch error:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const filterByCategory = async (category) => {
+  const getProductById = async (id) => {
     try {
-      setLoading(true);
-      const response = await productService.getProductsByCategory(category);
-      setProducts(response.data);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getPopularProducts = async () => {
-    try {
-      const response = await productService.getPopularProducts();
-      return response.data;
+      const product = await apiService.getProduct(id);
+      return product;
     } catch (error) {
-      throw new Error(error.message);
+      console.error('Error fetching product:', error);
+      throw error;
     }
+  };
+
+  const getProductsByCategory = async (categorySlug) => {
+    try {
+      const productsData = await apiService.getProductsByCategory(categorySlug);
+      return productsData || [];
+    } catch (error) {
+      console.error('Error fetching products by category:', error);
+      return [];
+    }
+  };
+
+  const searchProducts = async (query) => {
+    try {
+      const productsData = await apiService.searchProducts(query);
+      return productsData || [];
+    } catch (error) {
+      console.error('Error searching products:', error);
+      return [];
+    }
+  };
+
+  const refreshData = async () => {
+    await fetchInitialData();
   };
 
   const value = {
+    // Данные
     products,
+    categories,
     loading,
     error,
-    filters,
-    fetchProducts,
-    getProduct,
+    
+    // Методы
+    getProductById,
+    getProductsByCategory,
     searchProducts,
-    filterByCategory,
-    getPopularProducts,
-    setFilters
+    refreshData
   };
 
   return (

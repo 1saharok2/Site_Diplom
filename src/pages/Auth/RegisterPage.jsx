@@ -32,6 +32,37 @@ const RegisterPage = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Очищаем ошибку при изменении поля
+    if (error) setError('');
+  };
+
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      setError('Имя обязательно');
+      return false;
+    }
+
+    if (!formData.email.trim()) {
+      setError('Email обязателен');
+      return false;
+    }
+
+    if (!formData.password) {
+      setError('Пароль обязателен');
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Пароль должен содержать минимум 6 символов');
+      return false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Пароли не совпадают');
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e) => {
@@ -39,31 +70,43 @@ const RegisterPage = () => {
     setLoading(true);
     setError('');
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Пароли не совпадают');
+    try {
+      // Валидация формы
+      if (!validateForm()) {
+        setLoading(false);
+        return;
+      }
+
+      // Шаг 1: Подготовка данных для регистрации
+      const userData = {
+        firstName: formData.name.split(' ')[0], // Берем первое слово как имя
+        lastName: formData.name.split(' ').slice(1).join(' ') || '', // Остальное как фамилию
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone || undefined // Необязательное поле
+      };
+
+      // Шаг 2: Вызов функции регистрации из контекста
+      const result = await register(userData);
+
+      // Шаг 3: Обработка результата
+      if (result.success) {
+        // ✅ Успешная регистрация
+        navigate('/profile', { 
+          replace: true,
+          state: { message: 'Регистрация прошла успешно!' }
+        });
+      } else {
+        setError(result.error || 'Ошибка регистрации');
+      }
+
+    } catch (error) {
+      // Шаг 4: Обработка ошибок
+      console.error('Registration error:', error);
+      setError(error.message || 'Произошла ошибка при регистрации');
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (formData.password.length < 6) {
-      setError('Пароль должен содержать минимум 6 символов');
-      setLoading(false);
-      return;
-    }
-
-    const result = await register({
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      phone: formData.phone
-    });
-
-    if (result.success) {
-      navigate('/profile');
-    } else {
-      setError(result.error);
-    }
-    setLoading(false);
   };
 
   return (
@@ -75,7 +118,7 @@ const RegisterPage = () => {
         justifyContent: 'center',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         padding: 2,
-        marginTop: '-64px' // Компенсируем высоту хедера
+        marginTop: '-64px'
       }}
     >
       <Container 
@@ -109,7 +152,7 @@ const RegisterPage = () => {
           </Typography>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
+            <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
               {error}
             </Alert>
           )}
@@ -117,12 +160,13 @@ const RegisterPage = () => {
           <Box component="form" onSubmit={handleSubmit}>
             <TextField
               fullWidth
-              label="Имя"
+              label="Имя и фамилия"
               name="name"
               value={formData.name}
               onChange={handleChange}
               required
               margin="normal"
+              placeholder="Иван Иванов"
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2
@@ -139,6 +183,7 @@ const RegisterPage = () => {
               onChange={handleChange}
               required
               margin="normal"
+              placeholder="example@mail.com"
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2
@@ -149,11 +194,12 @@ const RegisterPage = () => {
             <TextField
               fullWidth
               type="tel"
-              label="Телефон"
+              label="Телефон (необязательно)"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
               margin="normal"
+              placeholder="+7 (999) 999-99-99"
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2
@@ -170,6 +216,7 @@ const RegisterPage = () => {
               onChange={handleChange}
               required
               margin="normal"
+              helperText="Минимум 6 символов"
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2
@@ -233,6 +280,26 @@ const RegisterPage = () => {
                 >
                   Войти
                 </Link>
+              </Typography>
+            </Box>
+
+            <Box
+              sx={{
+                p: 2,
+                bgcolor: 'grey.100',
+                borderRadius: 2,
+                borderLeft: '4px solid #667eea',
+                mt: 2
+              }}
+            >
+              <Typography variant="body2" sx={{ color: '#333', fontWeight: 600, mb: 1 }}>
+                Демо данные для тестирования:
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem' }}>
+                Email: test@example.com
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666', fontSize: '0.9rem' }}>
+                Пароль: любой от 6 символов
               </Typography>
             </Box>
           </Box>

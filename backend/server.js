@@ -3,16 +3,30 @@ const cors = require('cors');
 const supabase = require('./config/supabase');
 const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
+const categoryRoutes = require('./routes/categories');
+const productRoutes = require('./routes/products');  
+const userRoutes = require('./routes/userRoutes');  
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({ 
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  credentials: true
+ }));
 app.use(express.json());
+app.use('/api/categories', categoryRoutes);
+app.use('/api/products', productRoutes);   
+app.use('/api/users', userRoutes); 
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 
 // Routes
+
+app.get('/', (req, res) => {
+  res.send('API is running...');
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
@@ -74,5 +88,9 @@ app.get('/api/products/:id', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
 });
+
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  credentials: true
+}));

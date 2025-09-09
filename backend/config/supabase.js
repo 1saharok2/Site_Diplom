@@ -15,7 +15,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Проверка подключения
 supabase.from('categories').select('count')
-  .then(result => console.log('✅ Supabase client created successfully'))
-  .catch(error => console.log('❌ Supabase client error:', error.message));
+  .then(result => console.log(''))
+  .catch(error => console.log('', error.message));
 
 module.exports = supabase;

@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { CircularProgress, Box } from '@mui/material';
 
 const AdminRoute = ({ children }) => {
-  const { currentUser, loading } = useAuth();
+  const { isAuthenticated, isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
@@ -15,16 +15,11 @@ const AdminRoute = ({ children }) => {
     );
   }
 
-  console.log('Current user:', currentUser); // Добавим для отладки
-  console.log('User role:', currentUser?.role); // Добавим для отладки
-
-  if (!currentUser) {
-    console.log('No user, redirecting to login');
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (currentUser.role !== 'admin') {
-    console.log('User is not admin, redirecting to home');
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 

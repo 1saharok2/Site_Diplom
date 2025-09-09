@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Container,
@@ -8,7 +8,9 @@ import {
   Card,
   CardContent,
   Button,
-  Chip
+  Chip,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import {
   ShoppingBasket,
@@ -18,13 +20,28 @@ import {
   Star,
   Favorite
 } from '@mui/icons-material';
-import { mockProducts, mockCategories } from '../../data/mockData';
 import { useCart } from '../../context/CartContext';
+import { useProducts } from '../../context/ProductsContext';
 
 const HomePage = () => {
   const { addToCart } = useCart();
-  const featuredProducts = mockProducts.slice(0, 4);
-  const categories = mockCategories;
+  const { products, categories, loading, error, refreshData } = useProducts();
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+
+  console.log('Products:', products); // ← Добавьте для отладки
+  console.log('Categories:', categories); // ← Добавьте для отладки
+  console.log('Loading:', loading); // ← Добавьте для отладки
+  console.log('Error:', error); // ← Добавьте для отладки
+
+  useEffect(() => {
+    // Берем первые 8 товаров как featured или товары с высоким рейтингом
+    if (products.length > 0) {
+      const featured = products
+        .filter(product => product.rating >= 4.0)
+        .slice(0, 2);
+      setFeaturedProducts(featured.length > 0 ? featured : products.slice(0, 8));
+    }
+  }, [products]);
 
   const features = [
     {
@@ -45,16 +62,55 @@ const HomePage = () => {
     {
       icon: <ShoppingBasket sx={{ fontSize: 40 }} />,
       title: 'Широкий ассортимент',
-      description: 'Более 1000 товаров'
+      description: `Более ${products.length} товаров`
     }
   ];
 
   const handleAddToCart = (product) => {
-    addToCart(product);
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images?.[0],
+      quantity: 1
+    });
   };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <Box sx={{ pt: 0 }}>
+
+      {error && (
+        <Alert 
+          severity="warning" 
+          action={
+            <Button color="inherit" onClick={refreshData}>
+              Обновить
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      )}
+
+      {/* Hero Section */}
       <Box
         sx={{
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -222,7 +278,7 @@ const HomePage = () => {
               <Grid item xs={12} sm={6} md={3} key={category.id}>
                 <Card
                   component={Link}
-                  to={`/catalog?category=${category.slug}`}
+                  to={`/catalog/${category.slug}`}
                   sx={{
                     textDecoration: 'none',
                     color: 'inherit',
@@ -237,7 +293,7 @@ const HomePage = () => {
                   <Box
                     sx={{
                       height: 200,
-                      backgroundImage: `url(${category.image})`,
+                      backgroundImage: `url(${category.image_url || '/default-category.jpg'})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       position: 'relative'
@@ -248,7 +304,7 @@ const HomePage = () => {
                       {category.name}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {category.productsCount || 0} товаров
+                      {category.product_count || 0} товаров
                     </Typography>
                   </CardContent>
                 </Card>
@@ -275,127 +331,140 @@ const HomePage = () => {
           </Typography>
         </Box>
 
-        <Grid container spacing={4}>
-          {featuredProducts.map((product) => (
-            <Grid item xs={12} sm={6} md={3} key={product.id}>
-              <Card
-                sx={{
-                  height: '100%',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-8px)',
-                    boxShadow: 6
-                  }
-                }}
-              >
-                <Box
-                  sx={{
-                    position: 'relative',
-                    height: 250,
-                    overflow: 'hidden'
-                  }}
-                >
-                  <Box
-                    component="img"
-                    src={product.image}
-                    alt={product.name}
+        {featuredProducts.length === 0 ? (
+          <Box textAlign="center" py={4}>
+            <Typography variant="h6" color="text.secondary">
+              Товаров пока нет
+            </Typography>
+          </Box>
+        ) : (
+          <>
+            <Grid container spacing={4}>
+              {featuredProducts.map((product) => (
+                <Grid item xs={12} sm={6} md={3} key={product.id}>
+                  <Card
                     sx={{
-                      width: '100%',
                       height: '100%',
-                      objectFit: 'cover'
-                    }}
-                  />
-                  {product.isNew && (
-                    <Chip
-                      label="NEW"
-                      color="primary"
-                      size="small"
-                      sx={{
-                        position: 'absolute',
-                        top: 12,
-                        left: 12
-                      }}
-                    />
-                  )}
-                  <Button
-                    size="small"
-                    sx={{
-                      position: 'absolute',
-                      top: 12,
-                      right: 12,
-                      minWidth: 'auto',
-                      padding: '4px'
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: 6
+                      }
                     }}
                   >
-                    <Favorite sx={{ fontSize: 20 }} />
-                  </Button>
-                </Box>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                    {product.name}
-                  </Typography>
-                  {product.rating && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <Star sx={{ color: 'gold', fontSize: 18, mr: 0.5 }} />
-                      <Typography variant="body2">
-                        {product.rating}
-                      </Typography>
-                    </Box>
-                  )}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <Typography
-                      variant="h6"
+                    <Box
                       sx={{
-                        color: 'primary.main',
-                        fontWeight: 'bold'
+                        position: 'relative',
+                        height: 250,
+                        overflow: 'hidden'
                       }}
                     >
-                      {product.price.toLocaleString()} ₽
-                    </Typography>
-                    {product.oldPrice && (
-                      <Typography
-                        variant="body2"
+                      <Box
+                        component="img"
+                        src={product.images?.[0] || '/default-product.jpg'}
+                        alt={product.name}
                         sx={{
-                          color: 'text.secondary',
-                          textDecoration: 'line-through'
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                        onError={(e) => {
+                          e.target.src = '/default-product.jpg';
+                        }}
+                      />
+                      {product.is_new && (
+                        <Chip
+                          label="NEW"
+                          color="primary"
+                          size="small"
+                          sx={{
+                            position: 'absolute',
+                            top: 12,
+                            left: 12
+                          }}
+                        />
+                      )}
+                      <Button
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: 12,
+                          right: 12,
+                          minWidth: 'auto',
+                          padding: '4px'
                         }}
                       >
-                        {product.oldPrice.toLocaleString()} ₽
+                        <Favorite sx={{ fontSize: 20 }} />
+                      </Button>
+                    </Box>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        {product.name}
                       </Typography>
-                    )}
-                  </Box>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    startIcon={<ShoppingBasket />}
-                    onClick={() => handleAddToCart(product)}
-                    sx={{
-                      py: 1
-                    }}
-                  >
-                    В корзину
-                  </Button>
-                </CardContent>
-              </Card>
+                      {product.rating > 0 && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <Star sx={{ color: 'gold', fontSize: 18, mr: 0.5 }} />
+                          <Typography variant="body2">
+                            {product.rating}
+                          </Typography>
+                        </Box>
+                      )}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color: 'primary.main',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {product.price?.toLocaleString('ru-RU')} ₽
+                        </Typography>
+                        {product.old_price && (
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: 'text.secondary',
+                              textDecoration: 'line-through'
+                            }}
+                          >
+                            {product.old_price?.toLocaleString('ru-RU')} ₽
+                          </Typography>
+                        )}
+                      </Box>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        startIcon={<ShoppingBasket />}
+                        onClick={() => handleAddToCart(product)}
+                        sx={{
+                          py: 1
+                        }}
+                      >
+                        В корзину
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
             </Grid>
-          ))}
-        </Grid>
 
-        <Box sx={{ textAlign: 'center', mt: 6 }}>
-          <Button
-            component={Link}
-            to="/catalog"
-            variant="outlined"
-            size="large"
-            sx={{
-              px: 6,
-              py: 1.5,
-              fontSize: '1.1rem'
-            }}
-          >
-            Смотреть все товары
-          </Button>
-        </Box>
+            <Box sx={{ textAlign: 'center', mt: 6 }}>
+              <Button
+                component={Link}
+                to="/catalog"
+                variant="outlined"
+                size="large"
+                sx={{
+                  px: 6,
+                  py: 1.5,
+                  fontSize: '1.1rem'
+                }}
+              >
+                Смотреть все товары
+              </Button>
+            </Box>
+          </>
+        )}
       </Container>
     </Box>
   );

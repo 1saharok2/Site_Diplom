@@ -73,7 +73,7 @@ const AdminDashboard = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
-        Дашборд
+        Главная
       </Typography>
 
       <Grid container spacing={3}>

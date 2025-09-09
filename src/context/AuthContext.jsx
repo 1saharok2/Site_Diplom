@@ -34,34 +34,25 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      // Шаг 1: Вызов API
       const response = await apiService.login(credentials);
       
-      // Шаг 2: Проверяем структуру ответа
-      console.log('Login response:', response); // для отладки
+      console.log('Login response:', response); 
       
-      // Шаг 3: Правильно извлекаем данные из ответа
       let userData, token;
       
       if (response.user && response.token) {
-        // ✅ Вариант 1: Данные приходят напрямую в response
         userData = response.user;
         token = response.token;
       } else if (response.data && response.data.user) {
-        // ✅ Вариант 2: Данные вложены в response.data
         userData = response.data.user;
         token = response.data.token;
       } else {
-        // ❌ Неизвестная структура ответа
         throw new Error('Неверный формат ответа от сервера');
       }
-
-      // Проверяем, что данные есть
       if (!userData || !token) {
         throw new Error('Отсутствуют данные пользователя или токен');
       }
       
-      // Сохраняем в localStorage и состоянии
       localStorage.setItem('authToken', token);
       localStorage.setItem('userData', JSON.stringify(userData));
       setCurrentUser(userData);
