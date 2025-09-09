@@ -20,7 +20,6 @@ const LoginPage = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -36,20 +35,32 @@ const LoginPage = () => {
     setLoading(true);
     setError('');
 
-    const result = await login(credentials);
-    
-    if (result.success) {
-      const redirectPath = sessionStorage.getItem('redirectAfterLogin');
-    if (redirectPath) {
-      sessionStorage.removeItem('redirectAfterLogin');
-      navigate(redirectPath);
-    } else {
-      navigate(result.user.role === 'admin' ? '/admin' : '/profile');
+    try {
+      // Шаг 1: Вызов функции login из контекста
+      const result = await login(credentials);
+      
+      // Шаг 2: Проверяем результат и обрабатываем его
+      if (result.success) {
+        // ✅ Правильно - данные приходят напрямую из result
+        const { user } = result;
+        
+        const redirectPath = sessionStorage.getItem('redirectAfterLogin');
+        if (redirectPath) {
+          sessionStorage.removeItem('redirectAfterLogin');
+          navigate(redirectPath);
+        } else {
+          // ✅ Используем user из result, а не result.user
+          navigate(user.role === 'admin' ? '/admin' : '/profile');
+        }
+      } else {
+        setError(result.error);
+      }
+    } catch (error) {
+      // Дополнительная обработка ошибок
+      setError(error.message || 'Произошла ошибка при входе');
+    } finally {
+      setLoading(false);
     }
-  } else {
-      setError(result.error);
-    }
-    setLoading(false);
   };
 
   return (
@@ -184,15 +195,6 @@ const LoginPage = () => {
                 borderLeft: '4px solid #667eea'
               }}
             >
-              <Typography variant="body2" sx={{ color: '#333', fontWeight: 600, mb: 1 }}>
-                Демо доступ:
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#666' }}>
-                Email: admin@mail.com
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#666' }}>
-                Пароль: admin123
-              </Typography>
             </Box>
           </Box>
         </Paper>

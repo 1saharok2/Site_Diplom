@@ -3,6 +3,21 @@ import { apiService } from './api';
 const API_BASE = 'http://localhost:5000/api';
 
 export const adminService = {
+
+  login: (credentials) => 
+    fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials)
+    }).then(res => res.json()),
+
+  register: (userData) =>
+    fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    }).then(res => res.json()),
+
   // Products
   getProducts: () => 
     fetch(`${API_BASE}/admin/products`).then(res => res.json()),

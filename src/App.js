@@ -43,7 +43,6 @@ function App() {
                   margin: 0,
                   padding: 0
                 }}>
-                  {/* Header не показываем на админских страницах */}
                   <Routes>
                     <Route path="/admin/*" element={null} />
                     <Route path="*" element={<Header />} />
@@ -51,6 +50,7 @@ function App() {
                   
                   <main className="main-content">
                     <Routes>
+
                       {/* Public routes */}
                       <Route path="/" element={<HomePage />} />
                       <Route path="/login" element={<LoginPage />} />
@@ -114,7 +114,6 @@ function App() {
                     </Routes>
                   </main>
                   
-                  {/* Footer не показываем на админских страницах */}
                   <Routes>
                     <Route path="/admin/*" element={null} />
                     <Route path="*" element={<Footer />} />
