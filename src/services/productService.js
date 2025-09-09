@@ -1,5 +1,5 @@
 // services/productService.js
-import api from './api';
+import { apiService } from './api';
 import { mockService } from './mockService';
 
 const USE_MOCK_API = true;
@@ -8,7 +8,7 @@ export const productService = {
   // Получить все товары
   getProducts: USE_MOCK_API ? mockService.getProducts : async (params = {}) => {
     try {
-      const response = await api.get('/products', { params });
+      const response = await apiService.get('/products', { params });
       return response.data;
     } catch (error) {
       throw new Error(`Ошибка при получении товаров: ${error.message}`);
@@ -18,7 +18,7 @@ export const productService = {
   // Получить товар по ID
   getProduct: USE_MOCK_API ? mockService.getProduct : async (id) => {
     try {
-      const response = await api.get(`/products/${id}`);
+      const response = await apiService.get(`/products/${id}`);
       return response.data;
     } catch (error) {
       throw new Error(`Ошибка при получении товара: ${error.message}`);
@@ -28,7 +28,7 @@ export const productService = {
   // Создать новый товар
   createProduct: USE_MOCK_API ? mockService.createProduct : async (productData) => {
     try {
-      const response = await api.post('/products', productData);
+      const response = await apiService.post('/products', productData);
       return response.data;
     } catch (error) {
       throw new Error(`Ошибка при создании товара: ${error.message}`);
@@ -38,7 +38,7 @@ export const productService = {
   // Обновить товар
   updateProduct: USE_MOCK_API ? mockService.updateProduct : async (id, productData) => {
     try {
-      const response = await api.put(`/products/${id}`, productData);
+      const response = await apiService.put(`/products/${id}`, productData);
       return response.data;
     } catch (error) {
       throw new Error(`Ошибка при обновлении товара: ${error.message}`);
@@ -48,7 +48,7 @@ export const productService = {
   // Удалить товар
   deleteProduct: USE_MOCK_API ? mockService.deleteProduct : async (id) => {
     try {
-      const response = await api.delete(`/products/${id}`);
+      const response = await apiService.delete(`/products/${id}`);
       return response.data;
     } catch (error) {
       throw new Error(`Ошибка при удалении товара: ${error.message}`);
@@ -58,7 +58,7 @@ export const productService = {
   // Поиск товаров
   searchProducts: async (searchTerm, params = {}) => {
     try {
-      const response = await api.get('/products/search', {
+      const response = await apiService.get('/products/search', {
         params: { q: searchTerm, ...params }
       });
       return response.data;
@@ -70,7 +70,7 @@ export const productService = {
   // Получить товары по категории
   getProductsByCategory: async (categoryId, params = {}) => {
     try {
-      const response = await api.get(`/categories/${categoryId}/products`, { params });
+      const response = await apiService.get(`/categories/${categoryId}/products`, { params });
       return response.data;
     } catch (error) {
       throw new Error(`Ошибка при получении товаров категории: ${error.message}`);
@@ -80,7 +80,7 @@ export const productService = {
   // Получить популярные товары
   getPopularProducts: async (limit = 8) => {
     try {
-      const response = await api.get('/products/popular', {
+      const response = await apiService.get('/products/popular', {
         params: { limit }
       });
       return response.data;
@@ -92,7 +92,7 @@ export const productService = {
   // Получить новые товары
   getNewProducts: async (limit = 8) => {
     try {
-      const response = await api.get('/products/new', {
+      const response = await apiService.get('/products/new', {
         params: { limit }
       });
       return response.data;
@@ -104,7 +104,7 @@ export const productService = {
   // Получить товары со скидкой
   getDiscountedProducts: async (limit = 8) => {
     try {
-      const response = await api.get('/products/discounted', {
+      const response = await apiService.get('/products/discounted', {
         params: { limit }
       });
       return response.data;
@@ -119,7 +119,7 @@ export const productService = {
       const formData = new FormData();
       formData.append('image', imageFile);
       
-      const response = await api.post('/products/upload-image', formData, {
+      const response = await apiService.post('/products/upload-image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -133,7 +133,7 @@ export const productService = {
   // Обновить количество товара на складе
   updateStock: async (productId, quantity) => {
     try {
-      const response = await api.patch(`/products/${productId}/stock`, {
+      const response = await apiService.patch(`/products/${productId}/stock`, {
         quantity
       });
       return response.data;
@@ -145,7 +145,7 @@ export const productService = {
   // Получить статистику по товарам
   getProductsStats: async () => {
     try {
-      const response = await api.get('/products/stats');
+      const response = await apiService.get('/products/stats');
       return response.data;
     } catch (error) {
       throw new Error(`Ошибка при получении статистики товаров: ${error.message}`);
