@@ -93,6 +93,28 @@ const ProductPage = () => {
     );
   }
 
+  const handleShare = () => {
+  if (navigator.share) {
+    navigator.share({
+      title: product.name,
+      text: product.shortDescription,
+      url: window.location.href,
+    })
+    .catch(error => {
+      console.log('Ошибка при использовании Web Share API:', error);
+    });
+  } else {
+    // Fallback для браузеров без поддержки Web Share API
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => {
+        alert('Ссылка скопирована в буфер обмена!');
+      })
+      .catch(error => {
+        console.log('Ошибка при копировании:', error);
+      });
+  }
+};
+
   return (
     <Container className="product-page">
       {/* Хлебные крошки */}
@@ -225,35 +247,42 @@ const ProductPage = () => {
           </div>
 
           {/* Кнопки действий - БЕЗ quantity-selector */}
-          <div className="action-section">
-            <div className="action-buttons">
-              <div className="product-page-buttons">
-                <Button 
-                  variant="primary" 
-                  size="lg" 
-                  disabled={!product.inStock}
-                  className={`add-to-cart-btn ${isInCart ? 'added' : ''}`}
-                  onClick={handleAddToCart}
-                >
-                  <FaShoppingCart className="me-2" />
-                  {isInCart ? 'Добавлено!' : 'Добавить в корзину'}
-                </Button>
-                
-                <Button 
-                  variant={isInWishlist ? "danger" : "outline-secondary"} 
-                  className={`wishlist-btn ${isInWishlist ? 'added' : ''}`}
-                  onClick={handleToggleWishlist}
-                >
-                  {isInWishlist ? <FaHeart /> : <FaRegHeart />}
-                </Button>
-              </div>
+            <div className="action-section">
+              <div className="action-buttons">
+                <div className="product-page-buttons">
+                  <Button 
+                    variant="primary" 
+                    size="lg" 
+                    disabled={!product.inStock}
+                    className={`add-to-cart-btn ${isInCart ? 'added' : ''}`}
+                    onClick={handleAddToCart}
+                  >
+                    <FaShoppingCart className="me-2" />
+                    {isInCart ? 'Добавлено!' : 'Добавить в корзину'}
+                  </Button>
+                  
+                  <Button 
+                    variant={isInWishlist ? "danger" : "outline-secondary"} 
+                    className={`wishlist-btn ${isInWishlist ? 'added' : ''}`}
+                    onClick={handleToggleWishlist}
+                  >
+                    {isInWishlist ? <FaHeart /> : <FaRegHeart />}
+                  </Button>
+                </div>
 
-              <Button variant="outline-secondary" className="share-btn">
-                <FaShare className="me-2" />
-                Поделиться
-              </Button>
+                {/* Отдельная кнопка поделиться */}
+                <div className="share-button-container">
+                  <Button 
+                    variant="outline-secondary" 
+                    className="share-btn"
+                    onClick={handleShare}
+                  >
+                    <FaShare className="me-1" />
+                    Поделиться
+                  </Button>
+                </div>
+              </div>
             </div>
-          </div>
 
           {/* Краткое описание */}
           <div className="short-description">

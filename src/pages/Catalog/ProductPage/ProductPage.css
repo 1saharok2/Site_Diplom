@@ -41,7 +41,7 @@
 }
 
 .product-carousel .carousel-item {
-  height: 400px; /* Фиксированная высота как у main-product-image */
+  height: 400px;
 }
 
 .main-image-container {
@@ -267,12 +267,14 @@
   gap: 1rem;
 }
 
-/* Новые стили для кнопки */
+/* ВСЕ КНОПКИ В ОДНОЙ СТРОКЕ */
 .product-page-buttons {
   display: flex;
   gap: 12px;
   align-items: center;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 /* ИСПРАВЛЕННЫЕ СТИЛИ ДЛЯ КНОПКИ */
@@ -384,15 +386,34 @@
   color: white;
 }
 
+/* КНОПКА ПОДЕЛИТЬСЯ БЕЗ КОНТЕЙНЕРА - в одной строке */
 .product-page .share-btn {
-  border-radius: 25px;
-  padding: 10px 20px;
-  width: 100%;
-  border: 2px solid #6c757d;
+  border-radius: 20px;
+  padding: 8px 16px;
+  border: 1px solid #6c757d;
   background: white;
   color: #6c757d;
   transition: all 0.3s ease;
   text-decoration: none;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 40px;
+  margin-left: 12px;
+  padding-left: 16px;
+  position: relative;
+}
+
+.product-page .share-btn::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 30px;
+  width: 1px;
+  background-color: #e9ecef;
 }
 
 .product-page .share-btn:hover {
@@ -400,6 +421,11 @@
   background: #f8f9fa;
   color: #007bff;
   text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.product-page .share-btn .fa-share {
+  font-size: 0.8em;
 }
 
 /* Анимации */
@@ -491,7 +517,7 @@
 .spec-name {
   font-weight: 600;
   color: #495057;
-  padding: 0.5rem 0;
+  padding: 0.5rem 极
 }
 
 .spec-value {
@@ -547,7 +573,11 @@
   }
   
   .product-page-buttons {
+    display: flex;
     gap: 10px;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
   }
   
   .product-page .add-to-cart-btn {
@@ -559,6 +589,17 @@
   .product-page .wishlist-btn {
     width: 45px;
     height: 45px;
+  }
+  
+  .product-page .share-btn {
+    height: 40px;
+    font-size: 0.85rem;
+    margin-left: 0;
+    padding-left: 16px;
+  }
+  
+  .product-page .share-btn::before {
+    display: none;
   }
   
   .rating-price-container {
@@ -619,7 +660,6 @@
     font-size: 0.8rem;
   }
   
-  /* Уменьшение иконки на мобильных */
   .product-page .add-to-cart-btn .fa-shopping-cart {
     font-size: 0.8em;
     margin-right: 0.3rem;
@@ -631,8 +671,9 @@
   }
   
   .product-page .share-btn {
-    padding: 8px 16px;
+    padding: 8px 14px;
     font-size: 0.8rem;
+    height: 38px;
   }
   
   .rating-price-container {
@@ -667,6 +708,21 @@
   .thumbnail-wrapper {
     padding: 3px;
   }
+  
+  /* Адаптивность для quantity */
+  .quantity-input-group {
+    width: 120px;
+  }
+  
+  .quantity-btn {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .quantity-input {
+    font-size: 1rem;
+    padding: 0.4rem;
+  }
 }
 
 /* Для очень маленьких экранов */
@@ -678,6 +734,19 @@
   .thumbnail {
     width: 50px;
     height: 50px;
+  }
+  
+  .product-page-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .product-page .share-btn {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e9ecef;
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -740,23 +809,6 @@
 .quantity-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
-}
-
-/* Адаптивность для quantity */
-@media (max-width: 576px) {
-  .quantity-input-group {
-    width: 120px;
-  }
-  
-  .quantity-btn {
-    width: 35px;
-    height: 35px;
-  }
-  
-  .quantity-input {
-    font-size: 1rem;
-    padding: 0.4rem;
-  }
 }
 
 /* Индикаторы карусели */
