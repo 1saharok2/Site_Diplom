@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, Button, Badge } from 'react-bootstrap';
 import { FaHeart, FaShoppingCart, FaStar } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import './ProductCard.css';
 
-
 const ProductCard = ({ product }) => {
+  const [isInCart, setIsInCart] = useState(false);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+
   const {
     name,
     price,
@@ -18,10 +20,31 @@ const ProductCard = ({ product }) => {
     inStock
   } = product;
 
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsInCart(true);
+    setTimeout(() => setIsInCart(false), 600);
+    console.log('Добавлено в корзину:', product);
+  };
+
+  const handleAddToWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsInWishlist(!isInWishlist);
+    console.log(isInWishlist ? 'Удалено из избранного' : 'Добавлено в избранное', product);
+  };
+
   return (
     <Link to={`/product/${product.id}`} className="product-card-link">
       <div className="product-card-wrapper">
         <Card className="product-card">
+          {/* Бейджи */}
+          <div className="product-badges">
+            {isNew && <Badge bg="success" className="new-badge">Новинка</Badge>}
+            {discount > 0 && <Badge bg="danger" className="discount-badge">-{discount}%</Badge>}
+          </div>
+
           {/* Картинка товара */}
           <div className="product-image-container">
             {images && images[0] ? (
@@ -30,7 +53,7 @@ const ProductCard = ({ product }) => {
                 alt={name}
                 className="product-image"
                 onError={(e) => {
-                  e.target.style.backgroundColor = ' #007bff';
+                  e.target.style.backgroundColor = '#007bff';
                   e.target.src = 'https://via.placeholder.com/300x200/8767c2/ffffff?text=Нет+изображения';
                 }}
               />
@@ -54,7 +77,7 @@ const ProductCard = ({ product }) => {
                   <FaStar 
                     key={index} 
                     size={14}
-                    color={index < rating ? '#ffc107' : '#6c757d'} 
+                    color={index < Math.floor(rating) ? '#ffc107' : '#6c757d'} 
                   />
                 ))}
               </div>
@@ -82,13 +105,20 @@ const ProductCard = ({ product }) => {
             <div className="product-actions">
               {inStock ? (
                 <div className="action-buttons">
-                  <Button variant="primary" className="btn-cart">
+                  <Button 
+                    variant="primary" 
+                    className={`btn-cart ${isInCart ? 'added' : ''}`}
+                    onClick={handleAddToCart}
+                  >
                     <FaShoppingCart className="me-2" />
-                    В корзину
+                    {isInCart ? 'Добавлено!' : 'В корзину'}
                   </Button>
-                  <Button variant="outline-secondary" className="btn-wishlist">
-                    <FaHeart className="me-1" />
-                    В избранное
+                  <Button 
+                    variant="outline-secondary" 
+                    className={`btn-wishlist ${isInWishlist ? 'added' : ''}`}
+                    onClick={handleAddToWishlist}
+                  >
+                    <FaHeart />
                   </Button>
                 </div>
               ) : (

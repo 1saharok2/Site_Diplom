@@ -13,6 +13,7 @@ import realmeGT3 from '../assets/products/Phones/Realme GT 3.png';
 import samsungGalaxyS23Ultra from '../assets/products/Phones/Samsung Galaxy S23 Ultra.png';
 import vivoX90Pro from '../assets/products/Phones/Vivo X90 Pro.png';
 import xiaomiRedmiNote13 from '../assets/products/Phones/Xiaomi Redmi Note 13.png';
+import iphone16_pink from '../assets/products/Phones/iphone16_pink.png';
 
 
 const mockCategories = [
@@ -90,7 +91,7 @@ const mockProducts = [
     name: 'Смартфон Apple iPhone 16',
     price: 79990,
     oldPrice: 84900,
-    images: [iphone],
+    images: [iphone, iphone16_pink],
     category: 'smartphones',
     rating: 4.0,
     reviewsCount: 128,

@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   Container, Row, Col, Image, Button, Badge, Tabs, Tab, Alert,
-  Spinner, Form
+  Spinner, Form, Carousel
 } from 'react-bootstrap';
 import { 
   FaHeart, FaShoppingCart, FaStar, FaShare, 
   FaChevronLeft, FaChevronRight, FaRegHeart
 } from 'react-icons/fa';
 import { getProductById } from '../../../services/categoryService';
-import './ProductPage.css';
+import './ProductPage_css/ProductPage.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import ProductTabs from "C:/Users/Admin/Documents/GitHub/Site_Diplom/src/pages/Catalog/ProductPage/ProductsTabs.jsx";
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -19,6 +21,7 @@ const ProductPage = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isInWishlist, setIsInWishlist] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -57,14 +60,13 @@ const ProductPage = () => {
   };
 
   const handleAddToCart = () => {
-    // Логика добавления в корзину
+    setIsInCart(true);
+    setTimeout(() => setIsInCart(false), 600);
     console.log('Добавлено в корзину:', { product, quantity });
-    // Здесь можно добавить вызов контекста корзины или Redux
   };
 
   const handleToggleWishlist = () => {
     setIsInWishlist(!isInWishlist);
-    // Логика добавления/удаления из избранного
   };
 
   if (loading) {
@@ -92,6 +94,28 @@ const ProductPage = () => {
     );
   }
 
+  const handleShare = () => {
+  if (navigator.share) {
+    navigator.share({
+      title: product.name,
+      text: product.shortDescription,
+      url: window.location.href,
+    })
+    .catch(error => {
+      console.log('Ошибка при использовании Web Share API:', error);
+    });
+  } else {
+    // Fallback для браузеров без поддержки Web Share API
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => {
+        alert('Ссылка скопирована в буфер обмена!');
+      })
+      .catch(error => {
+        console.log('Ошибка при копировании:', error);
+      });
+  }
+};
+
   return (
     <Container className="product-page">
       {/* Хлебные крошки */}
@@ -112,45 +136,40 @@ const ProductPage = () => {
       </nav>
 
       <Row>
-        {/* Галерея изображений */}
+          {/* Галерея изображений с каруселью */}
         <Col lg={6} className="product-gallery">
-          <div className="main-image-container">
-            <Image 
-              src={product.images[selectedImageIndex]} 
-              alt={product.name}
-              className="main-product-image"
-              fluid
-              onError={(e) => {
-                e.target.src = 'https://via.placeholder.com/600x600/8767c2/ffffff?text=Нет+изображения';
-              }}
-            />
-            
-            {product.images.length > 1 && (
-              <>
-                <Button 
-                  variant="light" 
-                  className="nav-btn prev-btn"
-                  onClick={handlePrevImage}
-                >
-                  <FaChevronLeft />
-                </Button>
-                <Button 
-                  variant="light" 
-                  className="nav-btn next-btn"
-                  onClick={handleNextImage}
-                >
-                  <FaChevronRight />
-                </Button>
-              </>
-            )}
-
-            {product.isNew && (
-              <Badge bg="success" className="new-badge">Новинка</Badge>
-            )}
-            {product.discount > 0 && (
-              <Badge bg="danger" className="discount-badge">-{product.discount}%</Badge>
-            )}
-          </div>
+          <Carousel 
+            activeIndex={selectedImageIndex} 
+            onSelect={setSelectedImageIndex}
+            interval={null}
+            indicators={product.images.length > 1}
+            className="product-carousel"
+          >
+            {product.images.map((image, index) => (
+              <Carousel.Item key={index}>
+                <div className="main-image-container">
+                  <div className="image-wrapper">
+                    <Image 
+                      src={image} 
+                      alt={product.name}
+                      className="main-product-image"
+                      fluid
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/600x600/8767c2/ffffff?text=Нет+изображения';
+                      }}
+                    />
+                  </div>
+                  
+                  {product.isNew && (
+                    <Badge bg="success" className="new-badge">Новинка</Badge>
+                  )}
+                  {product.discount > 0 && (
+                    <Badge bg="danger" className="discount-badge">-{product.discount}%</Badge>
+                  )}
+                </div>
+              </Carousel.Item>
+            ))}
+          </Carousel>
 
           {/* Миниатюры */}
           {product.images.length > 1 && (
@@ -161,14 +180,16 @@ const ProductPage = () => {
                   className={`thumbnail ${index === selectedImageIndex ? 'active' : ''}`}
                   onClick={() => setSelectedImageIndex(index)}
                 >
-                  <Image 
-                    src={image} 
-                    alt={`${product.name} ${index + 1}`}
-                    fluid
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/80x80/8767c2/ffffff?text=Img';
-                    }}
-                  />
+                  <div className="thumbnail-wrapper">
+                    <Image 
+                      src={image} 
+                      alt={`${product.name} ${index + 1}`}
+                      fluid
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/80x80/8767c2/ffffff?text=Img';
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -179,30 +200,41 @@ const ProductPage = () => {
         <Col lg={6} className="product-info">
           <h1 className="product-title">{product.name}</h1>
 
-          {/* Рейтинг и отзывы */}
-          <div className="rating-section">
-            <div className="stars">
-              {[...Array(5)].map((_, index) => (
-                <FaStar 
-                  key={index}
-                  color={index < Math.floor(product.rating) ? '#ffc107' : '#e4e5e9'}
-                />
-              ))}
+          {/* Рейтинг и цена на одном уровне */}
+          <div className="rating-price-container">
+            {/* Рейтинг и отзывы */}
+            <div className="rating-section">
+              <div className="stars-container">
+                <div className="stars">
+                  {[...Array(5)].map((_, index) => (
+                    <FaStar 
+                      key={index}
+                      color={index < Math.floor(product.rating) ? '#ffc107' : '#e4e5e9'}
+                      size={16}
+                    />
+                  ))}
+                </div>
+                <span className="rating-value">{product.rating}</span>
+              </div>
+              <span className="reviews-count">({product.reviewsCount} отзывов)</span>
             </div>
-            <span className="rating-value">{product.rating}</span>
-            <span className="reviews-count">({product.reviewsCount} отзывов)</span>
-          </div>
 
-          {/* Цена */}
-          <div className="price-section">
-            <span className="current-price">
-              {product.price.toLocaleString('ru-RU')} ₽
-            </span>
-            {product.oldPrice > product.price && (
-              <span className="old-price">
-                {product.oldPrice.toLocaleString('ru-RU')} ₽
+            {/* Цена */}
+            <div className="price-section">
+              <span className="current-price">
+                {product.price.toLocaleString('ru-RU')} ₽
               </span>
-            )}
+              {product.oldPrice > product.price && (
+                <>
+                  <span className="old-price">
+                    {product.oldPrice.toLocaleString('ru-RU')} ₽
+                  </span>
+                  <div className="price-saving">
+                    Экономия {((product.oldPrice - product.price) / product.oldPrice * 100).toFixed(0)}%
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Наличие */}
@@ -211,54 +243,47 @@ const ProductPage = () => {
               {product.inStock ? 'В наличии' : 'Нет в наличии'}
             </Badge>
             {product.inStock && (
-              <span className="stock-text ms-2">Доставка завтра</span>
+              <span className="stock-text">Доставка завтра</span>
             )}
           </div>
 
-          {/* Количество и кнопки */}
-          <div className="action-section">
-            <div className="quantity-selector">
-              <Form.Label htmlFor="quantity">Количество:</Form.Label>
-              <Form.Select 
-                id="quantity"
-                value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value))}
-                style={{ width: '100px' }}
-                disabled={!product.inStock}
-              >
-                {[...Array(Math.min(product.inStock ? 10 : 0, 10))].map((_, i) => (
-                  <option key={i + 1} value={i + 1}>{i + 1}</option>
-                ))}
-              </Form.Select>
-            </div>
+          {/* Кнопки действий - БЕЗ quantity-selector */}
+            <div className="action-section">
+              <div className="action-buttons">
+                <div className="product-page-buttons">
+                  <Button 
+                    variant="primary" 
+                    size="lg" 
+                    disabled={!product.inStock}
+                    className={`add-to-cart-btn ${isInCart ? 'added' : ''}`}
+                    onClick={handleAddToCart}
+                  >
+                    <FaShoppingCart className="me-2" />
+                    {isInCart ? 'Добавлено!' : 'Добавить в корзину'}
+                  </Button>
+                  
+                  <Button 
+                    variant={isInWishlist ? "danger" : "outline-secondary"} 
+                    className={`wishlist-btn ${isInWishlist ? 'added' : ''}`}
+                    onClick={handleToggleWishlist}
+                  >
+                    {isInWishlist ? <FaHeart /> : <FaRegHeart />}
+                  </Button>
+                </div>
 
-            <div className="action-buttons">
-              <Button 
-                variant="primary" 
-                size="lg" 
-                disabled={!product.inStock}
-                className="add-to-cart-btn"
-                onClick={handleAddToCart}
-              >
-                <FaShoppingCart className="me-2" />
-                Добавить в корзину
-              </Button>
-              
-              <Button 
-                variant={isInWishlist ? "danger" : "outline-secondary"} 
-                className="wishlist-btn"
-                onClick={handleToggleWishlist}
-              >
-                {isInWishlist ? <FaHeart className="me-2" /> : <FaRegHeart className="me-2" />}
-                {isInWishlist ? 'В избранном' : 'В избранное'}
-              </Button>
-
-              <Button variant="outline-secondary" className="share-btn">
-                <FaShare className="me-2" />
-                Поделиться
-              </Button>
+                {/* Отдельная кнопка поделиться */}
+                <div className="share-button-container">
+                  <Button 
+                    variant="outline-secondary" 
+                    className="share-btn"
+                    onClick={handleShare}
+                  >
+                    <FaShare className="me-1" />
+                    Поделиться
+                  </Button>
+                </div>
+              </div>
             </div>
-          </div>
 
           {/* Краткое описание */}
           <div className="short-description">
@@ -266,53 +291,10 @@ const ProductPage = () => {
           </div>
         </Col>
       </Row>
-
-      {/* Детальная информация */}
+            {/* Детальная информация */}
       <Row className="mt-5">
         <Col>
-          <Tabs defaultActiveKey="description" className="product-tabs">
-            <Tab eventKey="description" title="Описание">
-              <div className="tab-content">
-                <h4>Подробное описание</h4>
-                <p>{product.fullDescription || product.description}</p>
-              </div>
-            </Tab>
-            
-            <Tab eventKey="specifications" title="Характеристики">
-              <div className="tab-content">
-                <h4>Технические характеристики</h4>
-                <div className="specs-table">
-                  <div className="spec-row">
-                    <span className="spec-name">Категория:</span>
-                    <span className="spec-value">{product.category}</span>
-                  </div>
-                  <div className="spec-row">
-                    <span className="spec-name">Рейтинг:</span>
-                    <span className="spec-value">{product.rating}/5</span>
-                  </div>
-                  <div className="spec-row">
-                    <span className="spec-name">Отзывы:</span>
-                    <span className="spec-value">{product.reviewsCount}</span>
-                  </div>
-                  <div className="spec-row">
-                    <span className="spec-name">Артикул:</span>
-                    <span className="spec-value">#{product.id}</span>
-                  </div>
-                </div>
-              </div>
-            </Tab>
-
-            <Tab eventKey="reviews" title="Отзывы">
-              <div className="tab-content">
-                <h4>Отзывы покупателей</h4>
-                {product.reviewsCount > 0 ? (
-                  <p>Система отзывов будет реализована позже</p>
-                ) : (
-                  <p>Пока нет отзывов об этом товаре</p>
-                )}
-              </div>
-            </Tab>
-          </Tabs>
+          <ProductTabs product={product} />
         </Col>
       </Row>
     </Container>
