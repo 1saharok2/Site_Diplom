@@ -1,0 +1,55 @@
+/* Стили для табов */
+.product-tabs {
+  margin-top: 2rem;
+}
+
+.product-tabs .nav-link {
+  color: #6c757d;
+  font-weight: 500;
+  padding: 1rem 1.5rem;
+}
+
+.product-tabs .nav-link.active {
+  color: #007bff;
+  background: none;
+  border-bottom: 3px solid #007bff;
+}
+
+.tab-content {
+  padding: 2rem;
+}
+
+.tab-content h4 {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+}
+
+.specs-table {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 1rem;
+}
+
+.spec-name {
+  font-weight: 600;
+  color: #495057;
+  padding: 0.5rem 0;
+}
+
+.spec-value {
+  color: #6c757d;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .specs-table {
+    grid-template-columns: 1fr;
+  }
+  
+  .spec-name {
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 0.25rem;
+  }
+}

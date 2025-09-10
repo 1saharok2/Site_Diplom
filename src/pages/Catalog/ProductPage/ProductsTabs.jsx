@@ -1,5 +1,6 @@
 import React from 'react';
 import { Tabs, Tab } from 'react-bootstrap';
+import './ProductPage_css/ProductTabs.css';
 
 const ProductTabs = ({ product }) => {
   return (

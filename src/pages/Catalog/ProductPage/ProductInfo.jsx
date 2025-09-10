@@ -1,6 +1,8 @@
 import React from 'react';
 import { Col, Badge, Button } from 'react-bootstrap';
 import { FaHeart, FaShoppingCart, FaShare, FaStar, FaRegHeart } from 'react-icons/fa';
+import './ProductPage_css/ProductInfo.css';
+
 
 const ProductInfo = ({ 
   product, 

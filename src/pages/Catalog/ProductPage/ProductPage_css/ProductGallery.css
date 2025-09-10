@@ -1,0 +1,204 @@
+/* ProductGallery.css */
+.product-gallery {
+  position: relative;
+}
+
+.product-carousel {
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.product-carousel .carousel-inner {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.product-carousel .carousel-item {
+  height: 400px;
+}
+
+.main-image-container {
+  position: relative;
+  height: 100%;
+  background: #f8f9fa;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.image-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.main-product-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.new-badge,
+.discount-badge {
+  position: absolute;
+  top: 10px;
+  font-size: 0.9rem;
+  padding: 5px 10px;
+}
+
+.new-badge {
+  left: 10px;
+  background: #28a745;
+}
+
+.discount-badge {
+  right: 10px;
+  background: #dc3545;
+}
+
+.thumbnails {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+
+.thumbnail {
+  width: 80px;
+  height: 80px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: #f8f9fa;
+}
+
+.thumbnail.active {
+  border-color: #007bff;
+}
+
+.thumbnail-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+}
+
+.thumbnail img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+/* КРИТИЧЕСКИ ВАЖНЫЕ СТИЛИ ДЛЯ КАРУСЕЛИ */
+.product-carousel .carousel-control-prev,
+.product-carousel .carousel-control-next {
+  width: 50px;
+  height: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0.9;
+  transition: all 0.3s ease;
+  border: 2px solid white;
+}
+
+.product-carousel .carousel-control-prev {
+  left: 15px;
+}
+
+.product-carousel .carousel-control-next {
+  right: 15px;
+}
+
+.product-carousel .carousel-control-prev:hover,
+.product-carousel .carousel-control-next:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.7);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.product-carousel .carousel-control-prev-icon,
+.product-carousel .carousel-control-next-icon {
+  filter: invert(1) brightness(2);
+  width: 25px;
+  height: 25px;
+}
+
+/* Делаем индикаторы более заметными */
+.product-carousel .carousel-indicators {
+  bottom: 15px;
+  margin: 0;
+}
+
+.product-carousel .carousel-indicators button {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin: 0 6px;
+  background-color: rgba(255, 255, 255, 0.6);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.product-carousel .carousel-indicators button.active {
+  background-color: #fff;
+  transform: scale(1.2);
+}
+
+/* Адаптивность для карусели */
+@media (max-width: 768px) {
+  .product-carousel .carousel-item {
+    height: 300px;
+  }
+  
+  .product-carousel .carousel-control-prev,
+  .product-carousel .carousel-control-next {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .thumbnail {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+@media (max-width: 576px) {
+  .product-carousel .carousel-item {
+    height: 250px;
+  }
+  
+  .product-carousel .carousel-control-prev,
+  .product-carousel .carousel-control-next {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .thumbnail {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 400px) {
+  .product-carousel .carousel-item {
+    height: 220px;
+  }
+  
+  .thumbnail {
+    width: 50px;
+    height: 50px;
+  }
+}
