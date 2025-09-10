@@ -1,4 +1,3 @@
-import React from 'react';
 // Импортируем все изображений категорий
 import smartphonesImg from '../assets/Categories/Smartphones.jpg';
 
