@@ -20,6 +20,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import Sidebar from '../Sidebar/Sidebar';
 
 const menuItems = [
   { text: 'Дашборд', icon: <Dashboard />, path: '/admin/dashboard' },

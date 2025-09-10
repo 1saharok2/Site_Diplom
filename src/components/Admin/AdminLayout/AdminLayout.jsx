@@ -11,7 +11,7 @@ import {
   Notifications as NotificationsIcon,
   AccountCircle as AccountIcon
 } from '@mui/icons-material';
-import Sidebar from '../Sidebar';
+import Sidebar from '../Sidebar/Sidebar';
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

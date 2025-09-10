@@ -13,6 +13,7 @@ import './ProductPage_css/ProductPage.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import ProductTabs from "./ProductsTabs.jsx";
 
+
 const ProductPage = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
