@@ -22,7 +22,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 
 const menuItems = [
-  { text: 'Дашборд', icon: <Dashboard />, path: '/admin/dashboard' },
+  { text: 'Статистика', icon: <Dashboard />, path: '/admin/dashboard' },
   { text: 'Товары', icon: <Inventory />, path: '/admin/products' },
   { text: 'Заказы', icon: <ShoppingCart />, path: '/admin/orders' },
   { text: 'Пользователи', icon: <People />, path: '/admin/users' },

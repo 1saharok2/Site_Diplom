@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useReducer } from 'react';
-import { apiService } from '../services/api';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const CartContext = createContext();
 
@@ -11,41 +10,71 @@ export const useCart = () => {
   return context;
 };
 
-const cartReducer = (state, action) => {
-  switch (action.type) {
-    case 'ADD_ITEM':
-      // Логика добавления в локальное состояние
-      return { ...state, items: [...state.items, action.payload] };
-    
-    case 'SYNC_CART':
-      // Синхронизация с бэкендом
-      return { ...state, items: action.payload };
-    
-    default:
-      return state;
-  }
-};
-
 export const CartProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(cartReducer, { items: [] });
+  const [cartItems, setCartItems] = useState([]);
 
-  const addToCart = async (product, quantity = 1) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        // Отправляем на сервер если пользователь авторизован
-        await apiService.addToCart({ productId: product.id, quantity }, token);
-      }
-      
-      // Обновляем локальное состояние
-      dispatch({ type: 'ADD_ITEM', payload: { ...product, quantity } });
-    } catch (error) {
-      console.error('Error adding to cart:', error);
+  useEffect(() => {
+    // Загрузка из localStorage
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      setCartItems(JSON.parse(savedCart));
     }
+  }, []);
+
+  useEffect(() => {
+    // Сохранение в localStorage
+    localStorage.setItem('cart', JSON.stringify(cartItems));
+  }, [cartItems]);
+
+  const addToCart = (product) => {
+    setCartItems(prevItems => {
+      const existingItem = prevItems.find(item => item.id === product.id);
+      if (existingItem) {
+        return prevItems.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+      return [...prevItems, { ...product, quantity: 1 }];
+    });
+  };
+
+  const removeFromCart = (productId) => {
+    setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
+  };
+
+  const updateQuantity = (productId, quantity) => {
+    if (quantity < 1) {
+      removeFromCart(productId);
+      return;
+    }
+    setCartItems(prevItems =>
+      prevItems.map(item =>
+        item.id === productId ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
+  const getTotalPrice = () => {
+    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const value = {
+    cartItems: cartItems || [], // Гарантируем что всегда массив
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    getTotalPrice
   };
 
   return (
-    <CartContext.Provider value={{ cart: state, addToCart }}>
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );
