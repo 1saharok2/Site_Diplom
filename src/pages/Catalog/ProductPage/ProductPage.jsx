@@ -10,8 +10,6 @@ import {
 import { categoryService } from '../../../services/categoryService';
 import './ProductPage_css/ProductPage.css';
 import ProductTabs from "./ProductsTabs.jsx";
-import ProductInfo from './ProductInfo';
-import ProductGallery from './ProductGallery';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -134,26 +132,6 @@ const ProductPage = () => {
     return product.images.length > 0 
       ? product.images 
       : ['https://via.placeholder.com/600x600/8767c2/ffffff?text=Нет+изображения'];
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: product.name,
-        text: product.shortDescription,
-        url: window.location.href,
-      }).catch(error => {
-        console.log('Ошибка при использовании Web Share API:', error);
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href)
-        .then(() => {
-          alert('Ссылка скопирована в буфер обмена!');
-        })
-        .catch(error => {
-          console.log('Ошибка при копировании:', error);
-        });
-    }
   };
 
   if (loading) {
