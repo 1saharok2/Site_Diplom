@@ -1,16 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, forwardRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Container,
   Typography,
-  Box,
+  Box as MuiBox, 
   Grid,
   Card,
   CardContent,
   Button,
   Chip,
   CircularProgress,
-  Alert
+  Alert,
+  alpha,
+  useTheme,
+  Fab,
+  Zoom,
+  useScrollTrigger,
+  Fade,
+  Slide,
+  Grow
 } from '@mui/material';
 import {
   ShoppingBasket,
@@ -18,30 +26,84 @@ import {
   Security,
   SupportAgent,
   Star,
-  Favorite
+  Favorite,
+  KeyboardArrowDown,
+  Category
 } from '@mui/icons-material';
 import { useCart } from '../../context/CartContext';
 import { useProducts } from '../../context/ProductsContext';
+
+// Создаем кастомный Box компонент с forwardRef
+const ScrollBox = forwardRef((props, ref) => (
+  <MuiBox ref={ref} {...props} />
+));
+
+// Анимированный компонент для плавного появления
+const AnimatedBox = ({ children, delay = 0, ...props }) => (
+  <Fade in timeout={800} style={{ transitionDelay: `${delay}ms` }} {...props}>
+    <MuiBox>{children}</MuiBox>
+  </Fade>
+);
+
+const ScrollTopButton = () => {
+  const trigger = useScrollTrigger({
+    threshold: 100,
+  });
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <Zoom in={trigger}>
+      <Fab
+        onClick={scrollToTop}
+        sx={{
+          position: 'fixed',
+          bottom: 24,
+          right: 24,
+          bgcolor: 'primary.main',
+          '&:hover': {
+            bgcolor: 'primary.dark'
+          }
+        }}
+        aria-label="scroll back to top"
+      >
+        <KeyboardArrowDown sx={{ transform: 'rotate(180deg)' }} />
+      </Fab>
+    </Zoom>
+  );
+};
 
 const HomePage = () => {
   const { addToCart } = useCart();
   const { products, categories, loading, error, refreshData } = useProducts();
   const [featuredProducts, setFeaturedProducts] = useState([]);
-
-  console.log('Products:', products); // ← Добавьте для отладки
-  console.log('Categories:', categories); // ← Добавьте для отладки
-  console.log('Loading:', loading); // ← Добавьте для отладки
-  console.log('Error:', error); // ← Добавьте для отладки
+  const categoriesSectionRef = useRef(null);
+  const theme = useTheme();
 
   useEffect(() => {
-    // Берем первые 8 товаров как featured или товары с высоким рейтингом
     if (products.length > 0) {
       const featured = products
         .filter(product => product.rating >= 4.0)
-        .slice(0, 2);
+        .slice(0, 4);
       setFeaturedProducts(featured.length > 0 ? featured : products.slice(0, 8));
     }
   }, [products]);
+
+  const scrollToCategories = () => {
+    if (categoriesSectionRef.current) {
+      const element = categoriesSectionRef.current;
+      const offset = 100; // Отступ сверху
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const features = [
     {
@@ -78,9 +140,9 @@ const HomePage = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <MuiBox display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
-      </Box>
+      </MuiBox>
     );
   }
 
@@ -95,8 +157,7 @@ const HomePage = () => {
   }
 
   return (
-    <Box sx={{ pt: 0 }}>
-
+    <MuiBox sx={{ pt: 0 }}>
       {error && (
         <Alert 
           severity="warning" 
@@ -111,362 +172,498 @@ const HomePage = () => {
       )}
 
       {/* Hero Section */}
-      <Box
+      <MuiBox
         sx={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.9)} 0%, ${alpha(theme.palette.secondary.main, 0.9)} 100%)`,
           color: 'white',
-          py: { xs: 2, md: 8 },
-          margin: 0,
+          py: { xs: 8, md: 12 },
           position: 'relative',
           overflow: 'hidden',
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center'
         }}
       >
-        <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 }, pt: { xs: 2, md: 4 } }}>
-          <Grid container spacing={4} alignItems="center" sx={{ margin: 0 }}>
-            <Grid item xs={12} md={6} sx={{ padding: 0 }}>
-              <Typography
-                variant="h1"
-                component="h1"
-                sx={{
-                  fontWeight: 'bold',
-                  fontSize: { xs: '2.2rem', md: '3.2rem' },
-                  mb: 3,
-                  lineHeight: 1.2,
-                  padding: 0,
-                  margin: 0
-                }}
-              >
-                Добро пожаловать в наш магазин
-              </Typography>
-              <Typography
-                variant="h5"
-                sx={{
-                  mb: 4,
-                  opacity: 0.9,
-                  fontWeight: 300,
-                  fontSize: { xs: '1.1rem', md: '1.4rem' }
-                }}
-              >
-                Откройте для себя лучшие товары по выгодным ценам. 
-                Техника, аксессуары и многое другое с гарантией качества.
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Button
-                  component={Link}
-                  to="/catalog"
-                  variant="contained"
-                  size="large"
-                  sx={{
-                    py: 1.5,
-                    px: 3,
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    backgroundColor: 'white',
-                    color: 'primary.main',
-                    '&:hover': {
-                      backgroundColor: '#f8f9fa',
-                      transform: 'translateY(-2px)'
-                    }
-                  }}
-                >
-                  Перейти к покупкам
-                </Button>
-                <Button
-                  component={Link}
-                  to="/categories"
-                  variant="outlined"
-                  size="large"
-                  sx={{
-                    py: 1.5,
-                    px: 3,
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    borderColor: 'white',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      borderColor: 'white'
-                    }
-                  }}
-                >
-                  Все категории
-                </Button>
-              </Box>
-            </Grid>
+        <Container maxWidth="lg">
+          <Grid container spacing={6} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <MuiBox>
+                <AnimatedBox delay={200}>
+                  <Typography
+                    variant="h1"
+                    component="h1"
+                    sx={{
+                      fontSize: { xs: '2.5rem', md: '3.5rem' },
+                      fontWeight: 800,
+                      lineHeight: 1.2,
+                      mb: 3,
+                      background: 'linear-gradient(135deg, #fff 0%, #e0e0e0 100%)',
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent'
+                    }}
+                  >
+                    Техника будущего
+                    <br />
+                    уже сегодня
+                  </Typography>
+                </AnimatedBox>
 
-            <Grid item xs={12} md={6} sx={{ padding: 0 }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  width: '100%',
-                  height: '100%',
-                  minHeight: 350
-                }}
-              >
-                <Box
-                  component="img"
-                  src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80"
-                  alt="Магазин электроники"
+                <AnimatedBox delay={400}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: 4,
+                      opacity: 0.9,
+                      fontWeight: 300,
+                      fontSize: { xs: '1.1rem', md: '1.3rem' }
+                    }}
+                  >
+                    Откройте для себя новейшие гаджеты и устройства 
+                    по лучшим ценам с гарантией качества
+                  </Typography>
+                </AnimatedBox>
+
+                <AnimatedBox delay={600}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={scrollToCategories}
+                    sx={{
+                      px: 4,
+                      py: 1.5,
+                      fontSize: '1.1rem',
+                      fontWeight: 600,
+                      borderRadius: 3,
+                      backgroundColor: 'white',
+                      color: 'primary.main',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: theme.shadows[8],
+                        backgroundColor: '#f5f5f5'
+                      }
+                    }}
+                  >
+                    Перейти к покупкам
+                  </Button>
+                </AnimatedBox>
+              </MuiBox>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <Slide direction="left" in timeout={1000}>
+                <MuiBox
                   sx={{
-                    width: '100%',
-                    maxWidth: 450,
-                    height: 'auto',
-                    borderRadius: 3,
-                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
-                    objectFit: 'cover'
+                    position: 'relative',
+                    textAlign: 'center'
                   }}
-                />
-              </Box>
+                >
+                  <MuiBox
+                    component="img"
+                    src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                    alt="Техника"
+                    sx={{
+                      width: '100%',
+                      maxWidth: 500,
+                      height: 'auto',
+                      borderRadius: 4,
+                      boxShadow: theme.shadows[10],
+                      transform: 'rotate3d(0.5, 1, 0, 15deg)',
+                      transition: 'transform 0.5s ease, box-shadow 0.5s ease',
+                      '&:hover': {
+                        transform: 'rotate3d(0.5, 1, 0, 5deg) scale(1.02)',
+                        boxShadow: theme.shadows[16]
+                      }
+                    }}
+                  />
+                </MuiBox>
+              </Slide>
             </Grid>
           </Grid>
         </Container>
-      </Box>
+      </MuiBox>
 
       {/* Преимущества */}
       <Container sx={{ py: 8 }}>
+        <AnimatedBox>
+          <Typography
+            variant="h2"
+            align="center"
+            gutterBottom
+            sx={{
+              fontWeight: 700,
+              mb: 6,
+              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}
+          >
+            Почему выбирают нас
+          </Typography>
+        </AnimatedBox>
+
         <Grid container spacing={4}>
           {features.map((feature, index) => (
             <Grid item xs={12} sm={6} md={3} key={index}>
-              <Box
-                sx={{
-                  textAlign: 'center',
-                  p: 3,
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-8px)'
-                  }
-                }}
-              >
-                <Box
+              <Grow in timeout={1000} style={{ transitionDelay: `${index * 200}ms` }}>
+                <MuiBox
                   sx={{
-                    color: 'primary.main',
-                    mb: 2
+                    textAlign: 'center',
+                    p: 3,
+                    transition: 'all 0.3s ease',
+                    borderRadius: 3,
+                    '&:hover': {
+                      transform: 'translateY(-8px)',
+                      backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                      boxShadow: theme.shadows[4]
+                    }
                   }}
                 >
-                  {feature.icon}
-                </Box>
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                  {feature.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {feature.description}
-                </Typography>
-              </Box>
+                  <MuiBox
+                    sx={{
+                      color: 'primary.main',
+                      mb: 2,
+                      transition: 'transform 0.3s ease',
+                      '&:hover': {
+                        transform: 'scale(1.1)'
+                      }
+                    }}
+                  >
+                    {feature.icon}
+                  </MuiBox>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                    {feature.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {feature.description}
+                  </Typography>
+                </MuiBox>
+              </Grow>
             </Grid>
           ))}
         </Grid>
       </Container>
 
       {/* Популярные категории */}
-      <Box sx={{ py: 8, backgroundColor: 'grey.50' }}>
+      <ScrollBox 
+        ref={categoriesSectionRef}
+        sx={{ py: 8, backgroundColor: 'grey.50' }}
+      >
         <Container>
-          <Typography
-            variant="h2"
-            align="center"
-            gutterBottom
-            sx={{
-              fontWeight: 'bold',
-              mb: 6
-            }}
-          >
-            Популярные категории
-          </Typography>
+          <AnimatedBox>
+            <MuiBox textAlign="center" mb={6}>
+              <Typography
+                variant="h2"
+                sx={{
+                  fontWeight: 700,
+                  mb: 2,
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}
+              >
+                Популярные категории
+              </Typography>
+              <Typography variant="h6" color="text.secondary">
+                Выберите категорию и откройте для себя лучшие товары
+              </Typography>
+            </MuiBox>
+          </AnimatedBox>
+
           <Grid container spacing={3}>
-            {categories.slice(0, 4).map((category) => (
+            {categories.slice(0, 4).map((category, index) => (
               <Grid item xs={12} sm={6} md={3} key={category.id}>
-                <Card
-                  component={Link}
-                  to={`/catalog/${category.slug}`}
-                  sx={{
-                    textDecoration: 'none',
-                    color: 'inherit',
-                    height: '100%',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      transform: 'translateY(-8px)',
-                      boxShadow: 6
-                    }
-                  }}
-                >
-                  <Box
-                    sx={{
-                      height: 200,
-                      backgroundImage: `url(${category.image_url || '/default-category.jpg'})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      position: 'relative'
-                    }}
-                  />
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                      {category.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {category.product_count || 0} товаров
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
-
-      {/* Хиты продаж */}
-      <Container sx={{ py: 8 }}>
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Typography
-            variant="h2"
-            gutterBottom
-            sx={{
-              fontWeight: 'bold'
-            }}
-          >
-            Хиты продаж
-          </Typography>
-          <Typography variant="h6" color="text.secondary">
-            Самые популярные товары
-          </Typography>
-        </Box>
-
-        {featuredProducts.length === 0 ? (
-          <Box textAlign="center" py={4}>
-            <Typography variant="h6" color="text.secondary">
-              Товаров пока нет
-            </Typography>
-          </Box>
-        ) : (
-          <>
-            <Grid container spacing={4}>
-              {featuredProducts.map((product) => (
-                <Grid item xs={12} sm={6} md={3} key={product.id}>
+                <Grow in timeout={1000} style={{ transitionDelay: `${index * 200}ms` }}>
                   <Card
+                    component={Link}
+                    to={`/catalog?category=${category.slug}`}
                     sx={{
+                      textDecoration: 'none',
+                      color: 'inherit',
                       height: '100%',
                       transition: 'all 0.3s ease',
+                      borderRadius: 3,
                       '&:hover': {
                         transform: 'translateY(-8px)',
-                        boxShadow: 6
+                        boxShadow: theme.shadows[8]
                       }
                     }}
                   >
-                    <Box
+                    <MuiBox
                       sx={{
+                        height: 200,
+                        backgroundImage: `url(${category.image_url || 'https://via.placeholder.com/300x200/6c757d/ffffff?text=Категория'})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
                         position: 'relative',
-                        height: 250,
-                        overflow: 'hidden'
+                        transition: 'transform 0.3s ease',
+                        '&:hover': {
+                          transform: 'scale(1.05)'
+                        }
+                      }}
+                    />
+                    <CardContent sx={{ textAlign: 'center' }}>
+                      <Category sx={{ fontSize: 32, color: 'primary.main', mb: 1 }} />
+                      <Typography variant="h6" gutterBottom>
+                        {category.name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        {category.description}
+                      </Typography>
+                      <Chip
+                        label={`${category.product_count || 0} товаров`}
+                        color="primary"
+                        variant="outlined"
+                      />
+                    </CardContent>
+                  </Card>
+                </Grow>
+              </Grid>
+            ))}
+          </Grid>
+
+          {categories.length > 4 && (
+            <AnimatedBox>
+              <MuiBox textAlign="center" mt={6}>
+                <Button
+                  component={Link}
+                  to="/catalog"
+                  variant="outlined"
+                  size="large"
+                  sx={{
+                    px: 6,
+                    py: 1.5,
+                    fontSize: '1rem',
+                    borderRadius: 3,
+                    borderWidth: 2,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      borderWidth: 2,
+                      transform: 'translateY(-2px)',
+                      boxShadow: theme.shadows[4]
+                    }
+                  }}
+                >
+                  Все категории
+                </Button>
+              </MuiBox>
+            </AnimatedBox>
+          )}
+        </Container>
+      </ScrollBox>
+
+      {/* Хиты продаж */}
+      <Container sx={{ py: 8 }}>
+        <AnimatedBox>
+          <MuiBox sx={{ textAlign: 'center', mb: 6 }}>
+            <Typography
+              variant="h2"
+              sx={{
+                fontWeight: 700,
+                mb: 2,
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}
+            >
+              Хиты продаж
+            </Typography>
+            <Typography variant="h6" color="text.secondary">
+              Самые популярные товары
+            </Typography>
+          </MuiBox>
+        </AnimatedBox>
+
+        {featuredProducts.length === 0 ? (
+          <AnimatedBox>
+            <MuiBox textAlign="center" py={4}>
+              <Typography variant="h6" color="text.secondary">
+                Товаров пока нет
+              </Typography>
+            </MuiBox>
+          </AnimatedBox>
+        ) : (
+          <>
+            <Grid container spacing={4}>
+              {featuredProducts.map((product, index) => (
+                <Grid item xs={12} sm={6} md={3} key={product.id}>
+                  <Grow in timeout={1000} style={{ transitionDelay: `${index * 150}ms` }}>
+                    <Card
+                      sx={{
+                        height: '100%',
+                        transition: 'all 0.3s ease',
+                        borderRadius: 3,
+                        '&:hover': {
+                          transform: 'translateY(-8px)',
+                          boxShadow: theme.shadows[8]
+                        }
                       }}
                     >
-                      <Box
-                        component="img"
-                        src={product.images?.[0] || '/default-product.jpg'}
-                        alt={product.name}
+                      <MuiBox
                         sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
+                          position: 'relative',
+                          height: 250,
+                          overflow: 'hidden',
+                          transition: 'transform 0.3s ease',
+                          '&:hover': {
+                            transform: 'scale(1.05)'
+                          }
                         }}
-                        onError={(e) => {
-                          e.target.src = '/default-product.jpg';
-                        }}
-                      />
-                      {product.is_new && (
-                        <Chip
-                          label="NEW"
-                          color="primary"
+                      >
+                        <MuiBox
+                          component="img"
+                          src={product.images?.[0] || ''}
+                          alt={product.name}
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            transition: 'transform 0.3s ease'
+                          }}
+                          onError={(e) => {
+                            e.target.src = '';
+                          }}
+                        />
+                        {product.is_new && (
+                          <Chip
+                            label="NEW"
+                            color="primary"
+                            size="small"
+                            sx={{
+                              position: 'absolute',
+                              top: 12,
+                              left: 12,
+                              animation: 'pulse 2s infinite'
+                            }}
+                          />
+                        )}
+                        <Button
                           size="small"
                           sx={{
                             position: 'absolute',
                             top: 12,
-                            left: 12
-                          }}
-                        />
-                      )}
-                      <Button
-                        size="small"
-                        sx={{
-                          position: 'absolute',
-                          top: 12,
-                          right: 12,
-                          minWidth: 'auto',
-                          padding: '4px'
-                        }}
-                      >
-                        <Favorite sx={{ fontSize: 20 }} />
-                      </Button>
-                    </Box>
-                    <CardContent>
-                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                        {product.name}
-                      </Typography>
-                      {product.rating > 0 && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                          <Star sx={{ color: 'gold', fontSize: 18, mr: 0.5 }} />
-                          <Typography variant="body2">
-                            {product.rating}
-                          </Typography>
-                        </Box>
-                      )}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color: 'primary.main',
-                            fontWeight: 'bold'
+                            right: 12,
+                            minWidth: 'auto',
+                            padding: '4px',
+                            color: 'white',
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                              transform: 'scale(1.1)'
+                            }
                           }}
                         >
-                          {product.price?.toLocaleString('ru-RU')} ₽
+                          <Favorite sx={{ fontSize: 20 }} />
+                        </Button>
+                      </MuiBox>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                          {product.name}
                         </Typography>
-                        {product.old_price && (
+                        {product.rating > 0 && (
+                          <MuiBox sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                            <Star sx={{ color: 'gold', fontSize: 18, mr: 0.5 }} />
+                            <Typography variant="body2">
+                              {product.rating}
+                            </Typography>
+                          </MuiBox>
+                        )}
+                        <MuiBox sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                           <Typography
-                            variant="body2"
+                            variant="h6"
                             sx={{
-                              color: 'text.secondary',
-                              textDecoration: 'line-through'
+                              color: 'primary.main',
+                              fontWeight: 'bold'
                             }}
                           >
-                            {product.old_price?.toLocaleString('ru-RU')} ₽
+                            {product.price?.toLocaleString('ru-RU')} ₽
                           </Typography>
-                        )}
-                      </Box>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        startIcon={<ShoppingBasket />}
-                        onClick={() => handleAddToCart(product)}
-                        sx={{
-                          py: 1
-                        }}
-                      >
-                        В корзину
-                      </Button>
-                    </CardContent>
-                  </Card>
+                          {product.old_price && (
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: 'text.secondary',
+                                textDecoration: 'line-through'
+                              }}
+                            >
+                              {product.old_price?.toLocaleString('ru-RU')} ₽
+                            </Typography>
+                          )}
+                        </MuiBox>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          startIcon={<ShoppingBasket />}
+                          onClick={() => handleAddToCart(product)}
+                          sx={{
+                            py: 1,
+                            borderRadius: 2,
+                            fontWeight: 600,
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              transform: 'scale(1.05)'
+                            }
+                          }}
+                        >
+                          В корзину
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </Grow>
                 </Grid>
               ))}
             </Grid>
 
-            <Box sx={{ textAlign: 'center', mt: 6 }}>
-              <Button
-                component={Link}
-                to="/catalog"
-                variant="outlined"
-                size="large"
-                sx={{
-                  px: 6,
-                  py: 1.5,
-                  fontSize: '1.1rem'
-                }}
-              >
-                Смотреть все товары
-              </Button>
-            </Box>
+            <AnimatedBox>
+              <MuiBox sx={{ textAlign: 'center', mt: 6 }}>
+                <Button
+                  component={Link}
+                  to="/catalog"
+                  variant="outlined"
+                  size="large"
+                  sx={{
+                    px: 6,
+                    py: 1.5,
+                    fontSize: '1.1rem',
+                    borderRadius: 3,
+                    borderWidth: 2,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      borderWidth: 2,
+                      transform: 'translateY(-2px)',
+                      boxShadow: theme.shadows[4]
+                    }
+                  }}
+                >
+                  Смотреть все товары
+                </Button>
+              </MuiBox>
+            </AnimatedBox>
           </>
         )}
       </Container>
-    </Box>
+
+      <ScrollTopButton />
+
+      {/* CSS анимации */}
+      <style>
+        {`
+          @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+          }
+          
+          .MuiCard-root, .MuiButton-root, .MuiBox-root {
+            transition: all 0.3s ease !important;
+          }
+        `}
+      </style>
+    </MuiBox>
   );
 };
 

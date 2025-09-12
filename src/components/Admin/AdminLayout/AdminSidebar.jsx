@@ -23,7 +23,7 @@ import { useAuth } from '../../../context/AuthContext';
 import Sidebar from '../Sidebar/Sidebar';
 
 const menuItems = [
-  { text: 'Дашборд', icon: <Dashboard />, path: '/admin/dashboard' },
+  { text: 'Статистика', icon: <Dashboard />, path: '/admin/dashboard' },
   { text: 'Товары', icon: <Inventory />, path: '/admin/products' },
   { text: 'Заказы', icon: <ShoppingCart />, path: '/admin/orders' },
   { text: 'Пользователи', icon: <People />, path: '/admin/users' },

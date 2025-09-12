@@ -135,22 +135,6 @@ const Footer = () => {
               </MuiLink>
               <MuiLink
                 component={Link}
-                to="/delivery"
-                color="inherit"
-                sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
-              >
-                Доставка и оплата
-              </MuiLink>
-              <MuiLink
-                component={Link}
-                to="/guarantee"
-                color="inherit"
-                sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
-              >
-                Гарантия
-              </MuiLink>
-              <MuiLink
-                component={Link}
                 to="/contacts"
                 color="inherit"
                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
