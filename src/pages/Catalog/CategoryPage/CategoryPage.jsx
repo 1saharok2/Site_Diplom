@@ -8,7 +8,7 @@ import {
 } from 'react-bootstrap';
 import { categoryService } from '../../../services/categoryService';
 import ProductCard from '../../../components/Products/ProductCard/ProductCard';
-import './CategoryPage.css'; // Убедитесь, что этот файл существует
+import './CategoryPage.css';
 
 const CategoryPage = () => {
   const { slug } = useParams();

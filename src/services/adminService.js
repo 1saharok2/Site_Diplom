@@ -1,22 +1,57 @@
-import { apiService } from './api';
-
 const API_BASE = 'http://localhost:5000/api';
 
-const handleSupabaseResponse = async (response) => {
-  if (!response.ok) {
-    throw new Error(`HTTP error: ${response.status}`);
+const handleApiResponse = async (response) => {
+  if (response.status === 401 || response.status === 403) {
+    localStorage.removeItem('authToken');
+    window.location.href = '/login';
+    throw new Error('Требуется авторизация');
   }
-  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error ${response.status}: ${errorText}`);
+  }
   const data = await response.json();
-  
   if (data && Array.isArray(data)) {
     return data;
   } else if (data && Array.isArray(data.data)) {
-    return data.data; 
-  } else if (data && data.success !== undefined) {
-    return data.users || data.data || [];
+    return data.data;
+  } else if (data && data.success !== undefined && data.data) {
+    return data.data;
+  } else if (data && data.users) {
+    return data.users;
+  } else if (data && data.products) {
+    return data.products;
   }
-  return [];
+  
+  return data || [];
+};
+
+const getAuthToken = () => {
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    throw new Error('Токен авторизации не найден');
+  }
+  return token;
+};
+
+// Универсальный метод для GET запросов
+const fetchWithAuth = async (url, options = {}) => {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers,
+      },
+    });
+    
+    return await handleApiResponse(response);
+  } catch (error) {
+    console.error(`Ошибка запроса к ${url}:`, error);
+    throw error;
+  }
 };
 
 export const adminService = {
@@ -37,207 +72,85 @@ export const adminService = {
 
   // Products
   getProducts: async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_BASE}/admin/products`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Ошибка загрузки товаров');
-      
-      const data = await response.json();
-      // Supabase возвращает массив напрямую
-      return Array.isArray(data) ? data : [];
-      
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      return [];
-    }
+    return fetchWithAuth(`${API_BASE}/admin/products`);
   },
 
   createProduct: async (productData) => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_BASE}/admin/products`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({...productData,
-          images: Array.isArray(productData.images) ? productData.images : []
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка создания товара');
-      }
-      
-      return await response.json();
-      
-    } catch (error) {
-      console.error('Error creating product:', error);
-      throw error;
-    }
+    return fetchWithAuth(`${API_BASE}/admin/products`, {
+      method: 'POST',
+      body: JSON.stringify({
+        ...productData,
+        images: Array.isArray(productData.images) ? productData.images : []
+      })
+    });
   },
 
   updateProduct: async (id, productData) => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_BASE}/admin/products/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(productData)
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка обновления товара');
-      }
-      
-      return await response.json();
-      
-    } catch (error) {
-      console.error('Error updating product:', error);
-      throw error;
-    }
+    return fetchWithAuth(`${API_BASE}/admin/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(productData)
+    });
   },
 
   deleteProduct: async (id) => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_BASE}/admin/products/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка удаления товара');
-      }
-      
-      return await response.json();
-      
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      throw error;
-    }
+    return fetchWithAuth(`${API_BASE}/admin/products/${id}`, {
+      method: 'DELETE'
+    });
   },
 
   // Orders
   getOrders: async () => {
-    try {
-      const response = await fetch(`${API_BASE}/admin/orders`);
-      if (!response.ok) throw new Error('Ошибка загрузки заказов');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      return [];
-    }
+    return fetchWithAuth(`${API_BASE}/admin/orders`);
   },
 
   updateOrderStatus: async (orderId, status) => {
-    try {
-      const response = await fetch(`${API_BASE}/admin/orders/${orderId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
-      });
-      if (!response.ok) throw new Error('Ошибка обновления статуса');
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      throw error;
-    }
+    return fetchWithAuth(`${API_BASE}/admin/orders/${orderId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status })
+    });
   },
 
   // Categories
-  getCategories: () => apiService.getCategories(),
+  getCategories: async () => {
+    return fetchWithAuth(`${API_BASE}/admin/categories`);
+  },
 
   // Users
   getUsers: async () => {
-    try {
+    return fetchWithAuth(`${API_BASE}/admin/users`);
+  },
 
+  getDashboardStats: async () => {
+    try {
       const token = localStorage.getItem('authToken');
       if (!token) {
-        console.warn('Токен не найден');
-        return [];
+      throw new Error('Токен не найден');
       }
 
-      const response = await fetch(`${API_BASE}/admin/users`, {
+      const response = await fetch(`${API_BASE}/admin/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      return await handleSupabaseResponse(response);
-      
-    } catch (error) {
-      console.error('Network error:', error);
-      return [];
-    }
-  },
-
-  updateUserRole: async (userId, role) => {
-    try {
-
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_BASE}/admin/users/${userId}/role`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ role })
-      });
-      
+    
       if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`Ошибка сервера: ${response.status} - ${errorText}`);
       }
-
+    
       const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Update role error:', error);
-      throw error;
-    }
-  },
-
-  getDashboardStats: async () => {
-  try {
-    const token = localStorage.getItem('authToken');
-    const response = await fetch(`${API_BASE}/admin/stats`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+      console.log('📊 Данные статистики от сервера:', data);
     
-    if (!response.ok) throw new Error('Ошибка загрузки статистики');
-    
-    const data = await response.json();
-    return {
-      totalOrders: data.orders || 0,
-      totalProducts: data.products || 0,
-      totalUsers: data.users || 0,
-      totalSales: data.sales || 0,
-      recentOrders: data.recentOrders || []
-    };
-  } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
+    // Разные варианты структуры ответа
       return {
-        totalOrders: 0,
-        totalProducts: 0,
-        totalUsers: 0,
-        totalSales: 0,
-        recentOrders: []
-      };
+        totalOrders: data.totalOrders || data.orders_count || data.orders || 0,
+        totalProducts: data.totalProducts || data.products_count || data.products || 0,
+        totalUsers: data.totalUsers || data.users_count || data.users || 0,
+        totalSales: data.totalSales || data.sales_total || data.sales || 0,
+        recentOrders: data.recentOrders || data.last_orders || data.orders || []
+      }; 
+    } catch (error) {
+      console.error('❌ Ошибка загрузки статистики:', error);
     }
   }
-};
+}
