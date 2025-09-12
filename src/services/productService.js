@@ -1,27 +1,48 @@
 // services/productService.js
 import { apiService } from './api';
-import { mockService } from './mockService';
+import { ensureValidImageUrl } from '../utils/urlHelpers';
 
 const USE_MOCK_API = true;
 
+const isValidUrl = (url) => {
+  if (!url || typeof url !== 'string' || url.trim() === '') return false;
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 export const productService = {
   // Получить все товары
-  getProducts: USE_MOCK_API ? mockService.getProducts : async (params = {}) => {
+  getProducts: async () => {
     try {
-      const response = await apiService.get('/products', { params });
-      return response.data;
+      const products = await apiService.getProducts();
+      
+      return products.map(product => ({
+        ...product,
+        image: ensureValidImageUrl(product.image)
+      }));
     } catch (error) {
-      throw new Error(`Ошибка при получении товаров: ${error.message}`);
+      console.error('Error fetching products:', error);
+      throw error;
     }
   },
 
+
   // Получить товар по ID
-  getProduct: USE_MOCK_API ? mockService.getProduct : async (id) => {
+  getProductById: async (id) => {
     try {
-      const response = await apiService.get(`/products/${id}`);
-      return response.data;
+      const product = await apiService.getProduct(id);
+      
+      return {
+        ...product,
+        image: isValidUrl(product.image) ? product.image : null
+      };
     } catch (error) {
-      throw new Error(`Ошибка при получении товара: ${error.message}`);
+      console.error('Error fetching product:', error);
+      throw error;
     }
   },
 

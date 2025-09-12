@@ -4,12 +4,11 @@ import {
   Container, 
   Spinner, 
   Alert, 
-  Button, 
-  Breadcrumb 
+  Button
 } from 'react-bootstrap';
-import { getCategoryBySlug, getProductsByCategory } from '../../../services/categoryService';
-import './CategoryPage.css';
+import { categoryService } from '../../../services/categoryService';
 import ProductCard from '../../../components/Products/ProductCard/ProductCard';
+import './CategoryPage.css';
 
 const CategoryPage = () => {
   const { slug } = useParams();
@@ -25,8 +24,8 @@ const CategoryPage = () => {
       try {
         setLoading(true);
         const [categoryData, productsData] = await Promise.all([
-          getCategoryBySlug(slug),
-          getProductsByCategory(slug)
+          categoryService.getCategoryBySlug(slug),
+          categoryService.getProductsByCategory(slug)
         ]);
         setCategory(categoryData);
         setProducts(productsData);
@@ -54,7 +53,7 @@ const CategoryPage = () => {
         case 'rating':
           return b.rating - a.rating;
         case 'newest':
-          return b.isNew - a.isNew;
+          return new Date(b.createdAt) - new Date(a.createdAt);
         default:
           return a.name.localeCompare(b.name);
       }
@@ -101,8 +100,6 @@ const CategoryPage = () => {
 
   return (
     <Container className="category-page">
-
-
       {/* Заголовок категории */}
       <div className="category-header">
         <h1 className="category-title">{category.name}</h1>

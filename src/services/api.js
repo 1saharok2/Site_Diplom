@@ -1,6 +1,24 @@
 const API_BASE = 'http://localhost:5000/api';
 
 export const apiService = {
+  get: (url) => fetch(`${API_BASE}${url}`).then(res => res.json()),
+  post: (url, data) => 
+    fetch(`${API_BASE}${url}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(res => res.json()),
+  put: (url, data) =>
+    fetch(`${API_BASE}${url}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(res => res.json()),
+  delete: (url) =>
+    fetch(`${API_BASE}${url}`, {
+      method: 'DELETE'
+    }).then(res => res.json()),
+  
   // Products
   getProducts: () => fetch(`${API_BASE}/products`).then(res => res.json()),
   getProduct: (id) => fetch(`${API_BASE}/products/${id}`).then(res => res.json()),

@@ -1,425 +1,363 @@
-// src/pages/Admin/Categories/AdminCategories.jsx
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
+  Container,
   Typography,
+  Box,
+  Grid,
+  Card,
+  CardContent,
   Button,
-  Paper,
-  CircularProgress,
-  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
-  IconButton,
-  Chip
+  Chip,
+  Divider,
+  useTheme,
+  CircularProgress,
+  Alert
 } from '@mui/material';
-import { 
-  Add, 
-  Edit, 
-  Delete, 
-  Image as ImageIcon 
+import {
+  Add,
+  Edit,
+  Delete,
+  Smartphone,
+  Laptop,
+  Headphones,
+  DevicesOther
 } from '@mui/icons-material';
-import { adminService } from '../../../services/adminService';
+
+// Сервис для работы с API (замените на вашу реализацию)
+import { categoryService } from '../../../services/categoryService';
 
 const AdminCategories = () => {
+  const theme = useTheme();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [formData, setFormData] = useState({ name: '', slug: '' });
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
+  // Функция для получения категорий из базы данных
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const categoriesData = await adminService.getCategories();
-      setCategories(categoriesData || []);
-    } catch (error) {
-      setError('Ошибка при загрузке категорий');
+      setError(null);
+      const categoriesData = await categoryService.getAllCategories();
+      setCategories(categoriesData);
+    } catch (err) {
+      setError('Не удалось загрузить категории: ' + err.message);
+      console.error('Ошибка загрузки категорий:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Удалить категорию? Все товары в этой категории будут без категории.')) {
-      try {
-        await adminService.deleteCategory(id);
-        setCategories(categories.filter(c => c.id !== id));
-        setSuccess('Категория удалена');
-        setTimeout(() => setSuccess(''), 3000);
-      } catch (error) {
-        setError('Ошибка при удалении категории');
-      }
-    }
+  // Загрузка категорий при монтировании компонента
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const handleAddCategory = () => {
+    setFormData({ name: '', slug: '' });
+    setEditingCategory(null);
+    setOpenDialog(true);
   };
 
-  const handleEdit = (category) => {
+  const handleEditCategory = (category) => {
+    setFormData({ name: category.name, slug: category.slug });
     setEditingCategory(category);
     setOpenDialog(true);
   };
 
-  const handleCreate = () => {
-    setEditingCategory(null);
-    setOpenDialog(true);
-  };
-
-  const handleDialogClose = () => {
-    setOpenDialog(false);
-    setEditingCategory(null);
-  };
-
-  const handleSubmit = async (formData) => {
-    try {
-      if (editingCategory) {
-        await adminService.updateCategory(editingCategory.id, formData);
-        setSuccess('Категория обновлена');
-      } else {
-        await adminService.createCategory(formData);
-        setSuccess('Категория создана');
+  const handleDeleteCategory = async (categoryId) => {
+    if (window.confirm('Вы уверены, что хотите удалить эту категорию?')) {
+      try {
+        await categoryService.deleteCategory(categoryId);
+        // Обновляем список после удаления
+        await fetchCategories();
+      } catch (err) {
+        setError('Не удалось удалить категорию: ' + err.message);
       }
-      fetchCategories();
-      handleDialogClose();
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (error) {
-      setError('Ошибка при сохранении категории');
     }
   };
 
-  const getProductCountText = (count) => {
-    if (count === 0) return 'нет товаров';
-    if (count === 1) return '1 товар';
-    if (count < 5) return `${count} товара`;
-    return `${count} товаров`;
+  const handleSaveCategory = async () => {
+    try {
+      if (editingCategory) {
+        // Обновление существующей категории
+        await categoryService.updateCategory(editingCategory.id, formData);
+      } else {
+        // Создание новой категории
+        await categoryService.createCategory(formData);
+      }
+      
+      // Обновляем список категорий
+      await fetchCategories();
+      setOpenDialog(false);
+    } catch (err) {
+      setError('Не удалось сохранить категорию: ' + err.message);
+    }
   };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Функция для получения иконки по названию категории
+  const getCategoryIcon = (categoryName) => {
+    const iconMap = {
+      'Смартфоны': <Smartphone />,
+      'Ноутбуки': <Laptop />,
+      'Наушники': <Headphones />,
+      'Аксессуары': <DevicesOther />
+    };
+    
+    return iconMap[categoryName] || <DevicesOther />;
+  };
+
+  // Функция для получения цвета по названию категории
+  const getCategoryColor = (categoryName) => {
+    const colorMap = {
+      'Смартфоны': theme.palette.primary.main,
+      'Ноутбуки': theme.palette.secondary.main,
+      'Наушники': theme.palette.success.main,
+      'Аксессуары': theme.palette.warning.main
+    };
+    
+    return colorMap[categoryName] || theme.palette.info.main;
+  };
+
+  const CategoryCard = ({ category }) => (
+    <Card sx={{ 
+      height: '100%', 
+      display: 'flex', 
+      flexDirection: 'column',
+      transition: 'all 0.3s ease',
+      border: `1px solid ${theme.palette.divider}`,
+      '&:hover': {
+        transform: 'translateY(-4px)',
+        boxShadow: theme.shadows[4],
+        borderColor: getCategoryColor(category.name)
+      }
+    }}>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        height: 120,
+        backgroundColor: `${getCategoryColor(category.name)}15`,
+        color: getCategoryColor(category.name)
+      }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          width: 60,
+          height: 60,
+          borderRadius: '50%',
+          backgroundColor: `${getCategoryColor(category.name)}20`,
+          fontSize: 32
+        }}>
+          {getCategoryIcon(category.name)}
+        </Box>
+      </Box>
+      
+      <CardContent sx={{ flexGrow: 1, p: 3 }}>
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+          {category.name}
+        </Typography>
+        
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          <Chip 
+            label={`${category.products_count || 0} товаров`}
+            size="small"
+            variant="outlined"
+            sx={{ 
+              backgroundColor: `${theme.palette.primary.main}08`,
+              borderColor: theme.palette.primary.main,
+              color: theme.palette.primary.main,
+              fontWeight: 500
+            }}
+          />
+        </Box>
+        
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+            SLUG:
+          </Typography>
+          <Typography variant="body2" sx={{ 
+            fontFamily: 'monospace', 
+            backgroundColor: theme.palette.grey[100],
+            p: 0.5,
+            borderRadius: 1,
+            mt: 0.5,
+            display: 'inline-block'
+          }}>
+            {category.slug}
+          </Typography>
+        </Box>
+      </CardContent>
+      
+      <Box sx={{ p: 2, pt: 0 }}>
+        <Divider sx={{ mb: 2 }} />
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Edit />}
+            onClick={() => handleEditCategory(category)}
+            sx={{ minWidth: '120px' }}
+          >
+            Редактировать
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            color="error"
+            startIcon={<Delete />}
+            onClick={() => handleDeleteCategory(category.id)}
+            sx={{ minWidth: '100px' }}
+          >
+            Удалить
+          </Button>
+        </Box>
+      </Box>
+    </Card>
+  );
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+      <Container maxWidth="lg" sx={{ py: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
         <CircularProgress />
-      </Box>
+      </Container>
     );
   }
 
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" component="h1">
-          Управление категориями
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleCreate}
-          sx={{ minWidth: '200px' }}
+    <Container maxWidth="lg" sx={{ py: 3 }}>
+      {/* Заголовок */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 4,
+        p: 3,
+        backgroundColor: theme.palette.background.paper,
+        borderRadius: 2,
+        boxShadow: theme.shadows[1]
+      }}>
+        <Box>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
+            Управление категориями
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Создавайте и редактируйте категории товаров
+          </Typography>
+        </Box>
+        <Button 
+          variant="contained" 
+          startIcon={<Add />} 
+          onClick={handleAddCategory}
+          sx={{ 
+            borderRadius: 2,
+            px: 3,
+            py: 1
+          }}
         >
-          Создать категорию
+          Добавить категорию
         </Button>
       </Box>
 
       {error && (
-        <Alert 
-          severity="error" 
-          sx={{ mb: 3 }} 
-          onClose={() => setError('')}
-        >
+        <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
 
-      {success && (
-        <Alert 
-          severity="success" 
-          sx={{ mb: 3 }} 
-          onClose={() => setSuccess('')}
-        >
-          {success}
-        </Alert>
+      {/* Сетка категорий */}
+      {categories.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 6 }}>
+          <Typography variant="h6" color="textSecondary">
+            Категории не найдены
+          </Typography>
+          <Button 
+            variant="contained" 
+            startIcon={<Add />} 
+            onClick={handleAddCategory}
+            sx={{ mt: 2 }}
+          >
+            Добавить первую категорию
+          </Button>
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {categories.map((category) => (
+            <Grid item xs={12} sm={6} md={4} key={category.id}>
+              <CategoryCard category={category} />
+            </Grid>
+          ))}
+        </Grid>
       )}
 
-      <Paper elevation={3}>
-        <Box p={3}>
-          {categories.length === 0 ? (
-            <Box textAlign="center" py={4}>
-              <Typography variant="h6" color="textSecondary" gutterBottom>
-                Категорий пока нет
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Создайте первую категорию для вашего магазина
-              </Typography>
-            </Box>
-          ) : (
-            <Box display="grid" gap={2}>
-              {categories.map((category) => (
-                <Box
-                  key={category.id}
-                  sx={{
-                    p: 3,
-                    border: '1px solid',
-                    borderColor: 'grey.300',
-                    borderRadius: 2,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    backgroundColor: 'background.paper',
-                    transition: 'all 0.2s ease-in-out',
-                    '&:hover': {
-                      boxShadow: 2,
-                      borderColor: 'primary.main'
-                    }
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={3}>
-                    {category.image_url && (
-                      <Box
-                        sx={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: 2,
-                          overflow: 'hidden',
-                          backgroundColor: 'grey.100',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        <img
-                          src={category.image_url}
-                          alt={category.name}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover'
-                          }}
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                        <ImageIcon 
-                          sx={{ 
-                            display: category.image_url ? 'none' : 'block',
-                            color: 'grey.400',
-                            fontSize: 32
-                          }} 
-                        />
-                      </Box>
-                    )}
-                    
-                    <Box>
-                      <Typography variant="h6" gutterBottom>
-                        {category.name}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary" gutterBottom>
-                        Slug: {category.slug}
-                      </Typography>
-                      {category.description && (
-                        <Typography variant="body2" color="textSecondary" paragraph>
-                          {category.description}
-                        </Typography>
-                      )}
-                      <Chip
-                        label={getProductCountText(category.product_count || 0)}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                      />
-                    </Box>
-                  </Box>
-
-                  <Box display="flex" gap={1}>
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleEdit(category)}
-                      title="Редактировать"
-                    >
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDelete(category.id)}
-                      title="Удалить"
-                      disabled={category.product_count > 0}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
-          )}
-        </Box>
-      </Paper>
-
-      <CategoryDialog
-        open={openDialog}
-        onClose={handleDialogClose}
-        onSubmit={handleSubmit}
-        category={editingCategory}
-      />
-    </Box>
-  );
-};
-
-const CategoryDialog = ({ open, onClose, onSubmit, category }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    description: '',
-    image_url: ''
-  });
-
-  const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    if (category) {
-      setFormData({
-        name: category.name || '',
-        slug: category.slug || '',
-        description: category.description || '',
-        image_url: category.image_url || ''
-      });
-    } else {
-      setFormData({
-        name: '',
-        slug: '',
-        description: '',
-        image_url: ''
-      });
-    }
-    setErrors({});
-  }, [category, open]);
-
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.name.trim()) {
-      newErrors.name = 'Название обязательно';
-    }
-    
-    if (!formData.slug.trim()) {
-      newErrors.slug = 'Slug обязателен';
-    } else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
-      newErrors.slug = 'Slug может содержать только латинские буквы, цифры и дефисы';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      onSubmit(formData);
-    }
-  };
-
-  const generateSlug = (name) => {
-    return name
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-  };
-
-  const handleNameChange = (e) => {
-    const name = e.target.value;
-    setFormData(prev => ({
-      ...prev,
-      name,
-      slug: prev.slug || generateSlug(name)
-    }));
-  };
-
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        {category ? 'Редактировать категорию' : 'Создать категорию'}
-      </DialogTitle>
-      
-      <form onSubmit={handleSubmit}>
-        <DialogContent>
+      {/* Диалог добавления/редактирования категории */}
+      <Dialog 
+        open={openDialog} 
+        onClose={() => setOpenDialog(false)} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3 } }}
+      >
+        <DialogTitle sx={{ 
+          backgroundColor: theme.palette.primary.main,
+          color: 'white',
+          fontWeight: 600
+        }}>
+          {editingCategory ? 'Редактировать категорию' : 'Добавить категорию'}
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
           <TextField
+            autoFocus
+            margin="dense"
+            name="name"
+            label="Название категории"
             fullWidth
-            label="Название категории *"
+            variant="outlined"
             value={formData.name}
-            onChange={handleNameChange}
-            margin="normal"
-            error={!!errors.name}
-            helperText={errors.name}
-            required
+            onChange={handleInputChange}
+            sx={{ mb: 2 }}
           />
-          
           <TextField
+            margin="dense"
+            name="slug"
+            label="SLUG"
             fullWidth
-            label="Slug *"
+            variant="outlined"
             value={formData.slug}
-            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-            margin="normal"
-            error={!!errors.slug}
-            helperText={errors.slug || 'Уникальный идентификатор для URL'}
-            required
+            onChange={handleInputChange}
+            helperText="Уникальный идентификатор категории в URL"
           />
-          
-          <TextField
-            fullWidth
-            label="Описание"
-            multiline
-            rows={3}
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            margin="normal"
-            helperText="Необязательное описание категории"
-          />
-          
-          <TextField
-            fullWidth
-            label="URL изображения"
-            value={formData.image_url}
-            onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-            margin="normal"
-            helperText="Ссылка на изображение категории"
-          />
-          
-          {formData.image_url && (
-            <Box mt={2} textAlign="center">
-              <img
-                src={formData.image_url}
-                alt="Preview"
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '200px',
-                  borderRadius: '8px',
-                  border: '1px solid #ddd'
-                }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            </Box>
-          )}
         </DialogContent>
-        
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={onClose} color="inherit">
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button 
+            onClick={() => setOpenDialog(false)}
+            sx={{ borderRadius: 2 }}
+          >
             Отмена
           </Button>
-          <Button 
-            type="submit" 
-            variant="contained" 
-            size="large"
+          <Button
+            variant="contained"
+            onClick={handleSaveCategory}
+            sx={{ borderRadius: 2 }}
           >
-            {category ? 'Сохранить' : 'Создать'}
+            Сохранить
           </Button>
         </DialogActions>
-      </form>
-    </Dialog>
+      </Dialog>
+    </Container>
   );
 };
 

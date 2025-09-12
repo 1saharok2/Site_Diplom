@@ -16,15 +16,17 @@ import {
   Dashboard as DashboardIcon,
   ShoppingCart as OrdersIcon,
   People as UsersIcon,
-  Category as ProductsIcon,
+  Category as CategoriesIcon,
+  Inventory as ProductsIcon,
   ExitToApp as LogoutIcon
 } from '@mui/icons-material';
 
 const menuItems = [
-  { text: 'Дашборд', icon: <DashboardIcon />, path: '/admin' },
+  { text: 'Статистика', icon: <DashboardIcon />, path: '/admin' },
   { text: 'Товары', icon: <ProductsIcon />, path: '/admin/products' },
   { text: 'Заказы', icon: <OrdersIcon />, path: '/admin/orders' },
-  { text: 'Пользователи', icon: <UsersIcon />, path: '/admin/users' }
+  { text: 'Пользователи', icon: <UsersIcon />, path: '/admin/users' },
+  { text: 'Категории', icon: <CategoriesIcon />, path: '/admin/categories'}
 ];
 
 const Sidebar = ({ open, onClose, onLogout }) => {

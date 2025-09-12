@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Button, Spinner, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { getCategories } from '../../../services/categoryService';
+import { categoryService } from '../../../services/categoryService';
 import './CategoriesPage.css';
 
 const CategoriesPage = () => {
@@ -14,7 +14,7 @@ const CategoriesPage = () => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const data = await getCategories();
+        const data = await categoryService.getAllCategories();
         setCategories(data);
       } catch (err) {
         setError('Ошибка загрузки категорий');
@@ -81,14 +81,12 @@ const CategoriesPage = () => {
           >
             <div className="category-image-container">
               <img 
-                src={category.image} 
+                src={category.image || '/api/placeholder/300/200'}
                 alt={category.name}
                 className="category-image"
                 onError={(e) => {
-                  if (category.image.includes('/src/assets/')) {
-                    e.target.src = `https://via.placeholder.com/400x300/007bff/ffffff?text=${encodeURIComponent(category.name)}`;
-                  } else {
-                    e.target.src = 'https://via.placeholder.com/400x300/6c757d/ffffff?text=Изображение';
+                  if (!e.target.src.includes('placeholder') && !e.target.src.includes('via.placeholder.com')) {
+                    e.target.src = `https://via.placeholder.com/400x300/6c757d/ffffff?text=${encodeURIComponent(category.name.slice(0, 15))}`;
                   }
                 }}
               />
@@ -110,7 +108,7 @@ const CategoriesPage = () => {
               <div 
                 className="btn btn-primary view-products-btn"
                 onClick={(e) => {
-                  e.stopPropagation(); // Останавливаем всплытие события
+                  e.stopPropagation();
                   navigate(`/catalog/${category.slug}`);
                 }}
               >
