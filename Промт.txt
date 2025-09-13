@@ -1,0 +1,338 @@
+Контекст проекта:
+Я разрабатываю интернет-магазин на React. Использую React Router для навигации, React Bootstrap для UI, React Icons для иконок. База данных — Supabase.
+
+Текущая задача:
+Подключить базу данных Supabase к странице товаров (ProductCard) и категориям (CategoryPage).
+
+Структура проекта:
+
+Главная страница: src/pages/HomePage/HomePage.jsx
+
+Страница категории: src/pages/CategoryPage/CategoryPage.jsx
+
+Карточка товара: src/components/Products/ProductCard/ProductCard.jsx
+
+Сервис Supabase: src/services/supabaseClient.js
+
+Сервис категорий: src/services/categoryService.js
+
+Ключевые компоненты:
+
+ProductCard (путь: src/components/Products/ProductCard/ProductCard.jsx):
+
+Получает данные товара через пропс product
+
+Ожидает объект с полями:
+
+javascript
+{
+  id,
+  name,
+  price,
+  oldPrice,
+  images: [],
+  rating,
+  reviewsCount,
+  isNew,
+  discount,
+  inStock
+}
+CategoryPage (путь: src/pages/CategoryPage/CategoryPage.jsx):
+
+Использует хук useParams() для получения slug категории из URL
+
+Использует сервисные функции:
+
+getCategoryBySlug(slug) — получение данных категории
+
+getProductsByCategory(slug) — получение товаров категории
+
+Фильтрует и сортирует товары
+
+Передает массив товаров в ProductCard
+
+Supabase клиент (путь: src/services/supabaseClient.js):
+
+javascript
+import { createClient } from '@supabase/supabase-js'
+const supabaseUrl = 'https://my-project.supabase.co'
+const supabaseAnonKey = 'my-anon-key'
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+CategoryService (путь: src/services/categoryService.js):
+
+Содержит функции для работы с категориями и товарами
+
+Должен быть подключен к Supabase
+
+Что нужно сделать:
+
+Настроить корректное подключение к Supabase
+
+Реализовать функции в categoryService.js для получения:
+
+Данных категории по slug
+
+Товаров категории по slug
+
+Обеспечить правильный маппинг полей из Supabase в структуру, ожидаемую ProductCard
+
+Реализовать обработку ошибок и состояния загрузки
+
+Технические детали:
+
+Используем React Hooks (useState, useEffect)
+
+Для запросов к Supabase используем асинхронные функции
+
+Важно сохранить существующую логику фильтрации и сортировки в CategoryPage
+
+Нужна обработка случаев:
+
+Загрузка данных
+
+Ошибки запросов
+
+Отсутствие категории/товаров
+
+Пример структуры таблиц Supabase (предположительная):
+
+Таблица categories: id, name, slug, description, created_at
+
+Таблица products: id, name, price, old_price, images, rating, reviews_count, is_new, discount, in_stock, category_id, created_at
+
+Важно:
+Названия полей в Supabase могут отличаться от ожидаемых в компонентах. Нужен маппинг.
+
+Запросы к Supabase:
+
+Для категории: supabase.from('categories').select('*').eq('slug', slug).single()
+
+Для товаров: supabase.from('products').select('*').eq('category_id', categoryId)
+
+Ожидаемый результат:
+
+CategoryPage получает данные из Supabase через categoryService
+
+ProductCard отображает товары с корректными данными
+
+Сохранена вся существующая функциональность (фильтрация, сортировка, UI)
+
+
+
+Вот структура проекта
+
+Структура папок тома SSD M2
+Серийный номер тома: 00000007 2ABD:7179
+C:\USERS\ADMIN\DOCUMENTS\GITHUB\SITE_DIPLOM\SRC
+│   App.css
+│   App.js
+│   App.test.js
+│   index.css
+│   index.js
+│   reportWebVitals.js
+│   setupTests.js
+│
+├───assets
+│   ├───Categories
+│   │       Smartphones.jpg
+│   │
+│   └───products
+│       └───Phones
+│               Google_Pixel_8_Pro.png
+│               Huawei P60 Pro.png
+│               iphone.png
+│               iphone16_pink.png
+│               Nothing Phone 2.png
+│               OnePlus 12.png
+│               Oppo Find X6.png
+│               Realme GT 3.png
+│               Samsung Galaxy S23 Ultra.png
+│               Vivo X90 Pro.png
+│               Xiaomi Redmi Note 13.png
+│
+├───components
+│   │   YandexMap.jsx
+│   │
+│   ├───Admin
+│   │   │   AdminPanel.js
+│   │   │   ProductManager.js
+│   │   │
+│   │   ├───AdminLayout
+│   │   │       AdminLayout.css
+│   │   │       AdminLayout.jsx
+│   │   │       AdminSidebar.jsx
+│   │   │
+│   │   ├───Common
+│   │   │       AdminRoute.jsx
+│   │   │       ImageUpload.jsx
+│   │   │
+│   │   ├───Products
+│   │   │       ProductCreate.jsx
+│   │   │       ProductForm.jsx
+│   │   │       ProductTable.jsx
+│   │   │
+│   │   └───Sidebar
+│   │           index.js
+│   │           Sidebar.jsx
+│   │
+│   ├───Cart
+│   │   ├───CartItem
+│   │   │       zxc
+│   │   │
+│   │   ├───CartSidebar
+│   │   │       zxc
+│   │   │
+│   │   └───CartTotal
+│   │           zxc
+│   │
+│   ├───Common
+│   │       AdminRoute.jsx
+│   │       index.js
+│   │       ProtectedCheckoutRoute.jsx
+│   │       ProtectedRoute.jsx
+│   │
+│   ├───Layout
+│   │   │   Layout.jsx
+│   │   │
+│   │   ├───Footer
+│   │   │       Footer.css
+│   │   │       Footer.jsx
+│   │   │
+│   │   └───Header
+│   │           Header.css
+│   │           Header.jsx
+│   │
+│   ├───Products
+│   │   │   ProductList.js
+│   │   │
+│   │   ├───ProductCard
+│   │   │       ProductCard.css
+│   │   │       ProductCard.jsx
+│   │   │
+│   │   └───ProductList
+│   └───UI
+│       │   CartBadge.jsx
+│       │   ImageWithFallBack.jsx
+│       │
+│       └───Loader
+│               LoadingSpinner.css
+│               LoadingSpinner.jsx
+│
+├───context
+│       AdminContext.jsx
+│       AuthContext.jsx
+│       CartContext.jsx
+│       CategoriesContext.jsx
+│       index.js
+│       ProductsContext.jsx
+│
+├───data
+│       constains.js
+│       mockData.js
+│
+├───pages
+│   │   index.js
+│   │
+│   ├───About
+│   │   │   index.js
+│   │   │
+│   │   ├───AboutPage
+│   │   │       AboutPage.css
+│   │   │       AboutPage.jsx
+│   │   │
+│   │   └───ContactsPage
+│   │           ContactsPage.css
+│   │           ContactsPage.jsx
+│   │
+│   ├───Admin
+│   │   │   index.js
+│   │   │
+│   │   ├───Categories
+│   │   │       AdminCategories.jsx
+│   │   │
+│   │   ├───Dashboard
+│   │   │       AdminDashboard.jsx
+│   │   │       AdminDashboard.module.css
+│   │   │
+│   │   ├───Orders
+│   │   │       AdminOrders.jsx
+│   │   │       OrderDetails.jsx
+│   │   │
+│   │   ├───Products
+│   │   │       AdminProducts.jsx
+│   │   │
+│   │   ├───Reviews
+│   │   │       AdminReviews.jsx
+│   │   │       ReviewModerate.jsx
+│   │   │
+│   │   └───Users
+│   │           AdminUsers.jsx
+│   │           UserEdit.jsx
+│   │
+│   ├───Auth
+│   │       AuthPages.css
+│   │       index.js
+│   │       LoginPage.jsx
+│   │       RegisterPage.jsx
+│   │
+│   ├───Cart
+│   │       CartPage.jsx
+│   │
+│   ├───Catalog
+│   │   │   CatalogPage.jsx
+│   │   │   index.js
+│   │   │
+│   │   ├───CategoriesPage
+│   │   │       CategoriesPage.css
+│   │   │       CategoriesPage.jsx
+│   │   │
+│   │   ├───CategoryPage
+│   │   │       CategoryPage.css
+│   │   │       CategoryPage.jsx
+│   │   │
+│   │   └───ProductPage
+│   │       │   ProductGallery.jsx
+│   │       │   ProductInfo.jsx
+│   │       │   ProductPage.jsx
+│   │       │   ProductsTabs.jsx
+│   │       │
+│   │       └───ProductPage_css
+│   │               ProductGallery.css
+│   │               ProductInfo.css
+│   │               ProductPage.css
+│   │               ProductTabs.css
+│   │
+│   ├───Checkout
+│   │       CheckoutPage.jsx
+│   │
+│   ├───Home
+│   │       HomePage.css
+│   │       HomePage.jsx
+│   │
+│   ├───OrderSuccess
+│   │       OrderSuccessPage.jsx
+│   │
+│   ├───Search
+│   │       SearchPage.jsx
+│   │
+│   └───User
+│           index.js
+│           OrdersPage.jsx
+│           ProfilePage.jsx
+│           WishlistPage.jsx
+│
+├───services
+│       adminService.js
+│       api.js
+│       categoryService.js
+│       mockService.js
+│       productService.js
+│
+├───styles
+│       AdminStyles.css
+│       theme.js
+│
+└───utils
+
+
+Это гит проэкта https://github.com/1saharok2/Site_Diplom/tree/Aleksandriy
