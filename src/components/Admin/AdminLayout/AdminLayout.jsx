@@ -19,6 +19,8 @@ const AdminLayout = ({ children }) => {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+      <AdminSidebar/>
+      
       {/* Сайдбар для десктопной версии */}
       <Box
         sx={{

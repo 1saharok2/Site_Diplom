@@ -5,7 +5,6 @@ import {
   ListItemIcon,
   ListItemText,
   ListItemButton,
-  Divider,
   Typography,
   Box,
   Chip,
@@ -54,20 +53,26 @@ const AdminSidebar = ({ onItemClick }) => {
 
   return (
     <Box sx={{ 
-      width: '100%', 
+      width: 280, // Фиксированная ширина
+      minWidth: 280,
       height: '100vh',
+      position: 'fixed', // Фиксированное позиционирование
+      left: 0,
+      top: 0,
       display: 'flex',
       flexDirection: 'column',
-      background: 'linear-gradient(180deg, #1a237e 0%, #283593 100%)', // Более темный градиент
+      background: 'linear-gradient(180deg, #1a237e 0%, #283593 100%)',
       color: 'white',
-      overflow: 'hidden' // Убираем скролл внутри сайдбара
+      overflow: 'hidden',
+      zIndex: 1000, // Высокий z-index чтобы был поверх контента
+      boxShadow: '2px 0 8px rgba(0,0,0,0.15)'
     }}>
-      {/* Заголовок с логотипом - УБИРАЕМ БЕЛУЮ ПОЛОСУ */}
+      {/* Заголовок с логотипом */}
       <Box sx={{ 
         p: 2, 
         textAlign: 'center', 
         borderBottom: '1px solid rgba(255,255,255,0.1)',
-        background: 'transparent' // Убираем любой фон
+        flexShrink: 0 // Запрещаем сжатие
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
           <Store sx={{ fontSize: 28, mr: 1, color: 'white' }} />
@@ -110,8 +115,8 @@ const AdminSidebar = ({ onItemClick }) => {
       
       {/* Основное меню с прокруткой */}
       <Box sx={{ 
-        flexGrow: 1, 
-        overflow: 'auto', 
+        flex: 1, // Занимает все доступное пространство
+        overflow: 'auto',
         py: 1,
         '&::-webkit-scrollbar': {
           width: '4px',
@@ -124,7 +129,7 @@ const AdminSidebar = ({ onItemClick }) => {
           borderRadius: '2px',
         },
       }}>
-        <List sx={{ pb: 8 }}> {/* Добавляем отступ снизу для кнопок */}
+        <List>
           {menuItems.map((item) => (
             <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
               <ListItemButton
@@ -167,18 +172,13 @@ const AdminSidebar = ({ onItemClick }) => {
         </List>
       </Box>
 
-      {/* ФИКСИРОВАННЫЕ кнопки внизу */}
+      {/* ФИКСИРОВАННЫЙ футер внизу */}
       <Box sx={{ 
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background: 'linear-gradient(180deg, transparent 0%, #1a237e 100%)',
+        flexShrink: 0, // Запрещаем сжатие
         p: 1.5,
-        zIndex: 10
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        background: 'linear-gradient(180deg, transparent 0%, #1a237e 100%)'
       }}>
-        <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mb: 1 }} />
-        
         <List sx={{ p: 0 }}>
           {/* Кнопка для перехода на главную страницу */}
           <ListItem disablePadding sx={{ mb: 1 }}>

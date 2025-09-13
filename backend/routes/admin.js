@@ -351,6 +351,88 @@ router.get('/stats', authenticateToken, requireAdmin, async (req, res) => {
     console.error('Admin stats error:', error);
     res.status(500).json({ error: 'Ошибка получения статистики' });
   }
-});
+},
+
+// GET /api/admin/categories - получение всех категорий для админки
+router.get('/categories', async (req, res) => {
+  try {
+    const { data: categories, error } = await supabase
+      .from('categories')
+      .select(`
+        *,
+        products:products (id)  // Получаем связанные товары для подсчета
+      `)
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+
+    // Добавляем количество товаров в каждой категории
+    const categoriesWithCount = categories.map(category => ({
+      ...category,
+      products_count: category.products ? category.products.length : 0
+    }));
+
+    res.json(categoriesWithCount);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}),
+
+// POST /api/admin/categories - создание категории
+router.post('/categories', async (req, res) => {
+  try {
+    const { name, slug, parent_id } = req.body;
+    
+    const { data, error } = await supabase
+      .from('categories')
+      .insert([{ name, slug, parent_id }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}),
+
+// PUT /api/admin/categories/:id - обновление категории
+router.put('/categories/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, slug, parent_id } = req.body;
+    
+    const { data, error } = await supabase
+      .from('categories')
+      .update({ name, slug, parent_id })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}),
+
+// DELETE /api/admin/categories/:id - удаление категории
+router.delete('/categories/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    res.json({ message: 'Category deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}));
+
+
 
 module.exports = router;

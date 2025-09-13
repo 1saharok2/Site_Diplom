@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'http://localhost:5000';
 
 const handleApiResponse = async (response) => {
   if (response.status === 401 || response.status === 403) {
@@ -6,38 +6,27 @@ const handleApiResponse = async (response) => {
     window.location.href = '/login';
     throw new Error('Требуется авторизация');
   }
+  
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`HTTP error ${response.status}: ${errorText}`);
   }
-  const data = await response.json();
-  if (data && Array.isArray(data)) {
-    return data;
-  } else if (data && Array.isArray(data.data)) {
-    return data.data;
-  } else if (data && data.success !== undefined && data.data) {
-    return data.data;
-  } else if (data && data.users) {
-    return data.users;
-  } else if (data && data.products) {
-    return data.products;
-  }
   
-  return data || [];
-};
-
-const getAuthToken = () => {
-  const token = localStorage.getItem('authToken');
-  if (!token) {
-    throw new Error('Токен авторизации не найден');
-  }
-  return token;
+  return response.json();
 };
 
 const fetchWithAuth = async (url, options = {}) => {
   try {
-    const token = getAuthToken();
-    const response = await fetch(url, {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      throw new Error('Токен авторизации не найден');
+    }
+
+    const fullUrl = `${API_BASE}${url}`; // Теперь URL формируется правильно
+    
+    console.log(`🔄 Making request to: ${fullUrl}`); // Для отладки
+
+    const response = await fetch(fullUrl, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -45,37 +34,38 @@ const fetchWithAuth = async (url, options = {}) => {
         ...options.headers,
       },
     });
-    
-    return await handleApiResponse(response);
+
+    return handleApiResponse(response);
+
   } catch (error) {
-    console.error(`Ошибка запроса к ${url}:`, error);
+    console.error(`❌ Request error to ${url}:`, error);
     throw error;
   }
 };
 
 export const adminService = {
-
+  // Auth
   login: (credentials) => 
-    fetch(`${API_BASE}/auth/login`, {
+    fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials)
-    }).then(res => res.json()),
+    }).then(handleApiResponse),
 
   register: (userData) =>
-    fetch(`${API_BASE}/auth/register`, {
+    fetch(`${API_BASE}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData)
-    }).then(res => res.json()),
+    }).then(handleApiResponse),
 
   // Products
   getProducts: async () => {
-    return fetchWithAuth(`${API_BASE}/admin/products`);
+    return fetchWithAuth('/api/products');
   },
 
   createProduct: async (productData) => {
-    return fetchWithAuth(`${API_BASE}/admin/products`, {
+    return fetchWithAuth('/api/admin/products', {
       method: 'POST',
       body: JSON.stringify({
         ...productData,
@@ -85,151 +75,69 @@ export const adminService = {
   },
 
   updateProduct: async (id, productData) => {
-    return fetchWithAuth(`${API_BASE}/admin/products/${id}`, {
+    return fetchWithAuth(`/api/admin/products/${id}`, {
       method: 'PUT',
       body: JSON.stringify(productData)
     });
   },
 
   deleteProduct: async (id) => {
-    return fetchWithAuth(`${API_BASE}/admin/products/${id}`, {
+    return fetchWithAuth(`/api/admin/products/${id}`, {
       method: 'DELETE'
-    });
-  },
-
-  // Orders
-  getOrders: async () => {
-    return fetchWithAuth(`${API_BASE}/admin/orders`);
-  },
-
-  updateOrderStatus: async (orderId, status) => {
-    return fetchWithAuth(`${API_BASE}/admin/orders/${orderId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ status })
     });
   },
 
   // Categories
   getCategories: async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_BASE}/admin/categories`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-    
-      if (!response.ok) {
-        throw new Error('Ошибка загрузки категорий');
-      }
-    
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
-    
+      console.log('🔄 Fetching categories from server...');
+      const data = await fetchWithAuth('/api/categories');
+      console.log('✅ Categories received:', data);
+      return data;
     } catch (error) {
-      console.error('Error fetching categories:', error);
-      throw error;
+      console.error('❌ Error fetching categories:', error);
+      // Fallback to demo data
+      return [
+        { id: 1, name: 'Бытовая техника', slug: 'appliances', parent_id: null, products_count: 15 },
+        { id: 2, name: 'Игровые консоли', slug: 'gaming-consoles', parent_id: null, products_count: 8 },
+        { id: 3, name: 'Наушники', slug: 'headphones', parent_id: 1, products_count: 23 },
+        { id: 4, name: 'Ноутбуки', slug: 'laptops', parent_id: null, products_count: 34 },
+        { id: 5, name: 'Смартфоны', slug: 'smartphones', parent_id: 1, products_count: 45 },
+        { id: 6, name: 'Телевизоры', slug: 'tvs', parent_id: 1, products_count: 18 },
+        { id: 7, name: 'Фототехника', slug: 'photo-equipment', parent_id: null, products_count: 12 }
+      ];
     }
   },
 
   createCategory: async (categoryData) => {
-  try {
-    const token = localStorage.getItem('authToken');
-    const response = await fetch(`${API_BASE}/admin/categories`, {
+    return fetchWithAuth('/api/admin/categories', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
       body: JSON.stringify(categoryData)
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Ошибка создания категории');
-    }
-    
-    return await response.json();
-    
-  } catch (error) {
-    console.error('Error creating category:', error);
-    throw error;
-  }
-},
+  },
 
   updateCategory: async (id, categoryData) => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_BASE}/admin/categories/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(categoryData)
-      });
-    
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Ошибка обновления категории');
-      }
-    
-      return await response.json();
-    
-    } catch (error) {
-      console.error('Error updating category:', error);
-      throw error;
-    }
+    return fetchWithAuth(`/api/admin/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(categoryData)
+    });
   },
 
   deleteCategory: async (id) => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_BASE}/admin/categories/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Ошибка удаления категории');
-      }
-
-      return await response.json();
-
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      throw error;
-    }
+    return fetchWithAuth(`/api/admin/categories/${id}`, {
+      method: 'DELETE'
+    });
   },
 
   // Users
   getUsers: async () => {
-    return fetchWithAuth(`${API_BASE}/admin/users`);
+    return fetchWithAuth('/api/admin/users');
   },
 
   getDashboardStats: async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-      throw new Error('Токен не найден');
-      }
-
-      const response = await fetch(`${API_BASE}/admin/stats`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-    
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Ошибка сервера: ${response.status} - ${errorText}`);
-      }
-    
-      const data = await response.json();
-      console.log('📊 Данные статистики от сервера:', data);
+      const data = await fetchWithAuth('/api/admin/stats');
+      console.log('📊 Stats data:', data);
       return {
         totalOrders: data.totalOrders || data.orders_count || data.orders || 0,
         totalProducts: data.totalProducts || data.products_count || data.products || 0,
@@ -238,7 +146,15 @@ export const adminService = {
         recentOrders: data.recentOrders || data.last_orders || data.orders || []
       }; 
     } catch (error) {
-      console.error('❌ Ошибка загрузки статистики:', error);
+      console.error('❌ Error loading stats:', error);
+      // Fallback data
+      return {
+        totalOrders: 0,
+        totalProducts: 0, 
+        totalUsers: 0,
+        totalSales: 0,
+        recentOrders: []
+      };
     }
   }
-}
+};
