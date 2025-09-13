@@ -34,7 +34,6 @@ const getAuthToken = () => {
   return token;
 };
 
-// Универсальный метод для GET запросов
 const fetchWithAuth = async (url, options = {}) => {
   try {
     const token = getAuthToken();
@@ -112,7 +111,98 @@ export const adminService = {
 
   // Categories
   getCategories: async () => {
-    return fetchWithAuth(`${API_BASE}/admin/categories`);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE}/admin/categories`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    
+      if (!response.ok) {
+        throw new Error('Ошибка загрузки категорий');
+      }
+    
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
+  },
+
+  createCategory: async (categoryData) => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${API_BASE}/admin/categories`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(categoryData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Ошибка создания категории');
+    }
+    
+    return await response.json();
+    
+  } catch (error) {
+    console.error('Error creating category:', error);
+    throw error;
+  }
+},
+
+  updateCategory: async (id, categoryData) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE}/admin/categories/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(categoryData)
+      });
+    
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Ошибка обновления категории');
+      }
+    
+      return await response.json();
+    
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw error;
+    }
+  },
+
+  deleteCategory: async (id) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE}/admin/categories/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Ошибка удаления категории');
+      }
+
+      return await response.json();
+
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      throw error;
+    }
   },
 
   // Users
@@ -140,8 +230,6 @@ export const adminService = {
     
       const data = await response.json();
       console.log('📊 Данные статистики от сервера:', data);
-    
-    // Разные варианты структуры ответа
       return {
         totalOrders: data.totalOrders || data.orders_count || data.orders || 0,
         totalProducts: data.totalProducts || data.products_count || data.products || 0,
