@@ -9,7 +9,7 @@ const ProductInfo = ({ product }) => {
 
   const handleAddToCart = () => {
     setIsInCart(true);
-    setTimeout(() => setIsInCart(false), 600);
+    setTimeout(() => setIsInCart(false), 2000);
     
     const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
     const existingItemIndex = cartItems.findIndex(item => item.id === product.id);
@@ -59,7 +59,8 @@ const ProductInfo = ({ product }) => {
     }
   };
 
-  const hasDiscount = product.oldPrice > product.price;
+  const hasDiscount = product.oldPrice && product.price && 
+                   Number(product.oldPrice) > Number(product.price);
 
   return (
     <div className="product-info">
@@ -115,33 +116,38 @@ const ProductInfo = ({ product }) => {
         )}
       </div>
 
+      {/* КНОПКИ - КРУГЛЫЕ И СКРУГЛЕННЫЕ */}
       <div className="action-buttons">
+        {/* Основная кнопка - скругленная */}
         <Button 
           variant="primary" 
           size="lg" 
           disabled={!product.inStock}
-          className="add-to-cart-btn me-3"
+          className={`add-to-cart-btn ${isInCart ? 'added' : ''}`}
           onClick={handleAddToCart}
         >
-          <FaShoppingCart className="me-2" />
-          Добавить в корзину
+          <FaShoppingCart className="btn-icon" />
+          {isInCart ? 'Добавлено!' : 'В корзину'}
         </Button>
         
-        <Button 
-          variant={isInWishlist ? "danger" : "outline-secondary"} 
-          className="wishlist-btn"
-          onClick={handleToggleWishlist}
-        >
-          {isInWishlist ? <FaHeart /> : <FaRegHeart />}
-        </Button>
+        {/* Второстепенные кнопки - круглые */}
+        <div className="secondary-buttons">
+          <Button 
+            variant={isInWishlist ? "danger" : "outline-primary"} 
+            className={`wishlist-btn circle-btn ${isInWishlist ? 'added' : ''}`}
+            onClick={handleToggleWishlist}
+          >
+            {isInWishlist ? <FaHeart /> : <FaRegHeart />}
+          </Button>
 
-        <Button 
-          variant="outline-secondary" 
-          className="share-btn ms-2"
-          onClick={handleShare}
-        >
-          <FaShare />
-        </Button>
+          <Button 
+            variant="outline-secondary" 
+            className="share-btn circle-btn"
+            onClick={handleShare}
+          >
+            <FaShare />
+          </Button>
+        </div>
       </div>
 
       <div className="short-description">

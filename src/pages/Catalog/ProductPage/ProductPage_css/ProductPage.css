@@ -39,37 +39,7 @@
   color: #007bff;
 }
 
-/* Адаптивность для мобильных */
-@media (max-width: 992px) {
-  .pe-lg-4,
-  .ps-lg-4 {
-    padding-right: 0 !important;
-    padding-left: 0 !important;
-  }
-  
-  .product-gallery {
-    margin-bottom: 2rem;
-  }
-  
-  .main-image-container {
-    height: 400px;
-  }
-}
-
-@media (max-width: 768px) {
-  .main-image-container {
-    height: 350px;
-  }
-}
-
-@media (max-width: 576px) {
-  .main-image-container {
-    height: 300px;
-    padding: 15px;
-  }
-}
-
-/* ДОБАВЛЯЕМ СТИЛИ ДЛЯ ГОРИЗОНТАЛЬНОГО РАСПОЛОЖЕНИЯ */
+/* ГОРИЗОНТАЛЬНОЕ РАСПОЛОЖЕНИЕ */
 .product-page .row {
   display: flex;
   flex-wrap: nowrap;
@@ -111,8 +81,41 @@
   object-fit: contain;
 }
 
-/* Адаптивность - вертикальное расположение на мобильных */
-@media (max-width: 992px) {
+/* АДАПТИВНОСТЬ ДЛЯ РАЗНЫХ ЭКРАНОВ */
+
+/* Большие десктопы (1440px+) */
+@media (min-width: 1440px) {
+  .product-page {
+    max-width: 1600px;
+  }
+  
+  .main-image-container {
+    height: 550px;
+  }
+}
+
+/* Ноутбуки (1200px - 1439px) */
+@media (max-width: 1439px) and (min-width: 1200px) {
+  .main-image-container {
+    height: 480px;
+  }
+}
+
+/* Планшеты горизонтально (992px - 1199px) */
+@media (max-width: 1199px) and (min-width: 992px) {
+  .main-image-container {
+    height: 450px;
+  }
+  
+  .pe-lg-4,
+  .ps-lg-4 {
+    padding-right: 1.5rem !important;
+    padding-left: 1.5rem !important;
+  }
+}
+
+/* Планшеты вертикально (768px - 991px) */
+@media (max-width: 991px) {
   .product-page .row {
     flex-wrap: wrap;
   }
@@ -121,46 +124,7 @@
     flex: 0 0 100%;
     max-width: 100%;
   }
-}
-
-.product-page {
-  padding: 20px 0;
-  min-height: 80vh;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.product-gallery,
-.product-info {
-  padding: 0;
-  margin: 0;
-  width: 100%;
-}
-
-.pe-lg-4 {
-  padding-right: 2rem !important;
-}
-
-.ps-lg-4 {
-  padding-left: 2rem !important;
-}
-
-.breadcrumb {
-  background: none;
-  padding: 0;
-  margin-bottom: 2rem;
-}
-
-.breadcrumb-item a {
-  color: #6c757d;
-  text-decoration: none;
-}
-
-.breadcrumb-item a:hover {
-  color: #007bff;
-}
-
-@media (max-width: 992px) {
+  
   .pe-lg-4,
   .ps-lg-4 {
     padding-right: 0 !important;
@@ -170,24 +134,69 @@
   .product-gallery {
     margin-bottom: 2rem;
   }
+  
+  .main-image-container {
+    height: 400px;
+  }
 }
 
-.product-page .row {
-  display: flex;
-  flex-wrap: nowrap;
-}
-
-.product-page .col-lg-6 {
-  flex: 1;
-}
-
-@media (max-width: 992px) {
-  .product-page .row {
-    flex-wrap: wrap;
+/* Большие телефоны (576px - 767px) */
+@media (max-width: 767px) and (min-width: 576px) {
+  .main-image-container {
+    height: 350px;
   }
   
-  .product-page .col-lg-6 {
-    flex: 0 0 100%;
-    max-width: 100%;
+  .breadcrumb {
+    font-size: 0.9rem;
+  }
+}
+
+/* Малые телефоны (до 575px) */
+@media (max-width: 575px) {
+  .product-page {
+    padding: 15px 0;
+  }
+  
+  .main-image-container {
+    height: 300px;
+    margin-bottom: 1rem;
+  }
+  
+  .breadcrumb {
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .breadcrumb-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+  }
+}
+
+/* Очень маленькие телефоны (до 375px) */
+@media (max-width: 375px) {
+  .main-image-container {
+    height: 250px;
+    padding: 15px;
+  }
+  
+  .breadcrumb-item {
+    max-width: 100px;
+  }
+}
+
+/* Портретная ориентация */
+@media (max-height: 600px) and (orientation: portrait) {
+  .main-image-container {
+    height: 300px;
+  }
+}
+
+/* Ландшафтная ориентация */
+@media (max-height: 500px) and (orientation: landscape) {
+  .main-image-container {
+    height: 350px;
   }
 }

@@ -3,519 +3,12 @@
   color: #2c3e50;
 }
 
-/* Заголовок */
-.product-header {
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 2px solid #f8f9fa;
-}
-
-.product-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 1rem;
-  line-height: 1.2;
-}
-
-.product-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.brand-label {
-  color: #6c757d;
-  font-weight: 500;
-}
-
-.brand-name {
-  color: #007bff;
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-
-/* Рейтинг */
-.rating-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 15px;
-}
-
-.stars-rating {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.stars {
-  display: flex;
-  gap: 0.2rem;
-}
-
-.star-filled {
-  color: #ffc107;
-  font-size: 1.2rem;
-}
-
-.star-empty {
-  color: #e4e5e9;
-  font-size: 1.2rem;
-}
-
-.rating-value {
-  font-weight: 700;
-  color: #495057;
-  font-size: 1.1rem;
-}
-
-.reviews-count {
-  color: #6c757d;
-  font-size: 0.9rem;
-}
-
-.product-id {
-  color: #6c757d;
-  font-size: 0.9rem;
-  font-style: italic;
-}
-
-/* Цены */
-.pricing-section {
-  margin-bottom: 2rem;
-  padding: 2rem;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border-radius: 15px;
-  border: 2px solid #e9ecef;
-}
-
-.current-price {
-  font-size: 2.5rem; /* Немного уменьшил размер */
-  font-weight: 700;  /* Уменьшил жирность с 800 до 700 */
-  color: #dc3545;
-  line-height: 1;
-  margin-bottom: 0.5rem;
-  text-shadow: 0 2px 4px rgba(220, 53, 69, 0.1);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* Добавил нормальный шрифт */
-}
-
-.old-price-container {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.old-price {
-  font-size: 1.4rem; /* Немного уменьшил размер */
-  color: #6c757d;
-  text-decoration: line-through;
-  font-weight: 500; /* Уменьшил жирность */
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.discount-badge {
-  background: linear-gradient(45deg, #dc3545, #fd7e14);
-  color: white;
-  padding: 0.4rem 1rem;
-  border-radius: 20px;
-  font-weight: 600; /* Уменьшил жирность с 700 до 600 */
-  font-size: 0.9rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* Наличие */
-.availability-section {
-  margin-bottom: 2.5rem;
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 15px;
-}
-
-.stock-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.stock-badge {
-  font-size: 1rem;
-  padding: 0.6rem 1.2rem;
-  border-radius: 25px;
-}
-
-.stock-count {
-  color: #28a745;
-  font-weight: 600;
-}
-
-.quantity-selector {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.quantity-label {
-  color: #495057;
-  font-weight: 600;
-}
-
-.quantity-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: white;
-  border-radius: 25px;
-  padding: 0.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.quantity-btn {
-  width: 35px;
-  height: 35px;
-  border: none;
-  border-radius: 50%;
-  background: #007bff;
-  color: white;
-  font-size: 1.2rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.quantity-btn:hover:not(:disabled) {
-  background: #0056b3;
-  transform: scale(1.1);
-}
-
-.quantity-btn:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.quantity-value {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #495057;
-  min-width: 30px;
-  text-align: center;
-}
-
-/* Кнопки */
-.action-buttons {
-  margin-bottom: 2.5rem;
-}
-
-.add-to-cart-btn {
-  width: 100%;
-  padding: 1.2rem 2rem;
-  font-size: 1.2rem;
-  font-weight: 600;
-  border-radius: 15px;
-  border: none;
-  background: linear-gradient(45deg, #007bff, #0056b3);
-  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-  transition: all 0.3s ease;
-  margin-bottom: 1rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.add-to-cart-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
-  background: linear-gradient(45deg, #0056b3, #004085);
-}
-
-.add-to-cart-btn:disabled {
-  opacity: 0.6;
-  transform: none;
-  box-shadow: none;
-}
-
-.add-to-cart-btn.added {
-  background: linear-gradient(45deg, #28a745, #20c997);
-  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-}
-
-.btn-icon {
-  margin-right: 0.75rem;
-  font-size: 1.1rem;
-}
-
-.secondary-buttons {
-  display: flex;
-  gap: 1rem;
-}
-
-.wishlist-btn,
-.share-btn {
-  width: 60px;
-  height: 60px;
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  transition: all 0.3s ease;
-  flex: 1;
-}
-
-.wishlist-btn {
-  border: 2px solid #007bff;
-  background: white;
-  color: #007bff;
-}
-
-.wishlist-btn:hover {
-  background: #fff5f5;
-  border-color: #dc3545;
-  color: #dc3545;
-  transform: scale(1.05);
-}
-
-.wishlist-btn.added {
-  background: #dc3545;
-  border-color: #dc3545;
-  color: white;
-}
-
-.share-btn {
-  border: 2px solid #6c757d;
-  background: white;
-  color: #6c757d;
-}
-
-.share-btn:hover {
-  background: #f8f9fa;
-  border-color: #007bff;
-  color: #007bff;
-  transform: scale(1.05);
-}
-
-/* Преимущества */
-.benefits-section {
-  margin-bottom: 2.5rem;
-  padding: 2rem;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border-radius: 15px;
-  border: 2px solid #e9ecef;
-}
-
-.benefits-section h4 {
-  color: #2c3e50;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
-}
-
-.benefits-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-}
-
-.benefit-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease;
-}
-
-.benefit-item:hover {
-  transform: translateY(-2px);
-}
-
-.benefit-icon {
-  color: #007bff;
-  font-size: 1.3rem;
-  flex-shrink: 0;
-}
-
-.benefit-item span {
-  color: #495057;
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-
-/* Описание */
-.description-section {
-  margin-bottom: 2rem;
-}
-
-.description-section h4 {
-  color: #2c3e50;
-  margin-bottom: 1rem;
-  font-weight: 600;
-}
-
-.product-description {
-  color: #6c757d;
-  line-height: 1.7;
-  font-size: 1.05rem;
-  margin: 0;
-}
-
-/* Характеристики */
-.specs-preview {
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 15px;
-}
-
-.specs-preview h4 {
-  color: #2c3e50;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
-}
-
-.specs-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.spec-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.spec-item:last-child {
-  border-bottom: none;
-}
-
-.spec-name {
-  color: #6c757d;
-  font-weight: 500;
-}
-
-.spec-value {
-  color: #495057;
-  font-weight: 600;
-}
-
-/* Анимации */
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-10px);
-  }
-  60% {
-    transform: translateY(-5px);
-  }
-}
-
-.add-to-cart-btn.added {
-  animation: bounce 0.6s ease;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.wishlist-btn.added {
-  animation: pulse 0.4s ease;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-  .current-price {
-    font-size: 2rem; /* Уменьшаем для мобильных */
-    font-weight: 600;
-
-      .old-price {
-    font-size: 1.2rem;
-    font-weight: 400;
-  }
-  }
-  
-  .current-price {
-    font-size: 2.2rem;
-  }
-  
-  .rating-section {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-  }
-  
-  .benefits-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .quantity-controls {
-    margin-left: auto;
-  }
-  
-  .secondary-buttons {
-    flex-direction: column;
-  }
-  
-  .wishlist-btn,
-  .share-btn {
-    width: 100%;
-    height: 50px;
-  }
-}
-
-@media (max-width: 576px) {
-  .product-title {
-    font-size: 1.8rem;
-
-    .current-price {
-    font-size: 1.8rem;
-    }
-  }
-  
-  .current-price {
-    font-size: 1.8rem;
-  }
-  
-  .pricing-section,
-  .availability-section,
-  .benefits-section {
-    padding: 1.5rem;
-  }
-  
-  .add-to-cart-btn {
-    padding: 1rem 1.5rem;
-    font-size: 1.1rem;
-  }
-}
-
-.product-info {
-  padding: 0;
-}
-
 .product-title {
   font-size: 2.2rem;
   font-weight: 700;
   color: #2c3e50;
   margin-bottom: 1rem;
+  line-height: 1.2;
 }
 
 .product-brand {
@@ -568,6 +61,7 @@
   font-size: 2.2rem;
   font-weight: 700;
   color: #dc3545;
+  line-height: 1;
 }
 
 .old-price {
@@ -590,6 +84,7 @@
   padding: 12px 16px;
   background: #f8f9fa;
   border-radius: 10px;
+  flex-wrap: wrap;
 }
 
 .stock-text {
@@ -597,30 +92,156 @@
   font-weight: 500;
 }
 
+/* ОСНОВНЫЕ КНОПКИ */
 .action-buttons {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
 }
 
+/* Скругленная кнопка корзины */
 .add-to-cart-btn {
-  flex: 1;
-}
-
-.wishlist-btn,
-.share-btn {
-  width: 50px;
-  height: 50px;
+  border-radius: 50px !important;
+  font-weight: 600;
+  padding: 15px 30px;
+  border: none;
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+  transition: all 0.3s ease;
+  min-height: 55px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.add-to-cart-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+  background: linear-gradient(45deg, #0056b3, #004085);
+}
+
+.add-to-cart-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+.add-to-cart-btn.added {
+  background: linear-gradient(45deg, #28a745, #20c997) !important;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
+}
+
+
+.add-to-cart-btn.added:hover:not(:disabled) {
+  background: linear-gradient(45deg, #28a745, #20c997) !important;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
+  transform: translateY(0);
+}
+
+/* Круглые кнопки */
+.secondary-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.circle-btn {
+  width: 55px !important;
+  height: 55px !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.2rem !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Кнопка избранного */
+.wishlist-btn {
+  border: 2px solid #007bff !important;
+  background: white !important;
+  color: #007bff !important;
+}
+
+.wishlist-btn:hover {
+  border-color: #dc3545 !important;
+  background: #fff5f5 !important;
+  color: #dc3545 !important;
+  transform: scale(1.1) !important;
+}
+
+.wishlist-btn.added {
+  border-color: #dc3545 !important;
+  background: #dc3545 !important;
+  color: white !important;
+}
+
+/* УБЕРАЕМ ХОВЕР ЭФФЕКТ ДЛЯ ДОБАВЛЕННОГО СОСТОЯНИЯ */
+.wishlist-btn.added:hover {
+  border-color: #dc3545 !important;
+  background: #dc3545 !important;
+  color: white !important;
+  transform: scale(1) !important;
+}
+/* Кнопка поделиться */
+.share-btn {
+  border: 2px solid #6c757d !important;
+  background: white !important;
+  color: #6c757d !important;
+}
+
+.share-btn:hover {
+  border-color: #007bff !important;
+  background: #f8f9fa !important;
+  color: #007bff !important;
+  transform: scale(1.1) !important;
+}
+
+.btn-icon {
+  font-size: 1.1rem;
+}
+
+/* Анимации */
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+.add-to-cart-btn.added {
+  animation: bounce 0.6s ease;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.wishlist-btn.added {
+  animation: pulse 0.4s ease;
 }
 
 .short-description {
   padding: 1rem;
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .short-description p {
@@ -629,8 +250,58 @@
   line-height: 1.6;
 }
 
-@media (max-width: 768px) {
+/* АДАПТИВНОСТЬ ДЛЯ РАЗНЫХ ЭКРАНОВ */
+
+/* Большие десктопы (1440px+) */
+@media (min-width: 1440px) {
   .product-title {
+    font-size: 2.5rem;
+  }
+  
+  .current-price {
+    font-size: 2.5rem;
+  }
+}
+
+/* Ноутбуки (1200px - 1439px) */
+@media (max-width: 1439px) and (min-width: 992px) {
+  .product-title {
+    font-size: 2rem;
+  }
+  
+  .current-price {
+    font-size: 2rem;
+  }
+}
+
+/* Планшеты (768px - 991px) */
+@media (max-width: 991px) and (min-width: 768px) {
+  .product-title {
+    font-size: 1.8rem;
+  }
+  
+  .current-price {
+    font-size: 1.8rem;
+  }
+  
+  .rating-price-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .price-section {
+    align-items: flex-start;
+  }
+}
+
+/* Большие телефоны (576px - 767px) */
+@media (max-width: 767px) {
+  .product-title {
+    font-size: 1.6rem;
+  }
+  
+  .current-price {
     font-size: 1.8rem;
   }
   
@@ -643,15 +314,104 @@
     align-items: flex-start;
   }
   
-  .current-price {
-    font-size: 1.8rem;
+  .action-buttons {
+    flex-direction: column;
+    align-items: stretch;
   }
   
-  .action-buttons {
-    flex-wrap: wrap;
+  .secondary-buttons {
+    justify-content: center;
+    margin-top: 1rem;
   }
   
   .add-to-cart-btn {
     min-width: 100%;
+  }
+}
+
+/* Малые телефоны (до 575px) */
+@media (max-width: 575px) {
+  .product-title {
+    font-size: 1.4rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .current-price {
+    font-size: 1.6rem;
+  }
+  
+  .old-price {
+    font-size: 1.1rem;
+  }
+  
+  .rating-price-container {
+    gap: 12px;
+  }
+  
+  .availability {
+    padding: 10px 12px;
+    margin-bottom: 1.5rem;
+  }
+  
+  .circle-btn {
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 1.1rem !important;
+  }
+  
+  .add-to-cart-btn {
+    padding: 12px 20px;
+    min-height: 50px;
+    font-size: 1rem;
+  }
+  
+  .short-description {
+    padding: 0.8rem;
+  }
+  
+  .short-description p {
+    font-size: 0.9rem;
+  }
+}
+
+/* Очень маленькие телефоны (до 375px) */
+@media (max-width: 375px) {
+  .product-title {
+    font-size: 1.3rem;
+  }
+  
+  .current-price {
+    font-size: 1.5rem;
+  }
+  
+  .circle-btn {
+    width: 45px !important;
+    height: 45px !important;
+  }
+  
+  .secondary-buttons {
+    gap: 8px;
+  }
+  
+  .action-buttons {
+    gap: 10px;
+  }
+}
+
+/* Портретная ориентация */
+@media (max-height: 600px) and (orientation: portrait) {
+  .product-info {
+    padding: 0.5rem 0;
+  }
+}
+
+/* Ландшафтная ориентация */
+@media (max-height: 500px) and (orientation: landscape) {
+  .product-title {
+    font-size: 1.4rem;
+  }
+  
+  .current-price {
+    font-size: 1.5rem;
   }
 }
