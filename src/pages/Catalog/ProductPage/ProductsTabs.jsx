@@ -8,7 +8,7 @@ const ProductTabs = ({ product }) => {
       <Tab eventKey="description" title="Описание">
         <div className="tab-content">
           <h4>Подробное описание</h4>
-          <p>{product.fullDescription || product.description}</p>
+          <p>{product.description}</p>
         </div>
       </Tab>
       

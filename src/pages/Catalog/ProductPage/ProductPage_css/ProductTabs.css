@@ -1,4 +1,3 @@
-/* Стили для табов */
 .product-tabs {
   margin-top: 2rem;
 }
@@ -42,7 +41,6 @@
   border-bottom: 1px solid #e9ecef;
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
   .specs-table {
     grid-template-columns: 1fr;
