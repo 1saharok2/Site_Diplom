@@ -1,0 +1,119 @@
+Контекст проекта:
+Я разрабатываю интернет-магазин на React. Использую React Router для навигации, React Bootstrap для UI, React Icons для иконок. База данных — Supabase.
+
+Текущая задача:
+Подключить базу данных Supabase к странице товаров (ProductCard) и категориям (CategoryPage).
+
+Структура проекта:
+
+Главная страница: src/pages/HomePage/HomePage.jsx
+
+Страница категории: src/pages/CategoryPage/CategoryPage.jsx
+
+Карточка товара: src/components/Products/ProductCard/ProductCard.jsx
+
+Сервис Supabase: src/services/supabaseClient.js
+
+Сервис категорий: src/services/categoryService.js
+
+Ключевые компоненты:
+
+ProductCard (путь: src/components/Products/ProductCard/ProductCard.jsx):
+
+Получает данные товара через пропс product
+
+Ожидает объект с полями:
+
+javascript
+{
+  id,
+  name,
+  price,
+  oldPrice,
+  images: [],
+  rating,
+  reviewsCount,
+  isNew,
+  discount,
+  inStock
+}
+CategoryPage (путь: src/pages/CategoryPage/CategoryPage.jsx):
+
+Использует хук useParams() для получения slug категории из URL
+
+Использует сервисные функции:
+
+getCategoryBySlug(slug) — получение данных категории
+
+getProductsByCategory(slug) — получение товаров категории
+
+Фильтрует и сортирует товары
+
+Передает массив товаров в ProductCard
+
+Supabase клиент (путь: src/services/supabaseClient.js):
+
+javascript
+import { createClient } from '@supabase/supabase-js'
+const supabaseUrl = 'https://my-project.supabase.co'
+const supabaseAnonKey = 'my-anon-key'
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+CategoryService (путь: src/services/categoryService.js):
+
+Содержит функции для работы с категориями и товарами
+
+Должен быть подключен к Supabase
+
+Что нужно сделать:
+
+Настроить корректное подключение к Supabase
+
+Реализовать функции в categoryService.js для получения:
+
+Данных категории по slug
+
+Товаров категории по slug
+
+Обеспечить правильный маппинг полей из Supabase в структуру, ожидаемую ProductCard
+
+Реализовать обработку ошибок и состояния загрузки
+
+Технические детали:
+
+Используем React Hooks (useState, useEffect)
+
+Для запросов к Supabase используем асинхронные функции
+
+Важно сохранить существующую логику фильтрации и сортировки в CategoryPage
+
+Нужна обработка случаев:
+
+Загрузка данных
+
+Ошибки запросов
+
+Отсутствие категории/товаров
+
+Пример структуры таблиц Supabase (предположительная):
+
+Таблица categories: id, name, slug, description, created_at
+
+Таблица products: id, name, price, old_price, images, rating, reviews_count, is_new, discount, in_stock, category_id, created_at
+
+Важно:
+Названия полей в Supabase могут отличаться от ожидаемых в компонентах. Нужен маппинг.
+
+Запросы к Supabase:
+
+Для категории: supabase.from('categories').select('*').eq('slug', slug).single()
+
+Для товаров: supabase.from('products').select('*').eq('category_id', categoryId)
+
+Ожидаемый результат:
+
+CategoryPage получает данные из Supabase через categoryService
+
+ProductCard отображает товары с корректными данными
+
+Сохранена вся существующая функциональность (фильтрация, сортировка, UI)
+
