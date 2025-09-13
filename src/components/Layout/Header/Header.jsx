@@ -1,7 +1,6 @@
 // src/components/Layout/Header/Header.jsx
-import React, { useState } from 'react';
-import './Header.css';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -22,7 +21,11 @@ import {
   TextField,
   InputAdornment,
   Paper,
-  CircularProgress
+  CircularProgress,
+  alpha,
+  Slide,
+  Fade,
+  Container
 } from '@mui/material';
 import {
   ShoppingCart,
@@ -30,7 +33,11 @@ import {
   AccountCircle,
   ExitToApp,
   Search,
-  Clear
+  Clear,
+  Favorite,
+  Dashboard,
+  Store,
+  Phone
 } from '@mui/icons-material';
 import { useAuth } from '../../../context/AuthContext';
 import { useCart } from '../../../context/CartContext';
@@ -41,12 +48,23 @@ const Header = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { currentUser, logout } = useAuth();
   const { cartItems } = useCart();
   const { products, loading } = useProducts();
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -102,57 +120,124 @@ const Header = () => {
   const cartItemsCount = cartItems ? cartItems.reduce((total, item) => total + item.quantity, 0) : 0;
 
   const navigationItems = [
-    { label: 'Каталог', path: '/catalog' },
+    { label: 'Каталог', path: '/catalog', icon: <Store sx={{ fontSize: 18 }} /> },
     { label: 'О нас', path: '/about' },
-    { label: 'Контакты', path: '/contacts' }
+    { label: 'Контакты', path: '/contacts', icon: <Phone sx={{ fontSize: 18 }} /> }
   ];
 
   const drawer = (
-    <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
-      <Typography variant="h6" sx={{ my: 2 }}>
-        Магазин
-      </Typography>
-      <List>
+    <Box sx={{ 
+      width: 320,
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      height: '100%',
+      color: 'white'
+    }}>
+      <Box sx={{ p: 3, textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
+          🛍️ Электроник
+        </Typography>
+        <Typography variant="body2" sx={{ opacity: 0.8 }}>
+          Магазин электроники
+        </Typography>
+      </Box>
+      
+      <List sx={{ p: 2 }}>
         {navigationItems.map((item) => (
           <ListItem
             key={item.path}
             component={Link}
             to={item.path}
-            sx={{ textDecoration: 'none', color: 'inherit' }}
+            onClick={handleDrawerToggle}
+            sx={{
+              textDecoration: 'none',
+              color: 'inherit',
+              borderRadius: 2,
+              mb: 0.5,
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,0.1)'
+              }
+            }}
             disablePadding
           >
-            <ListItemButton sx={{ textAlign: 'center' }}>
-              <ListItemText primary={item.label} />
+            <ListItemButton sx={{ py: 2 }}>
+              {item.icon && <Box sx={{ mr: 2, opacity: 0.8 }}>{item.icon}</Box>}
+              <ListItemText 
+                primary={item.label} 
+                primaryTypographyProps={{ fontWeight: 500 }}
+              />
             </ListItemButton>
           </ListItem>
         ))}
+        
         {currentUser ? (
           <>
             <ListItem
               component={Link}
               to="/profile"
-              sx={{ textDecoration: 'none', color: 'inherit' }}
+              onClick={handleDrawerToggle}
+              sx={{
+                textDecoration: 'none',
+                color: 'inherit',
+                borderRadius: 2,
+                mb: 0.5,
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.1)'
+                }
+              }}
               disablePadding
             >
-              <ListItemButton sx={{ textAlign: 'center' }}>
-                <ListItemText primary="Профиль" />
+              <ListItemButton sx={{ py: 2 }}>
+                <AccountCircle sx={{ mr: 2, opacity: 0.8 }} />
+                <ListItemText 
+                  primary="Профиль" 
+                  primaryTypographyProps={{ fontWeight: 500 }}
+                />
               </ListItemButton>
             </ListItem>
+            
             {currentUser.role === 'admin' && (
               <ListItem
                 component={Link}
                 to="/admin"
-                sx={{ textDecoration: 'none', color: 'inherit' }}
+                onClick={handleDrawerToggle}
+                sx={{
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  borderRadius: 2,
+                  mb: 0.5,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.1)'
+                  }
+                }}
                 disablePadding
               >
-                <ListItemButton sx={{ textAlign: 'center' }}>
-                  <ListItemText primary="Админка" />
+                <ListItemButton sx={{ py: 2 }}>
+                  <Dashboard sx={{ mr: 2, opacity: 0.8 }} />
+                  <ListItemText 
+                    primary="Админка" 
+                    primaryTypographyProps={{ fontWeight: 500 }}
+                  />
                 </ListItemButton>
               </ListItem>
             )}
-            <ListItem disablePadding>
-              <ListItemButton onClick={handleLogout} sx={{ textAlign: 'center' }}>
-                <ListItemText primary="Выйти" />
+            
+            <ListItem 
+              onClick={handleLogout}
+              sx={{
+                borderRadius: 2,
+                mb: 0.5,
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.1)'
+                }
+              }}
+              disablePadding
+            >
+              <ListItemButton sx={{ py: 2 }}>
+                <ExitToApp sx={{ mr: 2, opacity: 0.8 }} />
+                <ListItemText 
+                  primary="Выйти" 
+                  primaryTypographyProps={{ fontWeight: 500 }}
+                />
               </ListItemButton>
             </ListItem>
           </>
@@ -161,21 +246,48 @@ const Header = () => {
             <ListItem
               component={Link}
               to="/login"
-              sx={{ textDecoration: 'none', color: 'inherit' }}
+              onClick={handleDrawerToggle}
+              sx={{
+                textDecoration: 'none',
+                color: 'inherit',
+                borderRadius: 2,
+                mb: 0.5,
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.1)'
+                }
+              }}
               disablePadding
             >
-              <ListItemButton sx={{ textAlign: 'center' }}>
-                <ListItemText primary="Войти" />
+              <ListItemButton sx={{ py: 2 }}>
+                <AccountCircle sx={{ mr: 2, opacity: 0.8 }} />
+                <ListItemText 
+                  primary="Войти" 
+                  primaryTypographyProps={{ fontWeight: 500 }}
+                />
               </ListItemButton>
             </ListItem>
+            
             <ListItem
               component={Link}
               to="/register"
-              sx={{ textDecoration: 'none', color: 'inherit' }}
+              onClick={handleDrawerToggle}
+              sx={{
+                textDecoration: 'none',
+                color: 'inherit',
+                borderRadius: 2,
+                mb: 0.5,
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.1)'
+                }
+              }}
               disablePadding
             >
-              <ListItemButton sx={{ textAlign: 'center' }}>
-                <ListItemText primary="Регистрация" />
+              <ListItemButton sx={{ py: 2 }}>
+                <ExitToApp sx={{ mr: 2, opacity: 0.8 }} />
+                <ListItemText 
+                  primary="Регистрация" 
+                  primaryTypographyProps={{ fontWeight: 500 }}
+                />
               </ListItemButton>
             </ListItem>
           </>
@@ -186,365 +298,479 @@ const Header = () => {
 
   return (
     <>
-      <AppBar position="static" sx={{ 
-        backgroundColor: 'white', 
-        color: 'black', 
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        borderBottom: '1px solid #e0e0e0'
-      }}>
-        <Toolbar sx={{ 
-          minHeight: '70px !important',
-          padding: '0 24px !important'
-        }}>
-          {/* Логотип - левая часть */}
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            minWidth: '120px'
+      <AppBar 
+        position="fixed" 
+        sx={{ 
+          backgroundColor: scrolled ? alpha(theme.palette.background.paper, 0.95) : 'transparent',
+          backdropFilter: scrolled ? 'blur(20px)' : 'none',
+          backgroundImage: scrolled ? 'none' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: scrolled ? 'text.primary' : 'white',
+          boxShadow: scrolled ? '0 8px 32px rgba(0,0,0,0.1)' : 'none',
+          borderBottom: scrolled ? '1px solid rgba(0,0,0,0.05)' : 'none',
+          transition: 'all 0.3s ease-in-out'
+        }}
+      >
+        <Container maxWidth="xl" disableGutters>
+          <Toolbar sx={{ 
+            minHeight: { xs: '70px', md: '80px' },
+            px: { xs: 2, md: 3 },
+            transition: 'all 0.3s ease'
           }}>
-            <Typography
-              variant="h6"
-              component={Link}
-              to="/"
-              sx={{
-                textDecoration: 'none',
-                color: 'inherit',
-                fontWeight: 'bold',
-                fontSize: '1.5rem',
-                '&:hover': {
-                  opacity: 0.8
-                }
-              }}
-            >
-              🛍️ Электроник
-            </Typography>
-          </Box>
-
-          {/* Поисковая строка - центр (только на десктопе) */}
-          {!isMobile && (
+            {/* Логотип */}
             <Box sx={{ 
-              flexGrow: 1, 
-              mx: 4, 
-              position: 'relative', 
-              maxWidth: '500px',
-              margin: '0 auto'
+              display: 'flex', 
+              alignItems: 'center',
+              minWidth: { xs: '100px', md: '140px' }
             }}>
-              <form onSubmit={handleSearchSubmit} style={{ width: '100%' }}>
-                <TextField
-                  fullWidth
-                  placeholder="Поиск товаров..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  size="small"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Search sx={{ color: 'text.secondary' }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: searchQuery && (
-                      <InputAdornment position="end">
-                        <IconButton
-                          size="small"
-                          onClick={handleClearSearch}
-                          edge="end"
-                          sx={{ padding: '4px' }}
-                        >
-                          <Clear sx={{ fontSize: '18px' }} />
-                        </IconButton>
-                      </InputAdornment>
-                    )
-                  }}
-                  sx={{
-                    backgroundColor: 'grey.50',
-                    borderRadius: '8px',
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '8px',
-                      '& fieldset': {
-                        border: 'none'
-                      },
-                      '&:hover fieldset': {
-                        border: 'none'
-                      },
-                      '&.Mui-focused fieldset': {
-                        border: '2px solid',
-                        borderColor: 'primary.main'
-                      }
-                    }
-                  }}
-                />
-              </form>
-
-              {/* Результаты поиска */}
-              {showSearchResults && (
-                <Paper
-                  sx={{
-                    position: 'absolute',
-                    top: 'calc(100% + 8px)',
-                    left: 0,
-                    right: 0,
-                    zIndex: 1000,
-                    maxHeight: '300px',
-                    overflow: 'auto',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                    border: '1px solid',
-                    borderColor: 'divider'
-                  }}
-                >
-                  {loading ? (
-                    <Box sx={{ p: 2, textAlign: 'center' }}>
-                      <CircularProgress size={20} />
-                    </Box>
-                  ) : filteredProducts.length > 0 ? (
-                    <List sx={{ py: 0 }}>
-                      {filteredProducts.map((product) => (
-                        <ListItem
-                          key={product.id}
-                          button
-                          onClick={() => handleSearchItemClick(product)}
-                          sx={{
-                            py: 1.5,
-                            px: 2,
-                            '&:hover': {
-                              backgroundColor: 'action.hover'
-                            }
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                            <Box
-                              component="img"
-                              src={product.image || '/images/placeholder.jpg'}
-                              alt={product.name}
-                              sx={{
-                                width: 40,
-                                height: 40,
-                                objectFit: 'cover',
-                                borderRadius: 1,
-                                mr: 2,
-                                flexShrink: 0
-                              }}
-                              onError={(e) => {
-                                e.target.src = '/images/placeholder.jpg';
-                              }}
-                            />
-                            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                              <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
-                                {product.name}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary" noWrap>
-                                {product.price?.toLocaleString()} ₽
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </ListItem>
-                      ))}
-                    </List>
-                  ) : searchQuery && (
-                    <Box sx={{ p: 3, textAlign: 'center' }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Товары не найдены
-                      </Typography>
-                    </Box>
-                  )}
-                </Paper>
-              )}
-            </Box>
-          )}
-
-          {/* Правая часть - навигация и действия */}
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: { xs: 0.5, sm: 1, md: 2 },
-            ml: 'auto'
-          }}>
-            {/* Навигация (только на десктопе) */}
-            {!isMobile && (
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 1,
-                mr: 2
-              }}>
-                {navigationItems.map((item) => (
-                  <Button
-                    key={item.path}
-                    component={Link}
-                    to={item.path}
-                    sx={{
-                      color: 'text.primary',
-                      textTransform: 'none',
-                      fontSize: '0.95rem',
-                      fontWeight: 500,
-                      padding: '6px 12px',
-                      minWidth: 'auto',
-                      '&:hover': {
-                        backgroundColor: 'action.hover',
-                        borderRadius: '6px'
-                      }
-                    }}
-                  >
-                    {item.label}
-                  </Button>
-                ))}
-              </Box>
-            )}
-
-            {/* Поиск на мобильных */}
-            {isMobile && (
-              <IconButton
-                color="inherit"
-                onClick={() => navigate('/search')}
-                sx={{ 
-                  color: 'text.primary',
-                  padding: '8px'
-                }}
-              >
-                <Search />
-              </IconButton>
-            )}
-
-            {/* Корзина */}
-            <IconButton
-              component={Link}
-              to="/cart"
-              sx={{ 
-                color: 'text.primary',
-                padding: '8px',
-                position: 'relative'
-              }}
-            >
-              <Badge 
-                badgeContent={cartItemsCount} 
-                color="error"
+              <Typography
+                variant="h4"
+                component={Link}
+                to="/"
                 sx={{
-                  '& .MuiBadge-badge': {
-                    fontSize: '0.7rem',
-                    height: '18px',
-                    minWidth: '18px'
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  fontWeight: 'bold',
+                  fontSize: { xs: '1.3rem', md: '1.8rem' },
+                  background: scrolled ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'none',
+                  backgroundClip: scrolled ? 'text' : 'none',
+                  textFillColor: scrolled ? 'transparent' : 'inherit',
+                  WebkitBackgroundClip: scrolled ? 'text' : 'none',
+                  WebkitTextFillColor: scrolled ? 'transparent' : 'inherit',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                    transition: 'transform 0.2s ease'
                   }
                 }}
               >
-                <ShoppingCart />
-              </Badge>
-            </IconButton>
+                🛍️ Электроник
+              </Typography>
+            </Box>
 
-            {/* Профиль пользователя */}
-            {currentUser ? (
-              <>
-                <IconButton
-                  onClick={handleProfileMenuOpen}
-                  sx={{ 
-                    color: 'text.primary',
-                    padding: '8px'
-                  }}
-                >
-                  <AccountCircle />
-                </IconButton>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={handleProfileMenuClose}
-                  PaperProps={{
-                    sx: {
-                      mt: 1,
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                      borderRadius: '8px'
-                    }
-                  }}
-                >
-                  <MenuItem
-                    component={Link}
-                    to="/profile"
-                    onClick={handleProfileMenuClose}
-                    sx={{ py: 1.5, px: 2 }}
-                  >
-                    Профиль
-                  </MenuItem>
-                  {currentUser.role === 'admin' && (
-                    <MenuItem
-                      component={Link}
-                      to="/admin"
-                      onClick={handleProfileMenuClose}
-                      sx={{ py: 1.5, px: 2 }}
-                    >
-                      Админ панель
-                    </MenuItem>
-                  )}
-                  <MenuItem 
-                    onClick={handleLogout}
-                    sx={{ py: 1.5, px: 2 }}
-                  >
-                    <ExitToApp sx={{ mr: 1.5, fontSize: '20px' }} />
-                    Выйти
-                  </MenuItem>
-                </Menu>
-              </>
-            ) : (
+            {/* Поисковая строка */}
+            {!isMobile && (
               <Box sx={{ 
-                display: 'flex', 
-                gap: 1,
-                ml: { xs: 0, sm: 1 }
+                flexGrow: 1, 
+                mx: 4, 
+                position: 'relative',
+                maxWidth: '600px',
+                margin: '0 auto'
               }}>
-                <Button
-                  component={Link}
-                  to="/login"
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    textTransform: 'none',
-                    borderColor: 'grey.300',
-                    color: 'text.primary',
-                    padding: '6px 16px',
-                    fontSize: '0.9rem',
-                    '&:hover': {
-                      borderColor: 'primary.main',
-                      backgroundColor: 'primary.light',
-                      color: 'primary.main'
-                    }
-                  }}
-                >
-                  Войти
-                </Button>
-                <Button
-                  component={Link}
-                  to="/register"
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    textTransform: 'none',
-                    backgroundColor: 'primary.main',
-                    padding: '6px 16px',
-                    fontSize: '0.9rem',
-                    '&:hover': {
-                      backgroundColor: 'primary.dark'
-                    }
-                  }}
-                >
-                  Регистрация
-                </Button>
+                <Slide direction="down" in={true} timeout={500}>
+                  <form onSubmit={handleSearchSubmit} style={{ width: '100%' }}>
+                    <TextField
+                      fullWidth
+                      placeholder="Поиск товаров..."
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      size="medium"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Search sx={{ 
+                              color: scrolled ? 'primary.main' : 'rgba(255,255,255,0.8)',
+                              fontSize: '22px'
+                            }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: searchQuery && (
+                          <InputAdornment position="end">
+                            <IconButton
+                              size="small"
+                              onClick={handleClearSearch}
+                              edge="end"
+                              sx={{ 
+                                padding: '6px',
+                                color: scrolled ? 'text.secondary' : 'rgba(255,255,255,0.7)'
+                              }}
+                            >
+                              <Clear sx={{ fontSize: '20px' }} />
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }}
+                      sx={{
+                        backgroundColor: scrolled ? 'grey.50' : 'rgba(255,255,255,0.15)',
+                        borderRadius: '12px',
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          color: scrolled ? 'text.primary' : 'white',
+                          '& fieldset': {
+                            border: 'none'
+                          },
+                          '&:hover fieldset': {
+                            border: 'none'
+                          },
+                          '&.Mui-focused fieldset': {
+                            border: '2px solid',
+                            borderColor: scrolled ? 'primary.main' : 'rgba(255,255,255,0.5)'
+                          }
+                        },
+                        '& .MuiInputBase-input::placeholder': {
+                          color: scrolled ? 'text.secondary' : 'rgba(255,255,255,0.7)',
+                          opacity: 1
+                        }
+                      }}
+                    />
+                  </form>
+                </Slide>
+
+                {/* Результаты поиска */}
+                {showSearchResults && (
+                  <Fade in={showSearchResults}>
+                    <Paper
+                      sx={{
+                        position: 'absolute',
+                        top: 'calc(100% + 8px)',
+                        left: 0,
+                        right: 0,
+                        zIndex: 9999,
+                        maxHeight: '400px',
+                        overflow: 'auto',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: '12px',
+                        background: 'rgba(255,255,255,0.95)',
+                        backdropFilter: 'blur(20px)'
+                      }}
+                    >
+                      {loading ? (
+                        <Box sx={{ p: 3, textAlign: 'center' }}>
+                          <CircularProgress size={24} />
+                        </Box>
+                      ) : filteredProducts.length > 0 ? (
+                        <List sx={{ py: 1 }}>
+                          {filteredProducts.map((product) => (
+                            <ListItem
+                              key={product.id}
+                              button
+                              onClick={() => handleSearchItemClick(product)}
+                              sx={{
+                                py: 2,
+                                px: 3,
+                                borderBottom: '1px solid',
+                                borderColor: 'divider',
+                                '&:last-child': {
+                                  borderBottom: 'none'
+                                },
+                                '&:hover': {
+                                  backgroundColor: 'primary.light',
+                                  '& .MuiTypography-root': {
+                                    color: 'primary.contrastText'
+                                  }
+                                },
+                                transition: 'all 0.2s ease'
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                <Box
+                                  component="img"
+                                  src={product.image || '/images/placeholder.jpg'}
+                                  alt={product.name}
+                                  sx={{
+                                    width: 50,
+                                    height: 50,
+                                    objectFit: 'cover',
+                                    borderRadius: 2,
+                                    mr: 3,
+                                    flexShrink: 0,
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                  }}
+                                  onError={(e) => {
+                                    e.target.src = '/images/placeholder.jpg';
+                                  }}
+                                />
+                                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                                  <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600, mb: 0.5 }}>
+                                    {product.name}
+                                  </Typography>
+                                  <Typography variant="body2" color="primary" sx={{ fontWeight: 'bold' }}>
+                                    {product.price?.toLocaleString()} ₽
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </ListItem>
+                          ))}
+                        </List>
+                      ) : searchQuery && (
+                        <Box sx={{ p: 4, textAlign: 'center' }}>
+                          <Search sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                          <Typography variant="body1" color="text.secondary">
+                            Ничего не найдено
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            Попробуйте изменить запрос
+                          </Typography>
+                        </Box>
+                      )}
+                    </Paper>
+                  </Fade>
+                )}
               </Box>
             )}
 
-            {/* Мобильное меню */}
-            {isMobile && (
+            {/* Правая часть */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: { xs: 1, md: 2 },
+              ml: 'auto'
+            }}>
+              {/* Навигация на десктопе */}
+              {!isMobile && (
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1,
+                  mr: 3
+                }}>
+                  {navigationItems.map((item) => (
+                    <Button
+                      key={item.path}
+                      component={Link}
+                      to={item.path}
+                      startIcon={item.icon}
+                      sx={{
+                        color: scrolled ? 'text.primary' : 'white',
+                        textTransform: 'none',
+                        fontSize: '0.95rem',
+                        fontWeight: 500,
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        minWidth: 'auto',
+                        '&:hover': {
+                          backgroundColor: scrolled ? 'primary.light' : 'rgba(255,255,255,0.1)',
+                          transform: 'translateY(-1px)',
+                          boxShadow: scrolled ? '0 4px 12px rgba(102, 126, 234, 0.2)' : '0 4px 12px rgba(0,0,0,0.1)'
+                        },
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {item.label}
+                    </Button>
+                  ))}
+                </Box>
+              )}
+
+              {/* Поиск на мобильных */}
+              {isMobile && (
+                <IconButton
+                  color="inherit"
+                  onClick={() => navigate('/search')}
+                  sx={{ 
+                    color: scrolled ? 'primary.main' : 'white',
+                    padding: '10px',
+                    '&:hover': {
+                      backgroundColor: scrolled ? 'primary.light' : 'rgba(255,255,255,0.1)'
+                    }
+                  }}
+                >
+                  <Search />
+                </IconButton>
+              )}
+
+              {/* Избранное */}
               <IconButton
-                color="inherit"
-                aria-label="open drawer"
-                edge="end"
-                onClick={handleDrawerToggle}
+                component={Link}
+                to="/favorites"
                 sx={{ 
-                  color: 'text.primary',
-                  padding: '8px',
-                  ml: 0.5
+                  color: scrolled ? 'primary.main' : 'white',
+                  padding: '10px',
+                  '&:hover': {
+                    backgroundColor: scrolled ? 'primary.light' : 'rgba(255,255,255,0.1)',
+                    transform: 'scale(1.1)'
+                  },
+                  transition: 'all 0.2s ease'
                 }}
               >
-                <MenuIcon />
+                <Favorite />
               </IconButton>
-            )}
-          </Box>
-        </Toolbar>
+
+              {/* Корзина */}
+              <IconButton
+                component={Link}
+                to="/cart"
+                sx={{ 
+                  color: scrolled ? 'primary.main' : 'white',
+                  padding: '10px',
+                  position: 'relative',
+                  '&:hover': {
+                    backgroundColor: scrolled ? 'primary.light' : 'rgba(255,255,255,0.1)',
+                    transform: 'scale(1.1)'
+                  },
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Badge 
+                  badgeContent={cartItemsCount} 
+                  color="error"
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      fontSize: '0.7rem',
+                      height: '20px',
+                      minWidth: '20px',
+                      fontWeight: 'bold'
+                    }
+                  }}
+                >
+                  <ShoppingCart sx={{ fontSize: '24px' }} />
+                </Badge>
+              </IconButton>
+
+              {/* Профиль пользователя */}
+              {currentUser ? (
+                <>
+                  <IconButton
+                    onClick={handleProfileMenuOpen}
+                    sx={{ 
+                      color: scrolled ? 'primary.main' : 'white',
+                      padding: '10px',
+                      '&:hover': {
+                        backgroundColor: scrolled ? 'primary.light' : 'rgba(255,255,255,0.1)',
+                        transform: 'scale(1.1)'
+                      },
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <AccountCircle sx={{ fontSize: '28px' }} />
+                  </IconButton>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={handleProfileMenuClose}
+                    PaperProps={{
+                      sx: {
+                        mt: 1,
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+                        borderRadius: '12px',
+                        minWidth: '200px',
+                        overflow: 'visible',
+                        '&:before': {
+                          content: '""',
+                          display: 'block',
+                          position: 'absolute',
+                          top: 0,
+                          right: 14,
+                          width: 10,
+                          height: 10,
+                          bgcolor: 'background.paper',
+                          transform: 'translateY(-50%) rotate(45deg)',
+                          zIndex: 0
+                        }
+                      }
+                    }}
+                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                  >
+                    <MenuItem
+                      component={Link}
+                      to="/profile"
+                      onClick={handleProfileMenuClose}
+                      sx={{ py: 1.5, px: 2, gap: 2 }}
+                    >
+                      <AccountCircle sx={{ opacity: 0.7 }} />
+                      Профиль
+                    </MenuItem>
+                    {currentUser.role === 'admin' && (
+                      <MenuItem
+                        component={Link}
+                        to="/admin"
+                        onClick={handleProfileMenuClose}
+                        sx={{ py: 1.5, px: 2, gap: 2 }}
+                      >
+                        <Dashboard sx={{ opacity: 0.7 }} />
+                        Админ панель
+                      </MenuItem>
+                    )}
+                    <MenuItem 
+                      onClick={handleLogout}
+                      sx={{ py: 1.5, px: 2, gap: 2 }}
+                    >
+                      <ExitToApp sx={{ opacity: 0.7 }} />
+                      Выйти
+                    </MenuItem>
+                  </Menu>
+                </>
+              ) : (
+                <Box sx={{ 
+                  display: 'flex', 
+                  gap: 1,
+                  ml: { xs: 0, sm: 1 }
+                }}>
+                  <Button
+                    component={Link}
+                    to="/login"
+                    variant={scrolled ? "outlined" : "contained"}
+                    size="small"
+                    sx={{
+                      textTransform: 'none',
+                      borderRadius: '8px',
+                      padding: '8px 20px',
+                      fontSize: '0.9rem',
+                      fontWeight: 600,
+                      background: scrolled ? 'transparent' : 'rgba(255,255,255,0.2)',
+                      color: scrolled ? 'primary.main' : 'white',
+                      borderColor: scrolled ? 'primary.main' : 'transparent',
+                      '&:hover': {
+                        background: scrolled ? 'primary.main' : 'rgba(255,255,255,0.3)',
+                        color: scrolled ? 'white' : 'white',
+                        transform: 'translateY(-1px)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                      },
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Войти
+                  </Button>
+                  <Button
+                    component={Link}
+                    to="/register"
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      textTransform: 'none',
+                      borderRadius: '8px',
+                      padding: '8px 20px',
+                      fontSize: '0.9rem',
+                      fontWeight: 600,
+                      background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
+                      boxShadow: '0 4px 15px rgba(255,107,107,0.4)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #ff5252 0%, #e53935 100%)',
+                        transform: 'translateY(-1px)',
+                        boxShadow: '0 6px 20px rgba(255,82,82,0.4)'
+                      },
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Регистрация
+                  </Button>
+                </Box>
+              )}
+
+              {/* Мобильное меню */}
+              {isMobile && (
+                <IconButton
+                  color="inherit"
+                  onClick={handleDrawerToggle}
+                  sx={{ 
+                    color: scrolled ? 'primary.main' : 'white',
+                    padding: '10px',
+                    '&:hover': {
+                      backgroundColor: scrolled ? 'primary.light' : 'rgba(255,255,255,0.1)'
+                    }
+                  }}
+                >
+                  <MenuIcon />
+                </IconButton>
+              )}
+            </Box>
+          </Toolbar>
+        </Container>
       </AppBar>
+
+      {/* Отступ для фиксированного хедера */}
+      <Toolbar sx={{ minHeight: { xs: '70px', md: '80px' } }} />
 
       <Drawer
         variant="temporary"
@@ -557,7 +783,7 @@ const Header = () => {
           display: { xs: 'block', md: 'none' },
           '& .MuiDrawer-paper': { 
             boxSizing: 'border-box', 
-            width: 280 
+            width: 320 
           },
         }}
       >

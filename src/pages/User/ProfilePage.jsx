@@ -1,5 +1,5 @@
 // pages/User/ProfilePage.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   Container,
@@ -14,7 +14,20 @@ import {
   List,
   ListItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  Avatar,
+  Chip,
+  Card,
+  CardContent,
+  Fade,
+  Slide,
+  useTheme,
+  alpha,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton
 } from '@mui/material';
 import {
   Edit,
@@ -24,36 +37,58 @@ import {
   Favorite,
   RateReview,
   LocationOn,
-  Payment,
-  Security
+  Person,
+  Email,
+  Phone,
+  Place,
+  CalendarToday,
+  ShoppingBag,
+  Loyalty,
+  Close
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
 const ProfilePage = () => {
   const { currentUser, updateProfile } = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: currentUser?.name || '',
-    email: currentUser?.email || '',
-    phone: currentUser?.phone || '',
-    address: currentUser?.address || ''
+    name: '',
+    email: '',
+    phone: '',
+    address: ''
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('success');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  // Инициализация формы данными пользователя
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        address: currentUser.address || ''
+      });
+    }
+  }, [currentUser]);
 
   const handleEdit = () => {
-    setFormData({
-      name: currentUser?.name || '',
-      email: currentUser?.email || '',
-      phone: currentUser?.phone || '',
-      address: currentUser?.address || ''
-    });
-    setIsEditing(true);
+    setEditDialogOpen(true);
   };
 
   const handleCancel = () => {
-    setIsEditing(false);
+    setEditDialogOpen(false);
+    // Восстанавливаем оригинальные данные
+    setFormData({
+      name: currentUser.name || '',
+      email: currentUser.email || '',
+      phone: currentUser.phone || '',
+      address: currentUser.address || ''
+    });
   };
 
   const handleChange = (e) => {
@@ -68,119 +103,453 @@ const ProfilePage = () => {
     setLoading(true);
     setMessage('');
 
-    const result = await updateProfile(formData);
-    
-    if (result.success) {
-      setMessage('Профиль успешно обновлен');
-      setIsEditing(false);
-    } else {
-      setMessage(result.error);
+    try {
+      const result = await updateProfile(formData);
+      
+      if (result.success) {
+        setMessage('Профиль успешно обновлен');
+        setMessageType('success');
+        setEditDialogOpen(false);
+        
+        // Автоматически скрываем сообщение через 3 секунды
+        setTimeout(() => {
+          setMessage('');
+        }, 3000);
+      } else {
+        setMessage(result.error || 'Ошибка при обновлении профиля');
+        setMessageType('error');
+      }
+    } catch (error) {
+      setMessage('Произошла ошибка при обновлении профиля');
+      setMessageType('error');
+      console.error('Update profile error:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const quickActions = [
     {
-      icon: <History />,
+      icon: <History sx={{ fontSize: 24 }} />,
       title: 'История заказов',
       description: 'Просмотр ваших предыдущих заказов',
       onClick: () => navigate('/orders'),
-      color: 'primary.main'
+      color: theme.palette.primary.main,
+      count: 5
     },
     {
-      icon: <Favorite />,
-      title: 'Избранные товары',
+      icon: <Favorite sx={{ fontSize: 24 }} />,
+      title: 'Избранное',
       description: 'Ваши сохраненные товары',
       onClick: () => navigate('/wishlist'),
-      color: 'error.main'
+      color: theme.palette.error.main,
+      count: 12
     },
     {
-      icon: <RateReview />,
+      icon: <RateReview sx={{ fontSize: 24 }} />,
       title: 'Мои отзывы',
       description: 'Просмотр и управление отзывами',
       onClick: () => navigate('/reviews'),
-      color: 'warning.main'
+      color: theme.palette.warning.main,
+      count: 3
     },
     {
-      icon: <LocationOn />,
+      icon: <LocationOn sx={{ fontSize: 24 }} />,
       title: 'Адреса доставки',
       description: 'Управление адресами доставки',
       onClick: () => navigate('/addresses'),
-      color: 'success.main'
+      color: theme.palette.success.main,
+      count: 2
+    }
+  ];
+
+  const stats = [
+    { label: 'Всего заказов', value: '5', color: 'primary', icon: <ShoppingBag /> },
+    { label: 'Избранные товары', value: '12', color: 'error', icon: <Favorite /> },
+    { label: 'Написано отзывов', value: '3', color: 'warning', icon: <RateReview /> },
+    { label: 'Бонусные баллы', value: '1250', color: 'success', icon: <Loyalty /> }
+  ];
+
+  const recentActivities = [
+    {
+      type: 'order',
+      title: 'Заказ #12345 выполнен',
+      description: 'Смартфон Samsung Galaxy S23',
+      date: '2 часа назад',
+      amount: '84 990 ₽',
+      icon: <ShoppingBag />,
+      color: theme.palette.success.main
     },
     {
-      icon: <Payment />,
-      title: 'Способы оплаты',
-      description: 'Управление платежными методами',
-      onClick: () => navigate('/payment-methods'),
-      color: 'info.main'
+      type: 'favorite',
+      title: 'Добавлен в избранное',
+      description: 'Ноутбук ASUS ROG Strix',
+      date: 'Вчера',
+      icon: <Favorite />,
+      color: theme.palette.error.main
     },
     {
-      icon: <Security />,
-      title: 'Безопасность',
-      description: 'Смена пароля и настройки безопасности',
-      onClick: () => navigate('/security'),
-      color: 'secondary.main'
+      type: 'review',
+      title: 'Оставлен отзыв',
+      description: 'Наушники Sony WH-1000XM5',
+      date: '3 дня назад',
+      icon: <RateReview />,
+      color: theme.palette.warning.main
     }
   ];
 
   if (!currentUser) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth="md" sx={{ py: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
         <Typography variant="h6">Пожалуйста, войдите в систему</Typography>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Личный кабинет
-      </Typography>
-
-      <Grid container spacing={3}>
-        {/* Основная информация профиля */}
-        <Grid item xs={12} md={8}>
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-              <Typography variant="h5">Профиль</Typography>
-              {!isEditing ? (
-                <Button
-                  startIcon={<Edit />}
-                  onClick={handleEdit}
-                  variant="outlined"
-                >
-                  Редактировать
-                </Button>
-              ) : (
-                <Box>
-                  <Button
-                    startIcon={<Cancel />}
-                    onClick={handleCancel}
-                    variant="outlined"
-                    sx={{ mr: 1 }}
-                  >
-                    Отмена
-                  </Button>
-                  <Button
-                    startIcon={<Save />}
-                    onClick={handleSubmit}
-                    variant="contained"
-                    disabled={loading}
-                  >
-                    Сохранить
-                  </Button>
-                </Box>
-              )}
+    <Box sx={{ 
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+      py: 4
+    }}>
+      <Container maxWidth="xl" sx={{ display: 'flex', justifyContent: 'center' }}>
+        <Box sx={{ width: '100%', maxWidth: '1200px' }}>
+          {/* Заголовок */}
+          <Slide direction="down" in={true} timeout={500}>
+            <Box sx={{ textAlign: 'center', mb: 6 }}>
+              <Typography variant="h2" component="h1" sx={{ 
+                fontWeight: 'bold', 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                backgroundClip: 'text',
+                textFillColor: 'transparent',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                mb: 2
+              }}>
+                Личный кабинет
+              </Typography>
+              <Typography variant="h6" color="text.secondary">
+                Управляйте вашими данными и покупками
+              </Typography>
             </Box>
+          </Slide>
 
-            {message && (
-              <Alert severity={message.includes('успешно') ? 'success' : 'error'} sx={{ mb: 2 }}>
+          {/* Сообщение об успехе/ошибке */}
+          {message && (
+            <Fade in={!!message}>
+              <Alert 
+                severity={messageType} 
+                sx={{ 
+                  mb: 3,
+                  borderRadius: 3,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                }}
+                onClose={() => setMessage('')}
+              >
                 {message}
               </Alert>
-            )}
+            </Fade>
+          )}
 
-            {isEditing ? (
+          <Grid container spacing={3} justifyContent="center">
+            {/* Боковая панель с профилем */}
+            <Grid item xs={12} md={4}>
+              <Slide direction="left" in={true} timeout={700}>
+                <Paper elevation={0} sx={{ 
+                  p: 4, 
+                  borderRadius: 4,
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                  textAlign: 'center',
+                  height: '100%'
+                }}>
+                  <Avatar
+                    sx={{
+                      width: 120,
+                      height: 120,
+                      mx: 'auto',
+                      mb: 3,
+                      border: `4px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      fontSize: '3rem',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    {currentUser.name?.charAt(0).toUpperCase()}
+                  </Avatar>
+
+                  <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+                    {currentUser.name}
+                  </Typography>
+                  
+                  <Chip
+                    label={currentUser.role}
+                    color="primary"
+                    variant="filled"
+                    sx={{ mb: 3, fontWeight: 'bold' }}
+                  />
+
+                  <Box sx={{ textAlign: 'left', mb: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Email sx={{ mr: 2, color: 'primary.main' }} />
+                      <Typography>{currentUser.email}</Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Phone sx={{ mr: 2, color: 'primary.main' }} />
+                      <Typography>{currentUser.phone || 'Не указан'}</Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Place sx={{ mr: 2, color: 'primary.main' }} />
+                      <Typography>{currentUser.address || 'Не указан'}</Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <CalendarToday sx={{ mr: 2, color: 'primary.main' }} />
+                      <Typography>
+                        {new Date(currentUser.createdAt).toLocaleDateString('ru-RU')}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Button
+                    startIcon={<Edit />}
+                    onClick={handleEdit}
+                    variant="outlined"
+                    fullWidth
+                    sx={{
+                      borderRadius: 3,
+                      py: 1.5,
+                      fontWeight: 'bold',
+                      borderWidth: 2,
+                      '&:hover': {
+                        borderWidth: 2,
+                        transform: 'translateY(-2px)'
+                      },
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Редактировать профиль
+                  </Button>
+                </Paper>
+              </Slide>
+
+              {/* Статистика */}
+              <Fade in={true} timeout={900}>
+                <Paper elevation={0} sx={{ 
+                  p: 3, 
+                  mt: 3,
+                  borderRadius: 4,
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
+                }}>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+                    📊 Статистика
+                  </Typography>
+                  
+                  <Grid container spacing={2}>
+                    {stats.map((stat, index) => (
+                      <Grid item xs={6} key={index}>
+                        <Card sx={{ 
+                          textAlign: 'center', 
+                          p: 2,
+                          background: 'transparent',
+                          boxShadow: 'none',
+                          border: `1px solid ${alpha(theme.palette[stat.color].main, 0.1)}`,
+                          borderRadius: 3
+                        }}>
+                          <Box sx={{ 
+                            color: `${stat.color}.main`,
+                            mb: 1
+                          }}>
+                            {stat.icon}
+                          </Box>
+                          <Typography variant="h4" sx={{ 
+                            fontWeight: 'bold',
+                            color: `${stat.color}.main`,
+                            mb: 0.5
+                          }}>
+                            {stat.value}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {stat.label}
+                          </Typography>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Paper>
+              </Fade>
+            </Grid>
+
+            {/* Основное содержание */}
+            <Grid item xs={12} md={8}>
+              {/* Быстрые действия */}
+              <Slide direction="right" in={true} timeout={700}>
+                <Paper elevation={0} sx={{ 
+                  p: 4, 
+                  mb: 3,
+                  borderRadius: 4,
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
+                }}>
+                  <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center', mb: 3 }}>
+                    ⚡ Быстрые действия
+                  </Typography>
+                  
+                  <Grid container spacing={2} justifyContent="center">
+                    {quickActions.map((action, index) => (
+                      <Grid item xs={12} sm={6} key={index} sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Card
+                          onClick={action.onClick}
+                          sx={{
+                            p: 3,
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            border: `2px solid ${alpha(action.color, 0.1)}`,
+                            background: 'transparent',
+                            transition: 'all 0.3s ease',
+                            width: '100%',
+                            maxWidth: '300px',
+                            '&:hover': {
+                              transform: 'translateY(-4px)',
+                              borderColor: action.color,
+                              boxShadow: `0 8px 25px ${alpha(action.color, 0.2)}`
+                            }
+                          }}
+                        >
+                          <Box sx={{ 
+                            color: action.color,
+                            mb: 2,
+                            fontSize: '2.5rem'
+                          }}>
+                            {action.icon}
+                          </Box>
+                          <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                            {action.title}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            {action.description}
+                          </Typography>
+                          <Chip
+                            label={action.count}
+                            size="small"
+                            sx={{
+                              backgroundColor: alpha(action.color, 0.1),
+                              color: action.color,
+                              fontWeight: 'bold'
+                            }}
+                          />
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Paper>
+              </Slide>
+
+              {/* Недавняя активность */}
+              <Slide direction="right" in={true} timeout={900}>
+                <Paper elevation={0} sx={{ 
+                  p: 4, 
+                  borderRadius: 4,
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
+                }}>
+                  <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center', mb: 3 }}>
+                    📈 Недавняя активность
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <List sx={{ width: '100%', maxWidth: '800px' }}>
+                      {recentActivities.map((activity, index) => (
+                        <React.Fragment key={index}>
+                          <ListItem 
+                            sx={{
+                              borderRadius: 3,
+                              mb: 2,
+                              p: 2,
+                              background: alpha(activity.color, 0.05),
+                              border: `1px solid ${alpha(activity.color, 0.1)}`,
+                              transition: 'all 0.3s ease',
+                              '&:hover': {
+                                transform: 'translateX(4px)',
+                                background: alpha(activity.color, 0.1)
+                              }
+                            }}
+                          >
+                            <ListItemIcon sx={{ color: activity.color, minWidth: 40 }}>
+                              {activity.icon}
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                                    {activity.title}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {activity.date}
+                                  </Typography>
+                                </Box>
+                              }
+                              secondary={
+                                <Box sx={{ mt: 0.5 }}>
+                                  <Typography variant="body2">
+                                    {activity.description}
+                                  </Typography>
+                                  {activity.amount && (
+                                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'primary.main', mt: 0.5 }}>
+                                      {activity.amount}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              }
+                            />
+                          </ListItem>
+                          {index < recentActivities.length - 1 && (
+                            <Divider sx={{ my: 1, opacity: 0.5 }} />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </List>
+                  </Box>
+                </Paper>
+              </Slide>
+            </Grid>
+          </Grid>
+
+          {/* Диалог редактирования профиля */}
+          <Dialog 
+            open={editDialogOpen} 
+            onClose={handleCancel}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{
+              sx: {
+                borderRadius: 4,
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)'
+              }
+            }}
+          >
+            <DialogTitle sx={{ 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              fontWeight: 'bold',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              ✏️ Редактирование профиля
+              <IconButton 
+                onClick={handleCancel} 
+                sx={{ color: 'white' }}
+                size="small"
+              >
+                <Close />
+              </IconButton>
+            </DialogTitle>
+
+            <DialogContent sx={{ p: 4 }}>
               <Box component="form" onSubmit={handleSubmit}>
                 <TextField
                   fullWidth
@@ -188,9 +557,13 @@ const ProfilePage = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  margin="normal"
                   required
+                  sx={{ mb: 3 }}
+                  InputProps={{
+                    startAdornment: <Person sx={{ mr: 1, color: 'primary.main' }} />
+                  }}
                 />
+                
                 <TextField
                   fullWidth
                   type="email"
@@ -198,9 +571,13 @@ const ProfilePage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  margin="normal"
                   required
+                  sx={{ mb: 3 }}
+                  InputProps={{
+                    startAdornment: <Email sx={{ mr: 1, color: 'primary.main' }} />
+                  }}
                 />
+                
                 <TextField
                   fullWidth
                   type="tel"
@@ -208,144 +585,50 @@ const ProfilePage = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  margin="normal"
+                  sx={{ mb: 3 }}
+                  InputProps={{
+                    startAdornment: <Phone sx={{ mr: 1, color: 'primary.main' }} />
+                  }}
                 />
+                
                 <TextField
                   fullWidth
                   label="Адрес"
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  margin="normal"
                   multiline
                   rows={3}
+                  sx={{ mb: 2 }}
+                  InputProps={{
+                    startAdornment: <Place sx={{ mr: 1, color: 'primary.main' }} />
+                  }}
                 />
               </Box>
-            ) : (
-              <Box>
-                <Typography><strong>Имя:</strong> {currentUser.name}</Typography>
-                <Typography><strong>Email:</strong> {currentUser.email}</Typography>
-                <Typography><strong>Телефон:</strong> {currentUser.phone || 'Не указан'}</Typography>
-                <Typography><strong>Адрес:</strong> {currentUser.address || 'Не указан'}</Typography>
-                <Typography><strong>Роль:</strong> {currentUser.role}</Typography>
-                <Typography>
-                  <strong>Дата регистрации:</strong>{' '}
-                  {new Date(currentUser.createdAt).toLocaleDateString('ru-RU')}
-                </Typography>
-              </Box>
-            )}
-          </Paper>
+            </DialogContent>
 
-          {/* Статистика */}
-          <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Статистика
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={6} md={3}>
-                <Box textAlign="center">
-                  <Typography variant="h4" color="primary.main">
-                    5
-                  </Typography>
-                  <Typography variant="body2">Заказов</Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={6} md={3}>
-                <Box textAlign="center">
-                  <Typography variant="h4" color="secondary.main">
-                    12
-                  </Typography>
-                  <Typography variant="body2">Избранное</Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={6} md={3}>
-                <Box textAlign="center">
-                  <Typography variant="h4" color="success.main">
-                    3
-                  </Typography>
-                  <Typography variant="body2">Отзывов</Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={6} md={3}>
-                <Box textAlign="center">
-                  <Typography variant="h4" color="warning.main">
-                    2
-                  </Typography>
-                  <Typography variant="body2">Адреса</Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-
-        {/* Быстрые действия */}
-        <Grid item xs={12} md={4}>
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Быстрые действия
-            </Typography>
-            
-            <List>
-              {quickActions.map((action, index) => (
-                <React.Fragment key={index}>
-                  <ListItem 
-                    button 
-                    onClick={action.onClick}
-                    sx={{
-                      borderRadius: 1,
-                      mb: 1,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        backgroundColor: 'action.hover',
-                        transform: 'translateX(4px)'
-                      }
-                    }}
-                  >
-                    <ListItemIcon sx={{ color: action.color }}>
-                      {action.icon}
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={action.title}
-                      secondary={action.description}
-                    />
-                  </ListItem>
-                  {index < quickActions.length - 1 && <Divider />}
-                </React.Fragment>
-              ))}
-            </List>
-          </Paper>
-
-          {/* Недавняя активность */}
-          <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Недавняя активность
-            </Typography>
-            <List>
-              <ListItem>
-                <ListItemText
-                  primary="Заказ #12345"
-                  secondary="15 января 2024 - 12 500 ₽"
-                />
-              </ListItem>
-              <Divider />
-              <ListItem>
-                <ListItemText
-                  primary="Добавлен в избранное"
-                  secondary="14 января 2024 - Смартфон Samsung"
-                />
-              </ListItem>
-              <Divider />
-              <ListItem>
-                <ListItemText
-                  primary="Оставлен отзыв"
-                  secondary="13 января 2024 - Ноутбук ASUS"
-                />
-              </ListItem>
-            </List>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Container>
+            <DialogActions sx={{ p: 3, pt: 0 }}>
+              <Button
+                onClick={handleCancel}
+                variant="outlined"
+                sx={{ borderRadius: 3 }}
+              >
+                Отмена
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                variant="contained"
+                disabled={loading}
+                sx={{ borderRadius: 3 }}
+                startIcon={<Save />}
+              >
+                {loading ? 'Сохранение...' : 'Сохранить изменения'}
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </Box>
+      </Container>
+    </Box>
   );
 };
 
