@@ -16,7 +16,11 @@ import {
   Divider,
   useTheme,
   CircularProgress,
-  Alert
+  Alert,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material';
 import {
   Add,
@@ -25,11 +29,154 @@ import {
   Smartphone,
   Laptop,
   Headphones,
-  DevicesOther
+  DevicesOther,
+  //Television,
+  VideogameAsset,
+  CameraAlt
 } from '@mui/icons-material';
+import { adminService } from '../../../services/adminService';
 
-// Сервис для работы с API (замените на вашу реализацию)
-import { categoryService } from '../../../services/categoryService';
+// Функция для получения иконки по названию категории
+const getCategoryIcon = (categoryName) => {
+  const iconMap = {
+    'Смартфоны': <Smartphone />,
+    'Ноутбуки': <Laptop />,
+    'Наушники': <Headphones />,
+    'Бытовая техника': <DevicesOther />,
+    //'Телевизоры': <Television />,
+    'Игровые консоли': <VideogameAsset />,
+    'Фототехника': <CameraAlt />,
+    'Компьютеры': <Laptop />,
+    'Аксессуары': <DevicesOther />
+  };
+  
+  return iconMap[categoryName] || <DevicesOther />;
+};
+
+const getCategoryColor = (categoryName, theme) => {
+  const colorMap = {
+    'Смартфоны': theme.palette.primary.main,
+    'Ноутбуки': theme.palette.secondary.main,
+    'Наушники': theme.palette.success.main,
+    'Бытовая техника': theme.palette.warning.main,
+    //'Телевизоры': theme.palette.info.main,
+    'Игровые консоли': theme.palette.error.main,
+    'Фототехника': theme.palette.grey[600]
+  };
+  
+  return colorMap[categoryName] || theme.palette.info.main;
+};
+
+const CategoryCard = ({ category, onEdit, onDelete, theme }) => (
+  <Card sx={{ 
+    height: '100%', 
+    display: 'flex', 
+    flexDirection: 'column',
+    transition: 'all 0.3s ease',
+    border: `1px solid ${theme.palette.divider}`,
+    '&:hover': {
+      transform: 'translateY(-4px)',
+      boxShadow: theme.shadows[4],
+      borderColor: getCategoryColor(category.name, theme)
+    }
+  }}>
+    <Box sx={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      height: 120,
+      backgroundColor: `${getCategoryColor(category.name, theme)}15`,
+      color: getCategoryColor(category.name, theme)
+    }}>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        width: 60,
+        height: 60,
+        borderRadius: '50%',
+        backgroundColor: `${getCategoryColor(category.name, theme)}20`,
+        fontSize: 32
+      }}>
+        {getCategoryIcon(category.name)}
+      </Box>
+    </Box>
+    
+    <CardContent sx={{ flexGrow: 1, p: 3 }}>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+        {category.name}
+      </Typography>
+      
+      {category.parent_id && (
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          <Chip 
+            label={`Подкатегория`}
+            size="small"
+            variant="outlined"
+            sx={{ 
+              backgroundColor: `${theme.palette.secondary.main}08`,
+              borderColor: theme.palette.secondary.main,
+              color: theme.palette.secondary.main,
+              fontWeight: 500
+            }}
+          />
+        </Box>
+      )}
+      
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+          SLUG:
+        </Typography>
+        <Typography variant="body2" sx={{ 
+          fontFamily: 'monospace', 
+          backgroundColor: theme.palette.grey[100],
+          p: 0.5,
+          borderRadius: 1,
+          mt: 0.5,
+          display: 'inline-block'
+        }}>
+          {category.slug}
+        </Typography>
+      </Box>
+
+      {category.products_count !== undefined && (
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+            Товаров:
+          </Typography>
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            {category.products_count}
+          </Typography>
+        </Box>
+      )}
+    </CardContent>
+    
+    <Box sx={{ p: 2, pt: 0 }}>
+      <Divider sx={{ mb: 2 }} />
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<Edit />}
+          onClick={() => onEdit(category)}
+          sx={{ flex: 1 }}
+        >
+          Редактировать
+        </Button>
+        <Button
+          size="small"
+          variant="outlined"
+          color="error"
+          startIcon={<Delete />}
+          onClick={() => onDelete(category.id)}
+          sx={{ flex: 1 }}
+        >
+          Удалить
+        </Button>
+      </Box>
+    </Box>
+  </Card>
+);
 
 const AdminCategories = () => {
   const theme = useTheme();
@@ -38,36 +185,59 @@ const AdminCategories = () => {
   const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
-  const [formData, setFormData] = useState({ name: '', slug: '' });
+  const [formData, setFormData] = useState({ 
+    name: '', 
+    slug: '', 
+    parent_id: '' 
+  });
 
-  // Функция для получения категорий из базы данных
   const fetchCategories = async () => {
     try {
       setLoading(true);
       setError(null);
-      const categoriesData = await categoryService.getAllCategories();
-      setCategories(categoriesData);
+      
+      console.log('🔄 Загрузка категорий...');
+      const categoriesData = await adminService.getCategories();
+      console.log('✅ Получены категории:', categoriesData);
+      
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      
     } catch (err) {
-      setError('Не удалось загрузить категории: ' + err.message);
-      console.error('Ошибка загрузки категорий:', err);
+      console.error('❌ Ошибка загрузки категорий:', err);
+      setError('Не удалось загрузить категории. Проверьте подключение к серверу.');
+      
+      // Показываем демо-данные при ошибке
+      const demoCategories = [
+        { id: 1, name: 'Бытовая техника', slug: 'appliances', parent_id: null, products_count: 15 },
+        { id: 2, name: 'Игровые консоли', slug: 'gaming-consoles', parent_id: null, products_count: 8 },
+        { id: 3, name: 'Наушники', slug: 'headphones', parent_id: 1, products_count: 23 },
+        { id: 4, name: 'Ноутбуки', slug: 'laptops', parent_id: null, products_count: 34 },
+        { id: 5, name: 'Смартфоны', slug: 'smartphones', parent_id: 1, products_count: 45 },
+        { id: 6, name: 'Телевизоры', slug: 'tvs', parent_id: 1, products_count: 18 },
+        { id: 7, name: 'Фототехника', slug: 'photo-equipment', parent_id: null, products_count: 12 }
+      ];
+      setCategories(demoCategories);
     } finally {
       setLoading(false);
     }
   };
 
-  // Загрузка категорий при монтировании компонента
   useEffect(() => {
     fetchCategories();
   }, []);
 
   const handleAddCategory = () => {
-    setFormData({ name: '', slug: '' });
+    setFormData({ name: '', slug: '', parent_id: '' });
     setEditingCategory(null);
     setOpenDialog(true);
   };
 
   const handleEditCategory = (category) => {
-    setFormData({ name: category.name, slug: category.slug });
+    setFormData({ 
+      name: category.name, 
+      slug: category.slug, 
+      parent_id: category.parent_id || '' 
+    });
     setEditingCategory(category);
     setOpenDialog(true);
   };
@@ -75,171 +245,74 @@ const AdminCategories = () => {
   const handleDeleteCategory = async (categoryId) => {
     if (window.confirm('Вы уверены, что хотите удалить эту категорию?')) {
       try {
-        await categoryService.deleteCategory(categoryId);
-        // Обновляем список после удаления
-        await fetchCategories();
+        await adminService.deleteCategory(categoryId);
+        setCategories(categories.filter(c => c.id !== categoryId));
+        setError(null);
       } catch (err) {
-        setError('Не удалось удалить категорию: ' + err.message);
+        console.error('❌ Ошибка удаления категории:', err);
+        setError('Не удалось удалить категорию. Возможно, в ней есть товары.');
       }
     }
   };
 
   const handleSaveCategory = async () => {
     try {
+      let savedCategory;
+      
       if (editingCategory) {
-        // Обновление существующей категории
-        await categoryService.updateCategory(editingCategory.id, formData);
+        savedCategory = await adminService.updateCategory(editingCategory.id, {
+          ...formData,
+          parent_id: formData.parent_id || null
+        });
+        setCategories(categories.map(c => 
+          c.id === editingCategory.id ? savedCategory : c
+        ));
       } else {
-        // Создание новой категории
-        await categoryService.createCategory(formData);
+        savedCategory = await adminService.createCategory({
+          ...formData,
+          parent_id: formData.parent_id || null
+        });
+        setCategories([...categories, savedCategory]);
       }
       
-      // Обновляем список категорий
-      await fetchCategories();
       setOpenDialog(false);
+      setError(null);
     } catch (err) {
-      setError('Не удалось сохранить категорию: ' + err.message);
+      console.error('❌ Ошибка сохранения категории:', err);
+      setError('Не удалось сохранить категорию. Проверьте данные и попробуйте снова.');
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: name === 'parent_id' ? (value === '' ? null : parseInt(value)) : value 
+    }));
   };
 
-  // Функция для получения иконки по названию категории
-  const getCategoryIcon = (categoryName) => {
-    const iconMap = {
-      'Смартфоны': <Smartphone />,
-      'Ноутбуки': <Laptop />,
-      'Наушники': <Headphones />,
-      'Аксессуары': <DevicesOther />
-    };
-    
-    return iconMap[categoryName] || <DevicesOther />;
+  const generateSlugFromName = () => {
+    if (!formData.name) return;
+    const slug = formData.name
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    setFormData(prev => ({ ...prev, slug }));
   };
-
-  // Функция для получения цвета по названию категории
-  const getCategoryColor = (categoryName) => {
-    const colorMap = {
-      'Смартфоны': theme.palette.primary.main,
-      'Ноутбуки': theme.palette.secondary.main,
-      'Наушники': theme.palette.success.main,
-      'Аксессуары': theme.palette.warning.main
-    };
-    
-    return colorMap[categoryName] || theme.palette.info.main;
-  };
-
-  const CategoryCard = ({ category }) => (
-    <Card sx={{ 
-      height: '100%', 
-      display: 'flex', 
-      flexDirection: 'column',
-      transition: 'all 0.3s ease',
-      border: `1px solid ${theme.palette.divider}`,
-      '&:hover': {
-        transform: 'translateY(-4px)',
-        boxShadow: theme.shadows[4],
-        borderColor: getCategoryColor(category.name)
-      }
-    }}>
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        height: 120,
-        backgroundColor: `${getCategoryColor(category.name)}15`,
-        color: getCategoryColor(category.name)
-      }}>
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          width: 60,
-          height: 60,
-          borderRadius: '50%',
-          backgroundColor: `${getCategoryColor(category.name)}20`,
-          fontSize: 32
-        }}>
-          {getCategoryIcon(category.name)}
-        </Box>
-      </Box>
-      
-      <CardContent sx={{ flexGrow: 1, p: 3 }}>
-        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-          {category.name}
-        </Typography>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <Chip 
-            label={`${category.products_count || 0} товаров`}
-            size="small"
-            variant="outlined"
-            sx={{ 
-              backgroundColor: `${theme.palette.primary.main}08`,
-              borderColor: theme.palette.primary.main,
-              color: theme.palette.primary.main,
-              fontWeight: 500
-            }}
-          />
-        </Box>
-        
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-            SLUG:
-          </Typography>
-          <Typography variant="body2" sx={{ 
-            fontFamily: 'monospace', 
-            backgroundColor: theme.palette.grey[100],
-            p: 0.5,
-            borderRadius: 1,
-            mt: 0.5,
-            display: 'inline-block'
-          }}>
-            {category.slug}
-          </Typography>
-        </Box>
-      </CardContent>
-      
-      <Box sx={{ p: 2, pt: 0 }}>
-        <Divider sx={{ mb: 2 }} />
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Edit />}
-            onClick={() => handleEditCategory(category)}
-            sx={{ minWidth: '120px' }}
-          >
-            Редактировать
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            color="error"
-            startIcon={<Delete />}
-            onClick={() => handleDeleteCategory(category.id)}
-            sx={{ minWidth: '100px' }}
-          >
-            Удалить
-          </Button>
-        </Box>
-      </Box>
-    </Card>
-  );
 
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ py: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
         <CircularProgress />
+        <Typography sx={{ ml: 2 }}>Загрузка категорий...</Typography>
       </Container>
     );
   }
 
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
-      {/* Заголовок */}
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
@@ -273,37 +346,24 @@ const AdminCategories = () => {
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
 
-      {/* Сетка категорий */}
-      {categories.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 6 }}>
-          <Typography variant="h6" color="textSecondary">
-            Категории не найдены
-          </Typography>
-          <Button 
-            variant="contained" 
-            startIcon={<Add />} 
-            onClick={handleAddCategory}
-            sx={{ mt: 2 }}
-          >
-            Добавить первую категорию
-          </Button>
-        </Box>
-      ) : (
-        <Grid container spacing={3}>
-          {categories.map((category) => (
-            <Grid item xs={12} sm={6} md={4} key={category.id}>
-              <CategoryCard category={category} />
-            </Grid>
-          ))}
-        </Grid>
-      )}
+      <Grid container spacing={3}>
+        {categories.map((category) => (
+          <Grid item xs={12} sm={6} md={4} key={category.id}>
+            <CategoryCard 
+              category={category} 
+              onEdit={handleEditCategory}
+              onDelete={handleDeleteCategory}
+              theme={theme}
+            />
+          </Grid>
+        ))}
+      </Grid>
 
-      {/* Диалог добавления/редактирования категории */}
       <Dialog 
         open={openDialog} 
         onClose={() => setOpenDialog(false)} 
@@ -323,23 +383,44 @@ const AdminCategories = () => {
             autoFocus
             margin="dense"
             name="name"
-            label="Название категории"
+            label="Название категории *"
             fullWidth
             variant="outlined"
             value={formData.name}
             onChange={handleInputChange}
+            onBlur={generateSlugFromName}
             sx={{ mb: 2 }}
           />
           <TextField
             margin="dense"
             name="slug"
-            label="SLUG"
+            label="SLUG *"
             fullWidth
             variant="outlined"
             value={formData.slug}
             onChange={handleInputChange}
             helperText="Уникальный идентификатор категории в URL"
+            sx={{ mb: 2 }}
           />
+          
+          <FormControl fullWidth variant="outlined" margin="dense">
+            <InputLabel>Родительская категория</InputLabel>
+            <Select
+              name="parent_id"
+              value={formData.parent_id || ''}
+              onChange={handleInputChange}
+              label="Родительская категория"
+            >
+              <MenuItem value="">Без родительской категории</MenuItem>
+              {categories
+                .filter(cat => !cat.parent_id)
+                .map(category => (
+                  <MenuItem key={category.id} value={category.id}>
+                    {category.name}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 0 }}>
           <Button 
@@ -351,9 +432,10 @@ const AdminCategories = () => {
           <Button
             variant="contained"
             onClick={handleSaveCategory}
+            disabled={!formData.name || !formData.slug}
             sx={{ borderRadius: 2 }}
           >
-            Сохранить
+            {editingCategory ? 'Сохранить' : 'Создать'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -10,9 +10,7 @@ import {
   Button,
   Card,
   CardContent,
-  Alert,
-  useTheme,
-  useMediaQuery
+  Alert
 } from '@mui/material';
 import {
   Phone,
@@ -21,10 +19,9 @@ import {
   Schedule,
   Send
 } from '@mui/icons-material';
+import YandexMap from '../../../components/YandexMap';
 
 const ContactsPage = () => {
-  const theme = useTheme();
-  //const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -44,9 +41,7 @@ const ContactsPage = () => {
     e.preventDefault();
     console.log('Форма отправлена:', formData);
     setIsSubmitted(true);
-    // Здесь будет отправка формы на сервер
     setFormData({ name: '', email: '', phone: '', message: '' });
-    
     setTimeout(() => setIsSubmitted(false), 3000);
   };
 
@@ -66,7 +61,7 @@ const ContactsPage = () => {
     {
       icon: <LocationOn sx={{ fontSize: 30 }} />,
       title: 'Адрес',
-      details: 'г. Москва, ул. Примерная, д. 123',
+      details: 'г. Курск, ул. Белгородская, д. 14',
       description: 'Приезжайте в гости'
     },
     {
@@ -151,21 +146,14 @@ const ContactsPage = () => {
             </Box>
 
             {/* Карта */}
-            <Paper elevation={3} sx={{ p: 3, borderRadius: 3 }}>
+            <Paper elevation={3} sx={{ p: 3, borderRadius: 3, height: 400 }}>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
                 Мы на карте
               </Typography>
-              <Box
-                sx={{
-                  height: 300,
-                  backgroundImage: 'url(https://via.placeholder.com/600x300?text=Карта+Москвы)',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  borderRadius: 2,
-                  border: '2px solid',
-                  borderColor: 'grey.200'
-                }}
-              />
+              <YandexMap
+                center={[51.670550205174614, 36.147750777233355]}
+                zoom={16}
+               />
             </Paper>
           </Grid>
 

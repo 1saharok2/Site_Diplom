@@ -4,31 +4,56 @@ import {
   AppBar,
   Toolbar,
   IconButton,
-  Typography
+  Typography,
+  Drawer
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   Notifications as NotificationsIcon,
   AccountCircle as AccountIcon
 } from '@mui/icons-material';
-import Sidebar from '../Sidebar/Sidebar';
+import AdminSidebar from './AdminSidebar';
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    window.location.href = '/login';
-  };
-
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* Сайдбар */}
-      <Sidebar
+      <AdminSidebar/>
+      
+      {/* Сайдбар для десктопной версии */}
+      <Box
+        sx={{
+          width: 280,
+          flexShrink: 0,
+          display: { xs: 'none', md: 'block' },
+          borderRight: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        <AdminSidebar onItemClick={() => {}} />
+      </Box>
+
+      {/* Мобильный Drawer */}
+      <Drawer
+        variant="temporary"
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        onLogout={handleLogout}
-      />
+        ModalProps={{
+          keepMounted: true,
+        }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': { 
+            boxSizing: 'border-box', 
+            width: 280,
+            borderRight: '1px solid',
+            borderColor: 'divider'
+          },
+        }}
+      >
+        <AdminSidebar onItemClick={() => setSidebarOpen(false)} />
+      </Drawer>
 
       {/* Основной контент */}
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
@@ -61,13 +86,18 @@ const AdminLayout = ({ children }) => {
           </Toolbar>
         </AppBar>
 
-        {/* Контент */}
-        <Box sx={{ 
-          maxWidth: 1200,
-          margin: '0 auto'
-        }}>
-          {children}
-        </Box>
+      {/* Основной контент */}
+      <Box 
+        component="main" 
+        sx={{ 
+          flexGrow: 1, 
+          p: { xs: 2, md: 3 },
+          ml: { xs: 0, md: '280px' },
+          width: { xs: '100%', md: 'calc(100% - 280px)' }
+        }}
+      >
+        {children}
+      </Box>
       </Box>
     </Box>
   );
