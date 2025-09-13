@@ -1,3 +1,5 @@
+import {supabase} from '../services/supabaseClient'
+
 const API_BASE = 'http://localhost:5000';
 
 const handleApiResponse = async (response) => {
@@ -61,31 +63,95 @@ export const adminService = {
 
   // Products
   getProducts: async () => {
-    return fetchWithAuth('/api/products');
+  try {
+    const { data: products, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return products.map(product => ({
+      ...product,
+      images: product.image_url ? [product.image_url] : [],
+      mainImage: product.image_url || ''
+    }));
+  } catch (error) {
+    console.error('Error in getProducts:', error);
+    throw error;
+    }
   },
 
   createProduct: async (productData) => {
-    return fetchWithAuth('/api/admin/products', {
-      method: 'POST',
-      body: JSON.stringify({
-        ...productData,
-        images: Array.isArray(productData.images) ? productData.images : []
+  try {
+    const image_url = productData.images && productData.images.length > 0 
+      ? productData.images[0] 
+      : null;
+
+    const { data: product, error } = await supabase
+      .from('products')
+      .insert({
+        name: productData.name,
+        price: productData.price,
+        description: productData.description,
+        category_slug: productData.category_slug,
+        brand: productData.brand,
+        stock: productData.stock,
+        image_url: image_url
       })
-    });
-  },
+      .select()
+      .single();
+
+    if (error) throw error;
+    return product;
+  } catch (error) {
+    console.error('Error in createProduct:', error);
+    throw error;
+  }
+},
 
   updateProduct: async (id, productData) => {
-    return fetchWithAuth(`/api/admin/products/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(productData)
-    });
-  },
+  try {
+    const image_url = productData.images && productData.images.length > 0 
+      ? productData.images[0] 
+      : null;
 
-  deleteProduct: async (id) => {
-    return fetchWithAuth(`/api/admin/products/${id}`, {
-      method: 'DELETE'
-    });
-  },
+    const { data: product, error } = await supabase
+      .from('products')
+      .update({
+        name: productData.name,
+        price: productData.price,
+        description: productData.description,
+        category_slug: productData.category_slug,
+        brand: productData.brand,
+        stock: productData.stock,
+        image_url: image_url
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return product;
+  } catch (error) {
+    console.error('Error in updateProduct:', error);
+    throw error;
+  }
+},
+
+deleteProduct: async (id) => {
+  try {
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error in deleteProduct:', error);
+    throw error;
+  }
+},
 
   // Categories
   getCategories: async () => {
@@ -110,17 +176,24 @@ export const adminService = {
   },
 
   createCategory: async (categoryData) => {
-    return fetchWithAuth('/api/admin/categories', {
-      method: 'POST',
-      body: JSON.stringify(categoryData)
-    });
+    const { data, error } = await supabase
+      .from('categories')
+      .insert([categoryData])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   },
 
   updateCategory: async (id, categoryData) => {
-    return fetchWithAuth(`/api/admin/categories/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(categoryData)
-    });
+    const { data, error } = await supabase
+      .from('categories')
+      .update(categoryData)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   },
 
   deleteCategory: async (id) => {
@@ -132,6 +205,28 @@ export const adminService = {
   // Users
   getUsers: async () => {
     return fetchWithAuth('/api/admin/users');
+  },
+
+  updateUser: async (id, userData) => {
+    const { data, error } = await supabase
+      .from('users')
+      .update(userData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  deleteUser: async (id) => {
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return true;
   },
 
   getDashboardStats: async () => {
