@@ -311,19 +311,6 @@ const AdminDashboard = () => {
           </Paper>
         </Grid>
       </Grid>
-
-      {/* Кнопка отладки */}
-      <Box sx={{ mt: 3, textAlign: 'center' }}>
-        <Button 
-          variant="outlined" 
-          onClick={() => {
-            console.log('Текущая статистика:', stats);
-            console.log('Токен:', localStorage.getItem('authToken'));
-          }}
-        >
-          Debug Info
-        </Button>
-      </Box>
     </Box>
   );
 };
