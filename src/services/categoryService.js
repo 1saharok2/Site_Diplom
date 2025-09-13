@@ -18,7 +18,7 @@ export const categoryService = {
         .from('categories')
         .select('*')
         .eq('is_active', true)
-        .order('name');
+        .order('id');
 
       if (error) throw error;
 
