@@ -1,93 +1,115 @@
 // components/YandexMap.jsx
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 const YandexMap = ({ center = [51.670550205174614, 36.147750777233355], zoom = 15 }) => {
   const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [mapInstance, setMapInstance] = useState(null);
+
+  const initMapSimple = useCallback(() => {
+    const { ymaps } = window;
+    if (!ymaps || !mapRef.current) return;
+
+    try {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.destroy();
+      }
+
+      const map = new ymaps.Map(mapRef.current, {
+        center: center,
+        zoom: zoom,
+        controls: ['zoomControl', 'fullscreenControl']
+      });
+
+      const placemark = new ymaps.Placemark(
+        center,
+        {
+          hintContent: 'Наш магазин - нажмите для информации'
+        },
+        {
+          preset: 'islands#blueShoppingIcon',
+          iconColor: '#1976d2'
+        }
+      );
+
+      map.geoObjects.add(placemark);
+
+      // Надежный способ: создаем новый балун при каждом клике
+      placemark.events.add('click', function(e) {
+        e.preventDefault();
+        
+        // Закрываем текущий балун
+        map.balloon.close();
+        
+        // Создаем новый балун карты (не метки)
+        map.balloon.open(e.get('coords'), {
+          content: `
+            <div style="padding: 12px; max-width: 250px;">
+              <h3 style="margin: 0 0 8px 0; color: #d64e2cb6;">Электроник</h3>
+              <p style="margin: 0 0 8px 0;">
+                <strong>📍 Адрес:</strong><br/>
+                г. Курск, ул. Белгородская, д. 14
+              </p>
+              <p style="margin: 0;">
+                <strong>🕒 Часы работы:</strong><br/>
+                Пн-Пт: 9:00-18:00<br/>
+                Сб-Вс: 10:00-16:00
+              </p>
+            </div>
+          `,
+          closeButton: true
+        });
+      });
+
+      // Закрываем балун при клике на карту
+      map.events.add('click', function(e) {
+        if (!e.get('target')) {
+          map.balloon.close();
+        }
+      });
+
+      mapInstanceRef.current = map;
+      setIsLoading(false);
+
+    } catch (error) {
+      console.error('Ошибка создания карты:', error);
+      setIsLoading(false);
+    }
+  }, [center, zoom]);
 
   useEffect(() => {
-    const initMap = () => {
-      const { ymaps } = window;
-      if (!ymaps || !mapRef.current) return;
+    if (window.ymaps) {
+      window.ymaps.ready(initMapSimple);
+      return;
+    }
 
-      try {
-        // Создаем карту
-        const map = new ymaps.Map(mapRef.current, {
-          center: center,
-          zoom: zoom,
-          controls: ['zoomControl', 'fullscreenControl']
-        });
-
-        // Кастомная метка
-        const placemark = new ymaps.Placemark(
-          center,
-          {
-            balloonContent: `
-              <div style="padding: 12px; max-width: 250px;">
-                <h3 style="margin: 0 0 8px 0; color: #1976d2;">Наш магазин</h3>
-                <p style="margin: 0 0 8px 0;">
-                  <strong>📍 Адрес:</strong><br/>
-                  г. Москва, ул. Примерная, д. 123
-                </p>
-                <p style="margin: 0;">
-                  <strong>🕒 Часы работы:</strong><br/>
-                  Пн-Пт: 9:00-18:00<br/>
-                  Сб-Вс: 10:00-16:00
-                </p>
-              </div>
-            `,
-            hintContent: 'Наш магазин - нажмите для информации'
-          },
-          {
-            preset: 'islands#blueShoppingIcon',
-            iconColor: '#1976d2'
-          }
-        );
-
-        map.geoObjects.add(placemark);
-        
-        // Открываем балун при клике
-        placemark.events.add('click', function() {
-          placemark.balloon.open();
-        });
-
-        setMapInstance(map);
-        setIsLoading(false);
-
-      } catch (error) {
-        console.error('Ошибка создания карты:', error);
-        setIsLoading(false);
+    const script = document.createElement('script');
+    script.src = 'https://api-maps.yandex.ru/2.1/?apikey=2081de6f-48c5-4a93-aafb-fbd45af2b276&lang=ru_RU';
+    script.async = true;
+    
+    script.onload = () => {
+      if (window.ymaps) {
+        window.ymaps.ready(initMapSimple);
       }
     };
-      if (window.ymaps) {
-        initMap();
-        return;
+    
+    script.onerror = () => {
+      console.error('Не удалось загрузить Яндекс Карты');
+      setIsLoading(false);
+    };
+    
+    document.head.appendChild(script); 
+    
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.destroy();
+        mapInstanceRef.current = null;
       }
+    };
+  }, [initMapSimple]);
 
-      const script = document.createElement('script');
-      script.src = 'https://api-maps.yandex.ru/2.1/?apikey=2081de6f-48c5-4a93-aafb-fbd45af2b276&lang=ru_RU';
-      script.async = true;
-      script.onload = () => {
-        window.ymaps.ready(() => {
-          initMap();
-        });
-      };
-      script.onerror = () => {
-        console.error('Не удалось загрузить Яндекс Карты');
-        setIsLoading(false);
-      };
-      document.head.appendChild(script); 
-      
-      return () => {
-        if (window.ymaps && mapRef.current) {
-          mapRef.current.innerHTML = '';
-        }
-      };
-    }, [center, zoom]);
-
-return (
+  return (
     <Box sx={{ position: 'relative', height: '100%', width: '100%' }}>
       {isLoading && (
         <Box
