@@ -1,52 +1,124 @@
-import React from 'react';
-import { Tabs, Tab } from 'react-bootstrap';
+import React, { useState } from 'react';
 import './ProductPage_css/ProductTabs.css';
 
 const ProductTabs = ({ product }) => {
-  return (
-    <Tabs defaultActiveKey="description" className="product-tabs">
-      <Tab eventKey="description" title="Описание">
-        <div className="tab-content">
-          <h4>Подробное описание</h4>
-          <p>{product.fullDescription || product.description}</p>
-        </div>
-      </Tab>
-      
-      <Tab eventKey="specifications" title="Характеристики">
-        <div className="tab-content">
-          <h4>Технические характеристики</h4>
-          <div className="specs-table">
-            <div className="spec-row">
-              <span className="spec-name">Категория:</span>
-              <span className="spec-value">{product.category}</span>
+  const [activeTab, setActiveTab] = useState('description');
+
+  const tabs = [
+    { id: 'description', label: 'Описание' },
+    { id: 'specifications', label: 'Характеристики' },
+    { id: 'reviews', label: 'Отзывы' },
+    { id: 'delivery', label: 'Доставка и оплата' }
+  ];
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'description':
+        return (
+          <div className="tab-content">
+            <h3>Описание товара</h3>
+            <p>{product.description || 'Описание товара скоро появится...'}</p>
+            {product.features && (
+              <div className="features-list">
+                <h4>Ключевые особенности:</h4>
+                <ul>
+                  {product.features.map((feature, index) => (
+                    <li key={index}>{feature}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'specifications':
+        return (
+          <div className="tab-content">
+            <h3>Технические характеристики</h3>
+            {product.specifications ? (
+              <div className="specifications-table">
+                {Object.entries(product.specifications).map(([key, value], index) => (
+                  <div key={index} className="spec-row">
+                    <span className="spec-name">{key}:</span>
+                    <span className="spec-value">{value}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>Характеристики товара скоро будут добавлены...</p>
+            )}
+          </div>
+        );
+
+      case 'reviews':
+        return (
+          <div className="tab-content">
+            <h3>Отзывы покупателей</h3>
+            <div className="reviews-summary">
+              <div className="rating-overview">
+                <span className="average-rating">{product.rating || 0}</span>
+                <span className="rating-stars">★★★★★</span>
+                <span className="reviews-count">{product.reviewsCount || 0} отзывов</span>
+              </div>
             </div>
-            <div className="spec-row">
-              <span className="spec-name">Рейтинг:</span>
-              <span className="spec-value">{product.rating}/5</span>
-            </div>
-            <div className="spec-row">
-              <span className="spec-name">Отзывы:</span>
-              <span className="spec-value">{product.reviewsCount}</span>
-            </div>
-            <div className="spec-row">
-              <span className="spec-name">Артикул:</span>
-              <span className="spec-value">#{product.id}</span>
+            <div className="reviews-list">
+              <p>Отзывы будут доступны после покупки товара</p>
             </div>
           </div>
-        </div>
-      </Tab>
+        );
 
-      <Tab eventKey="reviews" title="Отзывы">
-        <div className="tab-content">
-          <h4>Отзывы покупателей</h4>
-          {product.reviewsCount > 0 ? (
-            <p>Система отзывов будет реализована позже</p>
-          ) : (
-            <p>Пока нет отзывов об этом товаре</p>
-          )}
-        </div>
-      </Tab>
-    </Tabs>
+      case 'delivery':
+        return (
+          <div className="tab-content">
+            <h3>Доставка и оплата</h3>
+            <div className="delivery-info">
+              <div className="info-item">
+                <h4>🚚 Доставка</h4>
+                <ul>
+                  <li>Курьерская доставка по городу - 1-2 дня</li>
+                  <li>Самовывоз из пункта выдачи - бесплатно</li>
+                  <li>Почтовая доставка по России - 3-7 дней</li>
+                </ul>
+              </div>
+              <div className="info-item">
+                <h4>💳 Оплата</h4>
+                <ul>
+                  <li>Наличными при получении</li>
+                  <li>Банковской картой онлайн</li>
+                  <li>Рассрочка и кредит</li>
+                </ul>
+              </div>
+              <div className="info-item">
+                <h4>🔄 Возврат</h4>
+                <p>Возврат товара в течение 14 дней без объяснения причин</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="product-tabs">
+      <div className="tabs-header">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      
+      <div className="tabs-content">
+        {renderTabContent()}
+      </div>
+    </div>
   );
 };
 

@@ -1,29 +1,16 @@
-/* ProductGallery.css */
 .product-gallery {
   position: relative;
-}
-
-.product-carousel {
-  margin-bottom: 1rem;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.product-carousel .carousel-inner {
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.product-carousel .carousel-item {
-  height: 400px;
+  margin-bottom: 2rem;
 }
 
 .main-image-container {
   position: relative;
-  height: 100%;
+  height: 500px;
   background: #f8f9fa;
-  border-radius: 10px;
+  border-radius: 15px;
   overflow: hidden;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .image-wrapper {
@@ -46,127 +33,99 @@
 .new-badge,
 .discount-badge {
   position: absolute;
-  top: 10px;
+  top: 15px;
   font-size: 0.9rem;
-  padding: 5px 10px;
+  padding: 8px 15px;
+  font-weight: 600;
+  z-index: 10;
 }
 
 .new-badge {
-  left: 10px;
-  background: #28a745;
+  left: 15px;
+  background: linear-gradient(45deg, #28a745, #20c997);
 }
 
 .discount-badge {
-  right: 10px;
-  background: #dc3545;
+  right: 15px;
+  background: linear-gradient(45deg, #dc3545, #fd7e14);
 }
 
 .thumbnails {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   overflow-x: auto;
-  padding: 10px 0;
+  padding: 10px 5px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.thumbnails::-webkit-scrollbar {
+  height: 6px;
+}
+
+.thumbnails::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
 }
 
 .thumbnail {
   width: 80px;
   height: 80px;
-  border: 2px solid transparent;
-  border-radius: 8px;
+  border: 3px solid transparent;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   flex-shrink: 0;
   background: #f8f9fa;
+  transition: all 0.3s ease;
 }
 
 .thumbnail.active {
   border-color: #007bff;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
 
-.thumbnail-wrapper {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px;
+.thumbnail:hover {
+  border-color: #007bff;
+  transform: translateY(-2px);
 }
 
 .thumbnail img {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-/* КРИТИЧЕСКИ ВАЖНЫЕ СТИЛИ ДЛЯ КАРУСЕЛИ */
-.product-carousel .carousel-control-prev,
-.product-carousel .carousel-control-next {
-  width: 50px;
-  height: 50px;
-  top: 50%;
-  transform: translateY(-50%);
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
-  opacity: 0.9;
-  transition: all 0.3s ease;
-  border: 2px solid white;
-}
+/* АДАПТИВНОСТЬ ДЛЯ РАЗНЫХ ЭКРАНОВ */
 
-.product-carousel .carousel-control-prev {
-  left: 15px;
-}
-
-.product-carousel .carousel-control-next {
-  right: 15px;
-}
-
-.product-carousel .carousel-control-prev:hover,
-.product-carousel .carousel-control-next:hover {
-  opacity: 1;
-  background: rgba(0, 0, 0, 0.7);
-  transform: translateY(-50%) scale(1.1);
-}
-
-.product-carousel .carousel-control-prev-icon,
-.product-carousel .carousel-control-next-icon {
-  filter: invert(1) brightness(2);
-  width: 25px;
-  height: 25px;
-}
-
-/* Делаем индикаторы более заметными */
-.product-carousel .carousel-indicators {
-  bottom: 15px;
-  margin: 0;
-}
-
-.product-carousel .carousel-indicators button {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  margin: 0 6px;
-  background-color: rgba(255, 255, 255, 0.6);
-  border: none;
-  transition: all 0.3s ease;
-}
-
-.product-carousel .carousel-indicators button.active {
-  background-color: #fff;
-  transform: scale(1.2);
-}
-
-/* Адаптивность для карусели */
-@media (max-width: 768px) {
-  .product-carousel .carousel-item {
-    height: 300px;
+/* Большие десктопы (1440px+) */
+@media (min-width: 1440px) {
+  .main-image-container {
+    height: 550px;
   }
   
-  .product-carousel .carousel-control-prev,
-  .product-carousel .carousel-control-next {
-    width: 40px;
-    height: 40px;
+  .thumbnail {
+    width: 90px;
+    height: 90px;
+  }
+}
+
+/* Ноутбуки (1200px - 1439px) */
+@media (max-width: 1439px) and (min-width: 992px) {
+  .main-image-container {
+    height: 480px;
+  }
+  
+  .thumbnail {
+    width: 75px;
+    height: 75px;
+  }
+}
+
+/* Планшеты (768px - 991px) */
+@media (max-width: 991px) and (min-width: 768px) {
+  .main-image-container {
+    height: 450px;
   }
   
   .thumbnail {
@@ -175,30 +134,105 @@
   }
 }
 
-@media (max-width: 576px) {
-  .product-carousel .carousel-item {
-    height: 250px;
+/* Большие телефоны (576px - 767px) */
+@media (max-width: 767px) {
+  .main-image-container {
+    height: 350px;
+    margin-bottom: 1rem;
   }
   
-  .product-carousel .carousel-control-prev,
-  .product-carousel .carousel-control-next {
-    width: 35px;
-    height: 35px;
+  .thumbnail {
+    width: 65px;
+    height: 65px;
+  }
+  
+  .new-badge,
+  .discount-badge {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    top: 10px;
+  }
+  
+  .new-badge {
+    left: 10px;
+  }
+  
+  .discount-badge {
+    right: 10px;
+  }
+}
+
+/* Малые телефоны (до 575px) */
+@media (max-width: 575px) {
+  .main-image-container {
+    height: 300px;
   }
   
   .thumbnail {
     width: 60px;
     height: 60px;
   }
+  
+  .thumbnails {
+    gap: 8px;
+  }
+  
+  .image-wrapper {
+    padding: 15px;
+  }
 }
 
-@media (max-width: 400px) {
-  .product-carousel .carousel-item {
-    height: 220px;
+/* Очень маленькие телефоны (до 375px) */
+@media (max-width: 375px) {
+  .main-image-container {
+    height: 250px;
   }
   
   .thumbnail {
-    width: 50px;
-    height: 50px;
+    width: 55px;
+    height: 55px;
+  }
+  
+  .new-badge,
+  .discount-badge {
+    font-size: 0.75rem;
+    padding: 5px 10px;
+  }
+}
+
+/* Портретная ориентация */
+@media (max-height: 600px) and (orientation: portrait) {
+  .main-image-container {
+    height: 300px;
+  }
+}
+
+/* Ландшафтная ориентация */
+@media (max-height: 500px) and (orientation: landscape) {
+  .main-image-container {
+    height: 350px;
+  }
+  
+  .thumbnails {
+    display: none;
+  }
+}
+
+/* Высокие экраны */
+@media (min-height: 900px) {
+  .main-image-container {
+    height: 600px;
+  }
+}
+
+/* Поддержка touch-устройств */
+@media (hover: none) and (pointer: coarse) {
+  .thumbnail:hover {
+    border-color: transparent;
+    transform: none;
+  }
+  
+  .thumbnail.active:hover {
+    border-color: #007bff;
   }
 }

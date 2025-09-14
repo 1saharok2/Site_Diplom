@@ -15,7 +15,6 @@ const ProductCard = ({ product }) => {
     images,
     rating,
     reviewsCount,
-    isNew,
     discount,
     inStock
   } = product;
@@ -25,45 +24,37 @@ const ProductCard = ({ product }) => {
     e.stopPropagation();
     setIsInCart(true);
     setTimeout(() => setIsInCart(false), 600);
-    console.log('Добавлено в корзину:', product);
   };
 
   const handleAddToWishlist = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsInWishlist(!isInWishlist);
-    console.log(isInWishlist ? 'Удалено из избранного' : 'Добавлено в избранное', product);
   };
 
   return (
-    <Link to={`/product/${product.id}`} className="product-card-link">
-      <div className="product-card-wrapper">
+    <div className="product-card-container">
+      <Link to={`/product/${product.id}`} className="product-card-link">
         <Card className="product-card">
           {/* Бейджи */}
           <div className="product-badges">
-            {isNew && <Badge bg="success" className="new-badge">Новинка</Badge>}
-            {discount > 0 && <Badge bg="danger" className="discount-badge">-{discount}%</Badge>}
+            {discount > 0 && (
+              <Badge bg="danger" className="discount-badge">
+                -{discount}%
+              </Badge>
+            )}
           </div>
 
           {/* Картинка товара */}
           <div className="product-image-container">
-            {images && images[0] ? (
-              <img 
-                src={images[0]} 
-                alt={name}
-                className="product-image"
-                onError={(e) => {
-                  e.target.style.backgroundColor = '#007bff';
-                  e.target.src = 'https://via.placeholder.com/300x200/8767c2/ffffff?text=Нет+изображения';
-                }}
-              />
-            ) : (
-              <img 
-                src="https://via.placeholder.com/300x200/8767c2/ffffff?text=Нет+изображения" 
-                alt="Нет изображения"
-                className="product-image"
-              />
-            )}
+            <img 
+              src={images && images[0] ? images[0] : 'https://via.placeholder.com/300x200/8767c2/ffffff?text=Нет+изображения'}
+              alt={name}
+              className="product-image"
+              onError={(e) => {
+                e.target.src = 'https://via.placeholder.com/300x200/8767c2/ffffff?text=Нет+изображения';
+              }}
+            />
           </div>
 
           {/* Информация о товаре */}
@@ -77,26 +68,26 @@ const ProductCard = ({ product }) => {
                   <FaStar 
                     key={index} 
                     size={14}
-                    color={index < Math.floor(rating) ? '#ffc107' : '#6c757d'} 
+                    color={index < Math.floor(rating || 0) ? '#ffc107' : '#e4e5e9'} 
                   />
                 ))}
               </div>
-              <span className="rating-count">({reviewsCount})</span>
+              <span className="rating-count">({reviewsCount || 0})</span>
             </div>
 
             {/* Цены */}
             <div className="price-container">
               <span className="current-price">
-                {price.toLocaleString('ru-RU')} ₽
+                {(price || 0).toLocaleString('ru-RU')} ₽
               </span>
               {oldPrice > price && (
-                <div>
+                <div className="old-price-container">
                   <span className="old-price">
-                    {oldPrice.toLocaleString('ru-RU')} ₽
+                    {(oldPrice || 0).toLocaleString('ru-RU')} ₽
                   </span>
-                  <div className="price-saving">
-                    Экономия {((oldPrice - price) / oldPrice * 100).toFixed(0)}%
-                  </div>
+                  <span className="price-saving">
+                    Экономия {Math.round((oldPrice - price) / oldPrice * 100)}%
+                  </span>
                 </div>
               )}
             </div>
@@ -110,7 +101,7 @@ const ProductCard = ({ product }) => {
                     className={`btn-cart ${isInCart ? 'added' : ''}`}
                     onClick={handleAddToCart}
                   >
-                    <FaShoppingCart className="me-2" />
+                    <FaShoppingCart className="btn-icon" />
                     {isInCart ? 'Добавлено!' : 'В корзину'}
                   </Button>
                   <Button 
@@ -129,8 +120,8 @@ const ProductCard = ({ product }) => {
             </div>
           </div>
         </Card>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 };
 
