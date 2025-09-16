@@ -186,16 +186,6 @@ const LoginPage = () => {
                 </Link>
               </Typography>
             </Box>
-
-            <Box
-              sx={{
-                p: 2,
-                bgcolor: 'grey.100',
-                borderRadius: 2,
-                borderLeft: '4px solid #667eea'
-              }}
-            >
-            </Box>
           </Box>
         </Paper>
       </Container>
