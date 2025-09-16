@@ -1,5 +1,5 @@
 // context/CartContext.jsx
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { cartService } from '../services/cartService';
 import { useAuth } from './AuthContext';
 
@@ -60,16 +60,7 @@ export const CartProvider = ({ children }) => {
   });
   const { currentUser } = useAuth();
 
-  // Загружаем корзину при изменении пользователя
-  useEffect(() => {
-    if (currentUser) {
-      loadCart();
-    } else {
-      dispatch({ type: 'CLEAR_CART' });
-    }
-  }, [currentUser]);
-
-  const loadCart = async () => {
+  const loadCart = useCallback (async () => {
     if (!currentUser) return;
     
     try {
@@ -79,7 +70,15 @@ export const CartProvider = ({ children }) => {
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
     }
-  };
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      loadCart();
+    } else {
+      dispatch({ type: 'CLEAR_CART' });
+    }
+  }, [currentUser, loadCart]);
 
 const addToCart = async (productId, quantity = 1) => {
   console.log('🛒 addToCart called:', { productId, quantity, currentUser });
@@ -90,31 +89,21 @@ const addToCart = async (productId, quantity = 1) => {
 
   try {
     dispatch({ type: 'SET_LOADING', payload: true });
-    console.log('📦 Calling cartService.addToCart...');
     
     const newItem = await cartService.addToCart(currentUser.id, productId, quantity);
-    console.log('✅ cartService response:', newItem);
     
-    // Проверяем, был ли товар уже в корзине
     const existingItemIndex = state.items.findIndex(
       item => item.product_id === productId
     );
 
-    console.log('🔍 Existing item index:', existingItemIndex);
-    console.log('📊 Current cart items:', state.items);
-
     if (existingItemIndex >= 0) {
       dispatch({ type: 'UPDATE_ITEM', payload: newItem });
-      console.log('🔄 Item updated in cart');
     } else {
       dispatch({ type: 'ADD_ITEM', payload: newItem });
-      console.log('➕ New item added to cart');
     }
     
-    console.log('📈 New cart state:', state.items);
     return newItem;
   } catch (error) {
-    console.error('❌ Error in addToCart:', error);
     dispatch({ type: 'SET_ERROR', payload: error.message });
     throw error;
   } finally {

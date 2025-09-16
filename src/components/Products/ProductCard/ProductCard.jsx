@@ -10,7 +10,7 @@ const ProductCard = ({ product }) => {
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { addToCart } = useCart();
-  const { currentUser, user, isAuthenticated } = useAuth();
+  const { currentUser } = useAuth();
 
   const {
     name,
@@ -27,32 +27,15 @@ const handleAddToCart = async (e) => {
   e.preventDefault();
   e.stopPropagation();
 
-  console.log('🛍️ Add to cart clicked for product:', product.id);
-  console.log('👤 Current user:', currentUser);
-
   if (!currentUser || !currentUser.id) {
     alert('Пожалуйста, авторизуйтесь чтобы добавить товар в корзину');
     return;
   }
-
   try {
     setIsAddingToCart(true);
-    console.log('🚀 Calling addToCart...');
-    
-    const result = await addToCart(product.id, 1);
-    console.log('🎉 addToCart completed successfully:', result);
-    
-    // Проверим что вернулось
-    if (result && result.id) {
-      console.log('✅ Товар добавлен! ID:', result.id);
-      console.log('📦 Данные товара:', result.products);
-    } else {
-      console.warn('⚠️ addToCart вернул пустой результат');
-    }
-    
+    await addToCart(product.id, 1);
     setTimeout(() => setIsAddingToCart(false), 600);
   } catch (error) {
-    console.error('💥 Error in handleAddToCart:', error);
     alert('Не удалось добавить товар в корзину: ' + error.message);
     setIsAddingToCart(false);
   }
