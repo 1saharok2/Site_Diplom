@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Container, Row, Col, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Alert, Spinner, Breadcrumb } from 'react-bootstrap';
+import { FaHome, FaChevronRight } from 'react-icons/fa';
 import { categoryService } from '../../../services/categoryService';
 import ProductGallery from './ProductGallery';
 import ProductInfo from './ProductInfo';
@@ -12,22 +13,39 @@ const ProductPage = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
+        console.log('🔄 Загрузка товара с ID:', id);
+        
         const productData = await categoryService.getProductById(id);
+        
+        if (!productData) {
+          throw new Error('Товар не найден');
+        }
+        
+        console.log('📦 Продукт получен:', productData);
+        console.log('🖼️ Изображения продукта:', productData.image_url);
+        console.log('📊 Количество изображений:', productData.image_url?.length || 0);
+        
         setProduct(productData);
+        
       } catch (err) {
+        console.error('❌ Ошибка загрузки товара:', err);
         setError(err.message || 'Ошибка загрузки товара');
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) fetchProduct();
+    if (id) {
+      fetchProduct();
+    } else {
+      setError('ID товара не указан');
+      setLoading(false);
+    }
   }, [id]);
 
   if (loading) {
@@ -55,25 +73,31 @@ const ProductPage = () => {
 
   return (
     <Container className="product-page">
-      <nav aria-label="breadcrumb" className="my-4">
-        <ol className="breadcrumb">
-          <li className="breadcrumb-item"><Link to="/">Главная</Link></li>
-          <li className="breadcrumb-item">
-            <Link to={`/catalog/${product.category}`}>
-              {product.categoryName || product.category}
-            </Link>
-          </li>
-          <li className="breadcrumb-item active">{product.name}</li>
-        </ol>
-      </nav>
+      {/* Хлебные крошки */}
+      <Breadcrumb className="my-4">
+        <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/" }} className="d-flex align-items-center">
+          <FaHome className="me-1" size={14} />
+          Главная
+        </Breadcrumb.Item>
+        
+        <Breadcrumb.Item 
+          linkAs={Link} 
+          linkProps={{ to: `/catalog/${product.category}` }}
+          className="d-flex align-items-center"
+        >
+          <FaChevronRight className="me-1 mx-1" size={10} />
+          {product.categoryName || product.category}
+        </Breadcrumb.Item>
+        
+        <Breadcrumb.Item active className="d-flex align-items-center">
+          <FaChevronRight className="me-1 mx-1" size={10} />
+          <span className="text-truncate">{product.name}</span>
+        </Breadcrumb.Item>
+      </Breadcrumb>
 
       <Row>
         <Col lg={6} className="pe-lg-4">
-          <ProductGallery 
-            product={product}
-            selectedImageIndex={selectedImageIndex}
-            onSelectImage={setSelectedImageIndex}
-          />
+          <ProductGallery product={product} />
         </Col>
 
         <Col lg={6} className="ps-lg-4">

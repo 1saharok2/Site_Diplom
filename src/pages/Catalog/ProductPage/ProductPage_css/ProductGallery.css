@@ -1,6 +1,5 @@
 .product-gallery {
   position: relative;
-  margin-bottom: 2rem;
 }
 
 .main-image-container {
@@ -20,6 +19,7 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
+  position: relative;
 }
 
 .main-product-image {
@@ -28,211 +28,285 @@
   width: auto;
   height: auto;
   object-fit: contain;
+  transition: transform 0.3s ease;
 }
 
-.new-badge,
-.discount-badge {
+.main-product-image:hover {
+  transform: scale(1.02);
+}
+
+/* Кнопки навигации */
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.nav-btn:hover {
+  background: white;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.prev-btn {
+  left: 15px;
+}
+
+.next-btn {
+  right: 15px;
+}
+
+/* Кнопка расширения */
+.expand-btn {
   position: absolute;
   top: 15px;
-  font-size: 0.9rem;
-  padding: 8px 15px;
-  font-weight: 600;
+  right: 15px;
+  width: 35px;
+  height: 35px;
+  border: none;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
   z-index: 10;
 }
 
-.new-badge {
-  left: 15px;
-  background: linear-gradient(45deg, #28a745, #20c997);
+.expand-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
 }
 
-.discount-badge {
+/* Счетчик изображений */
+.image-counter {
+  position: absolute;
+  bottom: 15px;
   right: 15px;
-  background: linear-gradient(45deg, #dc3545, #fd7e14);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
-.thumbnails {
+/* Миниатюры */
+.thumbnails-row {
+  margin: 0;
+}
+
+.thumbnails-container {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   overflow-x: auto;
-  padding: 10px 5px;
+  padding: 5px;
   scrollbar-width: thin;
-  -webkit-overflow-scrolling: touch;
 }
 
-.thumbnails::-webkit-scrollbar {
-  height: 6px;
+.thumbnails-container::-webkit-scrollbar {
+  height: 4px;
 }
 
-.thumbnails::-webkit-scrollbar-thumb {
+.thumbnails-container::-webkit-scrollbar-thumb {
   background: #ccc;
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
-.thumbnail {
+.thumbnail-item {
+  flex: 0 0 auto;
   width: 80px;
   height: 80px;
-  border: 3px solid transparent;
-  border-radius: 12px;
+  border: 2px solid transparent;
+  border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
-  flex-shrink: 0;
-  background: #f8f9fa;
   transition: all 0.3s ease;
 }
 
-.thumbnail.active {
-  border-color: #007bff;
-  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-}
-
-.thumbnail:hover {
+.thumbnail-item:hover {
   border-color: #007bff;
   transform: translateY(-2px);
 }
 
-.thumbnail img {
+.thumbnail-item.active {
+  border-color: #007bff;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.thumbnail-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* АДАПТИВНОСТЬ ДЛЯ РАЗНЫХ ЭКРАНОВ */
-
-/* Большие десктопы (1440px+) */
-@media (min-width: 1440px) {
-  .main-image-container {
-    height: 550px;
-  }
-  
-  .thumbnail {
-    width: 90px;
-    height: 90px;
-  }
+/* Модальное окно */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
 }
 
-/* Ноутбуки (1200px - 1439px) */
-@media (max-width: 1439px) and (min-width: 992px) {
-  .main-image-container {
-    height: 480px;
-  }
-  
-  .thumbnail {
-    width: 75px;
-    height: 75px;
-  }
+.modal-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
 }
 
-/* Планшеты (768px - 991px) */
-@media (max-width: 991px) and (min-width: 768px) {
+.modal-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+}
+
+.modal-image {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+}
+
+.modal-navigation {
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.modal-nav-btn {
+  width: 45px;
+  height: 45px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-nav-btn:hover {
+  background: white;
+  transform: scale(1.1);
+}
+
+.modal-counter {
+  color: white;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Адаптивность */
+@media (max-width: 991px) {
   .main-image-container {
-    height: 450px;
+    height: 400px;
   }
   
-  .thumbnail {
+  .thumbnail-item {
     width: 70px;
     height: 70px;
   }
+  
+  .nav-btn {
+    width: 35px;
+    height: 35px;
+  }
 }
 
-/* Большие телефоны (576px - 767px) */
 @media (max-width: 767px) {
   .main-image-container {
     height: 350px;
-    margin-bottom: 1rem;
   }
   
-  .thumbnail {
-    width: 65px;
-    height: 65px;
+  .thumbnail-item {
+    width: 60px;
+    height: 60px;
   }
   
-  .new-badge,
-  .discount-badge {
-    font-size: 0.8rem;
-    padding: 6px 12px;
-    top: 10px;
-  }
-  
-  .new-badge {
-    left: 10px;
-  }
-  
-  .discount-badge {
-    right: 10px;
+  .expand-btn {
+    width: 30px;
+    height: 30px;
   }
 }
 
-/* Малые телефоны (до 575px) */
 @media (max-width: 575px) {
   .main-image-container {
     height: 300px;
   }
   
-  .thumbnail {
-    width: 60px;
-    height: 60px;
+  .thumbnail-item {
+    width: 50px;
+    height: 50px;
   }
   
-  .thumbnails {
-    gap: 8px;
+  .nav-btn {
+    width: 30px;
+    height: 30px;
   }
   
-  .image-wrapper {
-    padding: 15px;
+  .modal-content {
+    max-width: 95vw;
   }
 }
-
-/* Очень маленькие телефоны (до 375px) */
-@media (max-width: 375px) {
-  .main-image-container {
-    height: 250px;
-  }
-  
-  .thumbnail {
-    width: 55px;
-    height: 55px;
-  }
-  
-  .new-badge,
-  .discount-badge {
-    font-size: 0.75rem;
-    padding: 5px 10px;
-  }
+/* Добавьте эти стили */
+.image-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
 }
 
-/* Портретная ориентация */
-@media (max-height: 600px) and (orientation: portrait) {
-  .main-image-container {
-    height: 300px;
-  }
+.hidden {
+  opacity: 0;
+  visibility: hidden;
 }
 
-/* Ландшафтная ориентация */
-@media (max-height: 500px) and (orientation: landscape) {
-  .main-image-container {
-    height: 350px;
-  }
-  
-  .thumbnails {
-    display: none;
-  }
+.no-image-placeholder,
+.image-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #6c757d;
 }
 
-/* Высокие экраны */
-@media (min-height: 900px) {
-  .main-image-container {
-    height: 600px;
-  }
-}
-
-/* Поддержка touch-устройств */
-@media (hover: none) and (pointer: coarse) {
-  .thumbnail:hover {
-    border-color: transparent;
-    transform: none;
-  }
-  
-  .thumbnail.active:hover {
-    border-color: #007bff;
-  }
+.no-image-placeholder svg,
+.image-error svg {
+  color: #dee2e6;
 }

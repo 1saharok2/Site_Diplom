@@ -10,6 +10,43 @@ const isValidUrl = (url) => {
   }
 };
 
+// Функция для обработки image_url из разных форматов
+const processImageUrls = (imageData) => {
+  if (!imageData) return [];
+  
+  console.log('🔄 Обработка image_url:', imageData);
+  
+  // Вариант 1: Уже массив
+  if (Array.isArray(imageData)) {
+    console.log('✅ image_url уже массив');
+    return imageData.filter(url => url && typeof url === 'string');
+  }
+  
+  // Вариант 2: JSON строка
+  if (typeof imageData === 'string') {
+    try {
+      const parsed = JSON.parse(imageData);
+      console.log('✅ image_url это JSON строка:', parsed);
+      
+      if (Array.isArray(parsed)) {
+        return parsed.filter(url => url && typeof url === 'string');
+      } else if (typeof parsed === 'string') {
+        return [parsed];
+      }
+    } catch (e) {
+      console.log('❌ Не JSON, попробуем как обычную строку');
+      // Вариант 3: Обычная строка с URL
+      if (imageData.startsWith('http') || imageData.startsWith('/')) {
+        return [imageData];
+      }
+    }
+  }
+  
+  // Вариант 4: Неизвестный формат
+  console.log('❌ Неизвестный формат image_url');
+  return [];
+};
+
 export const categoryService = {
   // Получить все категории
   getAllCategories: async () => {
@@ -28,7 +65,7 @@ export const categoryService = {
         slug: category.slug,
         description: category.description,
         image: isValidUrl(category.image_url) ? category.image_url : null,
-        productCount: category.product_count || 0  // ← ИСПРАВИЛ НА productCount
+        productCount: category.product_count || 0
       }));
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -57,7 +94,7 @@ export const categoryService = {
         slug: category.slug,
         description: category.description,
         image: isValidUrl(category.image_url) ? category.image_url : null,
-        productCount: category.product_count || 0  // ← ИСПРАВИЛ НА productCount
+        productCount: category.product_count || 0
       };
     } catch (error) {
       console.error('Error fetching category:', error);
@@ -77,24 +114,29 @@ export const categoryService = {
 
       if (error) throw error;
 
-      return products.map(product => ({
-        id: product.id,
-        name: product.name,
-        price: product.price || 0,
-        oldPrice: product.old_price || null,
-        discount: product.discount || 0,
-        rating: product.rating || 0,
-        reviewsCount: product.reviews_count || 0,
-        inStock: product.stock > 0,
-        stock: product.stock || 0,
-        isNew: product.is_new || false,
-        category: product.category_slug,
-        images: product.image_url ? [product.image_url] : [],
-        description: product.description || '',
-        brand: product.brand || '',
-        specifications: product.specifications || {},
-        slug: product.slug
-      }));
+      return products.map(product => {
+        const processedImages = processImageUrls(product.image_url);
+        
+        return {
+          id: product.id,
+          name: product.name,
+          price: product.price || 0,
+          oldPrice: product.old_price || null,
+          discount: product.discount || 0,
+          rating: product.rating || 0,
+          reviewsCount: product.reviews_count || 0,
+          inStock: product.stock > 0,
+          stock: product.stock || 0,
+          isNew: product.is_new || false,
+          category: product.category_slug,
+          images: processedImages.length > 0 ? processedImages : 
+                 ['https://via.placeholder.com/600x600/8767c2/ffffff?text=Нет+изображения'],
+          description: product.description || '',
+          brand: product.brand || '',
+          specifications: product.specifications || {},
+          slug: product.slug
+        };
+      });
     } catch (error) {
       console.error('Error fetching products by category:', error);
       throw new Error(error.message || 'Ошибка загрузки товаров категории');
@@ -104,6 +146,8 @@ export const categoryService = {
   // Получить товар по ID
   getProductById: async (id) => {
     try {
+      console.log('🔍 Запрос товара с ID:', id);
+      
       const { data: product, error } = await supabase
         .from('products')
         .select('*')
@@ -112,9 +156,20 @@ export const categoryService = {
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') return null; // Not found
+        if (error.code === 'PGRST116') {
+          console.log('❌ Товар не найден');
+          return null;
+        }
         throw error;
       }
+
+      console.log('✅ Товар получен из базы:', product);
+      console.log('🖼️ Image_url из базы:', product.image_url);
+      console.log('📊 Тип image_url:', typeof product.image_url);
+
+      // Обрабатываем изображения
+      const processedImages = processImageUrls(product.image_url);
+      console.log('🎯 Обработанные изображения:', processedImages);
 
       return {
         id: product.id,
@@ -130,14 +185,14 @@ export const categoryService = {
         isNew: product.is_new || false,
         category: product.category_slug,
         categoryName: product.category_slug,
-        images: product.image_url ? [product.image_url] : 
-               ['https://via.placeholder.com/600x600/8767c2/ffffff?text=Нет+изображения'],
+        image_url: processedImages, // ← ВАЖНО: сохраняем как image_url для совместимости
+        images: processedImages,    // ← и как images для обратной совместимости
         specifications: product.specifications || {},
         brand: product.brand || '',
         slug: product.slug
       };
     } catch (error) {
-      console.error('Ошибка загрузки товара:', error);
+      console.error('❌ Ошибка загрузки товара:', error);
       throw new Error(error.message || 'Ошибка загрузки товара');
     }
   },
@@ -183,7 +238,7 @@ export const categoryService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      throw new Error(error.message || 'Ошибка обновления категории');
+      throw new Error(error.message || 'Ошибка обновления категории'); 
     }
   },
 
