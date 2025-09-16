@@ -251,5 +251,234 @@ deleteProduct: async (id) => {
         recentOrders: []
       };
     }
-  }
+  },
+
+  getOrders: async () => {
+    try {
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*,
+            products (*)
+          ),
+          users (email, first_name, last_name, phone)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Форматируем данные для удобства использования
+      return orders.map(order => ({
+        ...order,
+        user_email: order.users?.email,
+        user_name: `${order.users?.first_name || ''} ${order.users?.last_name || ''}`.trim(),
+        user_phone: order.users?.phone,
+        items_count: order.order_items?.length || 0
+      }));
+    } catch (error) {
+      console.error('Error in getOrders:', error);
+      throw error;
+    }
+  },
+  
+  getOrderById: async (orderId) => {
+    try {
+      const { data: order, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*,
+            products (*)
+          ),
+          users (email, first_name, last_name, phone, avatar_url),
+          stores (name, address, phone),
+          employees (first_name, last_name, position)
+        `)
+        .eq('id', orderId)
+        .single();
+
+      if (error) throw error;
+      return order;
+    } catch (error) {
+      console.error('Error in getOrderById:', error);
+      throw error;
+    }
+  },
+
+  updateOrderStatus: async (orderId, status) => {
+    try {
+      const { data: order, error } = await supabase
+        .from('orders')
+        .update({ 
+          status: status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return order;
+    } catch (error) {
+      console.error('Error in updateOrderStatus:', error);
+      throw error;
+    }
+  },
+
+  updateOrder: async (orderId, orderData) => {
+    try {
+      const { data: order, error } = await supabase
+        .from('orders')
+        .update({
+          customer_name: orderData.customer_name,
+          customer_phone: orderData.customer_phone,
+          customer_email: orderData.customer_email,
+          total_amount: orderData.total_amount,
+          status: orderData.status,
+          store_id: orderData.store_id,
+          employee_id: orderData.employee_id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return order;
+    } catch (error) {
+      console.error('Error in updateOrder:', error);
+      throw error;
+    }
+  },
+
+  deleteOrder: async (orderId) => {
+    try {
+      // Сначала удаляем элементы заказа (из-за foreign key constraints)
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .delete()
+        .eq('order_id', orderId);
+
+      if (itemsError) throw itemsError;
+
+      // Затем удаляем сам заказ
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error in deleteOrder:', error);
+      throw error;
+    }
+  },
+
+  assignEmployeeToOrder: async (orderId, employeeId) => {
+    try {
+      const { data: order, error } = await supabase
+        .from('orders')
+        .update({ 
+          employee_id: employeeId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return order;
+    } catch (error) {
+      console.error('Error in assignEmployeeToOrder:', error);
+      throw error;
+    }
+  },
+
+  getOrdersByStatus: async (status) => {
+    try {
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*),
+          users (email, first_name, last_name)
+        `)
+        .eq('status', status)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return orders;
+    } catch (error) {
+      console.error('Error in getOrdersByStatus:', error);
+      throw error;
+    }
+  },
+
+  getRecentOrders: async (limit = 10) => {
+    try {
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*),
+          users (email, first_name, last_name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      return orders;
+    } catch (error) {
+      console.error('Error in getRecentOrders:', error);
+      throw error;
+    }
+  },
+
+  // Статистика по заказам
+  getOrdersStats: async () => {
+    try {
+      // Получаем общее количество заказов
+      const { count: totalOrders, error: countError } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact' });
+
+      if (countError) throw countError;
+
+      // Получаем заказы по статусам
+      const { data: ordersByStatus, error: statusError } = await supabase
+        .from('orders')
+        .select('status')
+        .then(result => {
+          const statusCounts = {};
+          result.data?.forEach(order => {
+            statusCounts[order.status] = (statusCounts[order.status] || 0) + 1;
+          });
+          return { data: statusCounts, error: null };
+        });
+
+      if (statusError) throw statusError;
+
+      // Получаем общую сумму продаж
+      const { data: totalSalesData, error: salesError } = await supabase
+        .from('orders')
+        .select('total_amount')
+        .eq('status', 'completed');
+
+      if (salesError) throw salesError;
+
+      const totalSales = totalSalesData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+
+      return {
+        total_orders: totalOrders || 0,
+        status_counts: ordersByStatus || {},
+        total_sales: totalSales,
+        average_order_value: totalOrders > 0 ? totalSales / totalOrders : 0
+      };
+    } catch (error) {
+      console.error('Error in getOrdersStats:', error);
+      throw error;
+    }
+  }  
 };

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Container,
   Typography,
-  Box as MuiBox, 
+  Box,
   Grid,
   Card,
   CardContent,
@@ -35,25 +35,31 @@ import { useProducts } from '../../context/ProductsContext';
 
 // Создаем кастомный Box компонент с forwardRef
 const ScrollBox = forwardRef((props, ref) => (
-  <MuiBox ref={ref} {...props} />
+  <Box ref={ref} {...props} />
 ));
 
 // Анимированный компонент для плавного появления
 const AnimatedBox = ({ children, delay = 0, ...props }) => (
   <Fade in timeout={800} style={{ transitionDelay: `${delay}ms` }} {...props}>
-    <MuiBox>{children}</MuiBox>
+    <Box>{children}</Box>
   </Fade>
 );
 
 const ScrollTopButton = () => {
-  const trigger = useScrollTrigger({
-    threshold: 100,
-  });
+  const trigger = useScrollTrigger({ threshold: 100 });
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  return (
+    <Zoom in={trigger}>
+      <Fab onClick={scrollToTop} sx={{ position: 'fixed', bottom: 24, right: 24 }}>
+        <KeyboardArrowDown sx={{ transform: 'rotate(180deg)' }} />
+      </Fab>
+    </Zoom>
+  );
+};
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
     <Zoom in={trigger}>
       <Fab
@@ -105,6 +111,36 @@ const HomePage = () => {
     }
   };
 
+    const handleImageError = (e) => {
+    e.target.src = '/images/placeholder.jpg';
+  };
+
+  const handleAddToCart = (product) => {
+    addToCart(product.id, 1);
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Alert severity="error" action={
+          <Button color="inherit" onClick={refreshData}>
+            Обновить
+          </Button>
+        }>
+          {error}
+        </Alert>
+      </Container>
+    );
+  };
+
   const features = [
     {
       icon: <LocalShipping sx={{ fontSize: 40 }} />,
@@ -128,51 +164,10 @@ const HomePage = () => {
     }
   ];
 
-  const handleAddToCart = (product) => {
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.images?.[0],
-      quantity: 1
-    });
-  };
-
-  if (loading) {
-    return (
-      <MuiBox display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </MuiBox>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container>
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {error}
-        </Alert>
-      </Container>
-    );
-  }
-
   return (
-    <MuiBox sx={{ pt: 0 }}>
-      {error && (
-        <Alert 
-          severity="warning" 
-          action={
-            <Button color="inherit" onClick={refreshData}>
-              Обновить
-            </Button>
-          }
-        >
-          {error}
-        </Alert>
-      )}
-
+    <Box sx={{ pt: 0 }}>
       {/* Hero Section */}
-      <MuiBox
+      <Box
         sx={{
           background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.9)} 0%, ${alpha(theme.palette.secondary.main, 0.9)} 100%)`,
           color: 'white',
@@ -187,7 +182,7 @@ const HomePage = () => {
         <Container maxWidth="lg">
           <Grid container spacing={6} alignItems="center">
             <Grid item xs={12} md={6}>
-              <MuiBox>
+              <Box>
                 <AnimatedBox delay={200}>
                   <Typography
                     variant="h1"
@@ -196,11 +191,7 @@ const HomePage = () => {
                       fontSize: { xs: '2.5rem', md: '3.5rem' },
                       fontWeight: 800,
                       lineHeight: 1.2,
-                      mb: 3,
-                      background: 'linear-gradient(135deg, #fff 0%, #e0e0e0 100%)',
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent'
+                      mb: 3
                     }}
                   >
                     Техника будущего
@@ -215,8 +206,7 @@ const HomePage = () => {
                     sx={{
                       mb: 4,
                       opacity: 0.9,
-                      fontWeight: 300,
-                      fontSize: { xs: '1.1rem', md: '1.3rem' }
+                      fontWeight: 300
                     }}
                   >
                     Откройте для себя новейшие гаджеты и устройства 
@@ -234,31 +224,19 @@ const HomePage = () => {
                       py: 1.5,
                       fontSize: '1.1rem',
                       fontWeight: 600,
-                      borderRadius: 3,
-                      backgroundColor: 'white',
-                      color: 'primary.main',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: theme.shadows[8],
-                        backgroundColor: '#f5f5f5'
-                      }
+                      borderRadius: 3
                     }}
                   >
                     Перейти к покупкам
                   </Button>
                 </AnimatedBox>
-              </MuiBox>
+              </Box>
             </Grid>
             
             <Grid item xs={12} md={6}>
               <Slide direction="left" in timeout={1000}>
-                <MuiBox
-                  sx={{
-                    position: 'relative',
-                    textAlign: 'center'
-                  }}
-                >
-                  <MuiBox
+                <Box sx={{ position: 'relative', textAlign: 'center' }}>
+                  <Box
                     component="img"
                     src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
                     alt="Техника"
@@ -267,21 +245,16 @@ const HomePage = () => {
                       maxWidth: 500,
                       height: 'auto',
                       borderRadius: 4,
-                      boxShadow: theme.shadows[10],
-                      transform: 'rotate3d(0.5, 1, 0, 15deg)',
-                      transition: 'transform 0.5s ease, box-shadow 0.5s ease',
-                      '&:hover': {
-                        transform: 'rotate3d(0.5, 1, 0, 5deg) scale(1.02)',
-                        boxShadow: theme.shadows[16]
-                      }
+                      boxShadow: theme.shadows[10]
                     }}
+                    onError={handleImageError}
                   />
-                </MuiBox>
+                </Box>
               </Slide>
             </Grid>
           </Grid>
         </Container>
-      </MuiBox>
+      </Box>
 
       {/* Преимущества */}
       <Container sx={{ py: 8 }}>
@@ -307,7 +280,7 @@ const HomePage = () => {
           {features.map((feature, index) => (
             <Grid item xs={12} sm={6} md={3} key={index}>
               <Grow in timeout={1000} style={{ transitionDelay: `${index * 200}ms` }}>
-                <MuiBox
+                <Box
                   sx={{
                     textAlign: 'center',
                     p: 3,
@@ -320,7 +293,7 @@ const HomePage = () => {
                     }
                   }}
                 >
-                  <MuiBox
+                  <Box
                     sx={{
                       color: 'primary.main',
                       mb: 2,
@@ -331,14 +304,14 @@ const HomePage = () => {
                     }}
                   >
                     {feature.icon}
-                  </MuiBox>
+                  </Box>
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                     {feature.title}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {feature.description}
                   </Typography>
-                </MuiBox>
+                </Box>
               </Grow>
             </Grid>
           ))}
@@ -352,7 +325,7 @@ const HomePage = () => {
       >
         <Container>
           <AnimatedBox>
-            <MuiBox textAlign="center" mb={6}>
+            <Box textAlign="center" mb={6}>
               <Typography
                 variant="h2"
                 sx={{
@@ -369,7 +342,7 @@ const HomePage = () => {
               <Typography variant="h6" color="text.secondary">
                 Выберите категорию и откройте для себя лучшие товары
               </Typography>
-            </MuiBox>
+            </Box>
           </AnimatedBox>
 
           <Grid container spacing={3}>
@@ -391,7 +364,7 @@ const HomePage = () => {
                       }
                     }}
                   >
-                    <MuiBox
+                    <Box
                       sx={{
                         height: 200,
                         backgroundImage: `url(${category.image_url || 'https://via.placeholder.com/300x200/6c757d/ffffff?text=Категория'})`,
@@ -426,7 +399,7 @@ const HomePage = () => {
 
           {categories.length > 4 && (
             <AnimatedBox>
-              <MuiBox textAlign="center" mt={6}>
+              <Box textAlign="center" mt={6}>
                 <Button
                   component={Link}
                   to="/catalog"
@@ -448,7 +421,7 @@ const HomePage = () => {
                 >
                   Все категории
                 </Button>
-              </MuiBox>
+              </Box>
             </AnimatedBox>
           )}
         </Container>
@@ -457,7 +430,7 @@ const HomePage = () => {
       {/* Хиты продаж */}
       <Container sx={{ py: 8 }}>
         <AnimatedBox>
-          <MuiBox sx={{ textAlign: 'center', mb: 6 }}>
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
             <Typography
               variant="h2"
               sx={{
@@ -474,16 +447,16 @@ const HomePage = () => {
             <Typography variant="h6" color="text.secondary">
               Самые популярные товары
             </Typography>
-          </MuiBox>
+          </Box>
         </AnimatedBox>
 
         {featuredProducts.length === 0 ? (
           <AnimatedBox>
-            <MuiBox textAlign="center" py={4}>
+            <Box textAlign="center" py={4}>
               <Typography variant="h6" color="text.secondary">
                 Товаров пока нет
               </Typography>
-            </MuiBox>
+            </Box>
           </AnimatedBox>
         ) : (
           <>
@@ -502,7 +475,7 @@ const HomePage = () => {
                         }
                       }}
                     >
-                      <MuiBox
+                      <Box
                         sx={{
                           position: 'relative',
                           height: 250,
@@ -513,7 +486,7 @@ const HomePage = () => {
                           }
                         }}
                       >
-                        <MuiBox
+                        <Box
                           component="img"
                           src={product.images?.[0] || ''}
                           alt={product.name}
@@ -559,20 +532,20 @@ const HomePage = () => {
                         >
                           <Favorite sx={{ fontSize: 20 }} />
                         </Button>
-                      </MuiBox>
+                      </Box>
                       <CardContent>
                         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                           {product.name}
                         </Typography>
                         {product.rating > 0 && (
-                          <MuiBox sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                             <Star sx={{ color: 'gold', fontSize: 18, mr: 0.5 }} />
                             <Typography variant="body2">
                               {product.rating}
                             </Typography>
-                          </MuiBox>
+                          </Box>
                         )}
-                        <MuiBox sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                           <Typography
                             variant="h6"
                             sx={{
@@ -593,7 +566,7 @@ const HomePage = () => {
                               {product.old_price?.toLocaleString('ru-RU')} ₽
                             </Typography>
                           )}
-                        </MuiBox>
+                        </Box>
                         <Button
                           fullWidth
                           variant="contained"
@@ -619,7 +592,7 @@ const HomePage = () => {
             </Grid>
 
             <AnimatedBox>
-              <MuiBox sx={{ textAlign: 'center', mt: 6 }}>
+              <Box sx={{ textAlign: 'center', mt: 6 }}>
                 <Button
                   component={Link}
                   to="/catalog"
@@ -641,7 +614,7 @@ const HomePage = () => {
                 >
                   Смотреть все товары
                 </Button>
-              </MuiBox>
+              </Box>
             </AnimatedBox>
           </>
         )}
@@ -658,12 +631,12 @@ const HomePage = () => {
             100% { transform: scale(1); }
           }
           
-          .MuiCard-root, .MuiButton-root, .MuiBox-root {
+          .MuiCard-root, .MuiButton-root, .Box-root {
             transition: all 0.3s ease !important;
           }
         `}
       </style>
-    </MuiBox>
+    </Box>
   );
 };
 

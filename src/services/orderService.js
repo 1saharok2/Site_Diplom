@@ -1,45 +1,50 @@
-import { apiService } from './api';
-
-const API_BASE = 'http://localhost:5000/api';
+// services/orderService.js
+import { supabase } from "./supabaseClient";
 
 export const orderService = {
+
   // Создание заказа
-  createOrder: async (orderData) => {
-    try {
-      const response = await fetch(`${API_BASE}/orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        body: JSON.stringify(orderData)
-      });
-
-      if (!response.ok) {
-        throw new Error('Ошибка создания заказа');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error creating order:', error);
-      throw error;
-    }
-  },
+createOrder: async (orderData) => {
+  try {
+    console.log('🟢 orderService.createOrder вызван', orderData);
+    
+    // Временная заглушка для тестирования
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const testOrder = {
+      id: Math.random().toString(36).substr(2, 9),
+      order_number: 'ORD-TEST-' + Date.now(),
+      status: 'pending',
+      total_amount: orderData.totalAmount,
+      created_at: new Date().toISOString()
+    };
+    
+    console.log('✅ Тестовый заказ создан:', testOrder);
+    return testOrder;
+    
+  } catch (error) {
+    console.error('❌ Ошибка в createOrder:', error);
+    throw error;
+  }
+},
 
   // Получение заказов пользователя
   getUserOrders: async (userId) => {
     try {
-      const response = await fetch(`${API_BASE}/orders/user/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*,
+            products (*)
+          )
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-      if (!response.ok) {
-        throw new Error('Ошибка получения заказов');
-      }
+      if (error) throw error;
+      return data;
 
-      return await response.json();
     } catch (error) {
       console.error('Error fetching user orders:', error);
       return [];
@@ -49,63 +54,92 @@ export const orderService = {
   // Получение всех заказов (для админа)
   getAllOrders: async () => {
     try {
-      const response = await fetch(`${API_BASE}/orders`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*,
+            products (*)
+          ),
+          users!inner (email, first_name, last_name, phone)
+        `)
+        .order('created_at', { ascending: false });
 
-      if (!response.ok) {
-        throw new Error('Ошибка получения заказов');
-      }
+      if (error) throw error;
+      return data;
 
-      return await response.json();
     } catch (error) {
       console.error('Error fetching orders:', error);
       return [];
     }
   },
 
+  // Получение деталей заказа
+  getOrderById: async (orderId) => {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*,
+            products (*)
+          ),
+          users (email, first_name, last_name, phone),
+          stores (name, address, phone),
+          employees (first_name, last_name, position)
+        `)
+        .eq('id', orderId)
+        .single();
+
+      if (error) throw error;
+      return data;
+
+    } catch (error) {
+      console.error('Error fetching order:', error);
+      throw error;
+    }
+  },
+
   // Обновление статуса заказа
   updateOrderStatus: async (orderId, status) => {
     try {
-      const response = await fetch(`${API_BASE}/orders/${orderId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        body: JSON.stringify({ status })
-      });
+      const { data, error } = await supabase
+        .from('orders')
+        .update({ 
+          status: status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+        .select()
+        .single();
 
-      if (!response.ok) {
-        throw new Error('Ошибка обновления заказа');
-      }
+      if (error) throw error;
+      return data;
 
-      return await response.json();
     } catch (error) {
       console.error('Error updating order:', error);
       throw error;
     }
   },
 
-  // Отмена заказа
-  cancelOrder: async (orderId) => {
+  // Назначение сотрудника на заказ
+  assignEmployeeToOrder: async (orderId, employeeId) => {
     try {
-      const response = await fetch(`${API_BASE}/orders/${orderId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      });
+      const { data, error } = await supabase
+        .from('orders')
+        .update({ 
+          employee_id: employeeId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+        .select()
+        .single();
 
-      if (!response.ok) {
-        throw new Error('Ошибка отмены заказа');
-      }
+      if (error) throw error;
+      return data;
 
-      return await response.json();
     } catch (error) {
-      console.error('Error canceling order:', error);
+      console.error('Error assigning employee:', error);
       throw error;
     }
   }
