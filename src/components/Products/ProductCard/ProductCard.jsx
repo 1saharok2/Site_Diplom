@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { Card, Button, Badge } from 'react-bootstrap';
 import { FaHeart, FaShoppingCart, FaStar } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
+import { useCart } from '../../../context/CartContext';
 import './ProductCard.css';
 
 const ProductCard = ({ product }) => {
-  const [isInCart, setIsInCart] = useState(false);
   const [isInWishlist, setIsInWishlist] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const { addToCart } = useCart();
+  const { currentUser, user, isAuthenticated } = useAuth();
 
   const {
     name,
@@ -19,12 +23,40 @@ const ProductCard = ({ product }) => {
     inStock
   } = product;
 
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsInCart(true);
-    setTimeout(() => setIsInCart(false), 600);
-  };
+const handleAddToCart = async (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  console.log('🛍️ Add to cart clicked for product:', product.id);
+  console.log('👤 Current user:', currentUser);
+
+  if (!currentUser || !currentUser.id) {
+    alert('Пожалуйста, авторизуйтесь чтобы добавить товар в корзину');
+    return;
+  }
+
+  try {
+    setIsAddingToCart(true);
+    console.log('🚀 Calling addToCart...');
+    
+    const result = await addToCart(product.id, 1);
+    console.log('🎉 addToCart completed successfully:', result);
+    
+    // Проверим что вернулось
+    if (result && result.id) {
+      console.log('✅ Товар добавлен! ID:', result.id);
+      console.log('📦 Данные товара:', result.products);
+    } else {
+      console.warn('⚠️ addToCart вернул пустой результат');
+    }
+    
+    setTimeout(() => setIsAddingToCart(false), 600);
+  } catch (error) {
+    console.error('💥 Error in handleAddToCart:', error);
+    alert('Не удалось добавить товар в корзину: ' + error.message);
+    setIsAddingToCart(false);
+  }
+};
 
   const handleAddToWishlist = (e) => {
     e.preventDefault();
@@ -48,11 +80,11 @@ const ProductCard = ({ product }) => {
           {/* Картинка товара */}
           <div className="product-image-container">
             <img 
-              src={images && images[0] ? images[0] : 'https://via.placeholder.com/300x200/8767c2/ffffff?text=Нет+изображения'}
+              src={images && images[0] ? images[0] : ''}
               alt={name}
               className="product-image"
               onError={(e) => {
-                e.target.src = 'https://via.placeholder.com/300x200/8767c2/ffffff?text=Нет+изображения';
+                e.target.src = '';
               }}
             />
           </div>
@@ -98,11 +130,12 @@ const ProductCard = ({ product }) => {
                 <div className="action-buttons">
                   <Button 
                     variant="primary" 
-                    className={`btn-cart ${isInCart ? 'added' : ''}`}
+                    className={`btn-cart ${isAddingToCart ? 'added' : ''}`}
                     onClick={handleAddToCart}
+                    disabled={isAddingToCart}
                   >
                     <FaShoppingCart className="btn-icon" />
-                    {isInCart ? 'Добавлено!' : 'В корзину'}
+                    {isAddingToCart ? 'Добавление...' : 'В корзину'}
                   </Button>
                   <Button 
                     variant="outline-secondary" 

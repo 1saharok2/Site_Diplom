@@ -1,76 +1,179 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+// context/CartContext.jsx
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { cartService } from '../services/cartService';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
-export const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
+const cartReducer = (state, action) => {
+  switch (action.type) {
+    case 'SET_CART':
+      return {
+        ...state,
+        items: action.payload,
+        loading: false,
+        error: null
+      };
+    case 'ADD_ITEM':
+      return {
+        ...state,
+        items: [...state.items, action.payload]
+      };
+    case 'UPDATE_ITEM':
+      return {
+        ...state,
+        items: state.items.map(item =>
+          item.id === action.payload.id ? action.payload : item
+        )
+      };
+    case 'REMOVE_ITEM':
+      return {
+        ...state,
+        items: state.items.filter(item => item.id !== action.payload)
+      };
+    case 'CLEAR_CART':
+      return {
+        ...state,
+        items: []
+      };
+    case 'SET_LOADING':
+      return {
+        ...state,
+        loading: action.payload
+      };
+    case 'SET_ERROR':
+      return {
+        ...state,
+        error: action.payload,
+        loading: false
+      };
+    default:
+      return state;
   }
-  return context;
 };
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  const [state, dispatch] = useReducer(cartReducer, {
+    items: [],
+    loading: false,
+    error: null
+  });
+  const { currentUser } = useAuth();
 
+  // Загружаем корзину при изменении пользователя
   useEffect(() => {
-    // Загрузка из localStorage
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+    if (currentUser) {
+      loadCart();
+    } else {
+      dispatch({ type: 'CLEAR_CART' });
     }
-  }, []);
+  }, [currentUser]);
 
-  useEffect(() => {
-    // Сохранение в localStorage
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [cartItems]);
-
-  const addToCart = (product) => {
-    setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === product.id);
-      if (existingItem) {
-        return prevItems.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prevItems, { ...product, quantity: 1 }];
-    });
+  const loadCart = async () => {
+    if (!currentUser) return;
+    
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const cartItems = await cartService.getCart(currentUser.id);
+      dispatch({ type: 'SET_CART', payload: cartItems });
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+    }
   };
 
-  const removeFromCart = (productId) => {
-    setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
-  };
+const addToCart = async (productId, quantity = 1) => {
+  console.log('🛒 addToCart called:', { productId, quantity, currentUser });
+  
+  if (!currentUser) {
+    throw new Error('Необходимо авторизоваться');
+  }
 
-  const updateQuantity = (productId, quantity) => {
-    if (quantity < 1) {
-      removeFromCart(productId);
-      return;
-    }
-    setCartItems(prevItems =>
-      prevItems.map(item =>
-        item.id === productId ? { ...item, quantity } : item
-      )
+  try {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    console.log('📦 Calling cartService.addToCart...');
+    
+    const newItem = await cartService.addToCart(currentUser.id, productId, quantity);
+    console.log('✅ cartService response:', newItem);
+    
+    // Проверяем, был ли товар уже в корзине
+    const existingItemIndex = state.items.findIndex(
+      item => item.product_id === productId
     );
+
+    console.log('🔍 Existing item index:', existingItemIndex);
+    console.log('📊 Current cart items:', state.items);
+
+    if (existingItemIndex >= 0) {
+      dispatch({ type: 'UPDATE_ITEM', payload: newItem });
+      console.log('🔄 Item updated in cart');
+    } else {
+      dispatch({ type: 'ADD_ITEM', payload: newItem });
+      console.log('➕ New item added to cart');
+    }
+    
+    console.log('📈 New cart state:', state.items);
+    return newItem;
+  } catch (error) {
+    console.error('❌ Error in addToCart:', error);
+    dispatch({ type: 'SET_ERROR', payload: error.message });
+    throw error;
+  } finally {
+    dispatch({ type: 'SET_LOADING', payload: false });
+  }
+};
+
+  const updateQuantity = async (cartItemId, quantity) => {
+    try {
+      const updatedItem = await cartService.updateCartItem(cartItemId, quantity);
+      dispatch({ type: 'UPDATE_ITEM', payload: updatedItem });
+      return updatedItem;
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+      throw error;
+    }
   };
 
-  const clearCart = () => {
-    setCartItems([]);
+  const removeFromCart = async (cartItemId) => {
+    try {
+      await cartService.removeFromCart(cartItemId);
+      dispatch({ type: 'REMOVE_ITEM', payload: cartItemId });
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+      throw error;
+    }
+  };
+
+  const clearCart = async () => {
+    if (!currentUser) return;
+    
+    try {
+      await cartService.clearCart(currentUser.id);
+      dispatch({ type: 'CLEAR_CART' });
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+      throw error;
+    }
   };
 
   const getTotalPrice = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return cartService.getCartTotal(state.items);
+  };
+
+  const getItemsCount = () => {
+    return cartService.getCartItemsCount(state.items);
   };
 
   const value = {
-    cartItems: cartItems || [], // Гарантируем что всегда массив
+    items: state.items,
+    loading: state.loading,
+    error: state.error,
     addToCart,
-    removeFromCart,
     updateQuantity,
+    removeFromCart,
     clearCart,
-    getTotalPrice
+    getTotalPrice,
+    getItemsCount,
+    refreshCart: loadCart
   };
 
   return (
@@ -78,4 +181,12 @@ export const CartProvider = ({ children }) => {
       {children}
     </CartContext.Provider>
   );
+};
+
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return context;
 };
