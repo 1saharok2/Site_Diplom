@@ -23,11 +23,9 @@ const AddToCartButton = ({ product, size = 'medium', variant = 'contained' }) =>
 
   const handleAddToCart = async () => {
     if (!user) {
-      // Можно перенаправить на страницу авторизации
       alert('Пожалуйста, авторизуйтесь чтобы добавить товар в корзину');
       return;
     }
-
     try {
       setLoading(true);
       await addToCart(product.id, 1);
@@ -43,10 +41,7 @@ const AddToCartButton = ({ product, size = 'medium', variant = 'contained' }) =>
   const handleCloseSnackbar = () => {
     setShowSuccess(false);
   };
-
-  // Проверяем, есть ли товар уже в корзине
-  const isInCart = false; // Можно добавить эту логику если нужно
-
+  const isInCart = false; 
   if (size === 'icon') {
     return (
       <>

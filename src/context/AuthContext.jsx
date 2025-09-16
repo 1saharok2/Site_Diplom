@@ -35,11 +35,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await apiService.login(credentials);
-      
-      console.log('Login response:', response); 
-      
       let userData, token;
-      
       if (response.user && response.token) {
         userData = response.user;
         token = response.token;
@@ -70,11 +66,8 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      // Для регистрации также добавляем обработку API
       const response = await apiService.register(userData);
-      
       let newUser, token;
-      
       if (response.user && response.token) {
         newUser = response.user;
         token = response.token;
@@ -82,7 +75,6 @@ export const AuthProvider = ({ children }) => {
         newUser = response.data.user;
         token = response.data.token;
       } else {
-        // Fallback на моковые данные если API не работает
         newUser = {
           ...userData,
           id: Math.floor(Math.random() * 1000) + 3,
