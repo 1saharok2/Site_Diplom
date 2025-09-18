@@ -1,5 +1,5 @@
 // context/OrderContext.jsx
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { orderService } from '../services/orderService';
 import { useAuth } from './AuthContext';
 
@@ -96,7 +96,7 @@ export const OrderProvider = ({ children }) => {
   const { currentUser, isAdmin } = useAuth();
 
   // Загрузка заказов пользователя
-  const loadUserOrders = async () => {
+  const loadUserOrders = useCallback(async () => {
     if (!currentUser) return;
     
     try {
@@ -110,7 +110,7 @@ export const OrderProvider = ({ children }) => {
         payload: error.message || 'Ошибка при загрузке заказов' 
       });
     }
-  };
+  }, [currentUser]);
 
   // Загрузка всех заказов (для админа)
   const loadAllOrders = async () => {
@@ -217,7 +217,7 @@ export const OrderProvider = ({ children }) => {
     } else {
       clearOrders();
     }
-  }, [currentUser, isAdmin]);
+  }, [currentUser, isAdmin, loadUserOrders]);
 
   const value = {
     // Состояние

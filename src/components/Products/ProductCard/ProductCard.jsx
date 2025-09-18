@@ -63,11 +63,11 @@ const handleAddToCart = async (e) => {
           {/* Картинка товара */}
           <div className="product-image-container">
             <img 
-              src={images && images[0] ? images[0] : ''}
+              src={images && images[0] ? images[0] : 'null'}
               alt={name}
               className="product-image"
               onError={(e) => {
-                e.target.src = '';
+                e.target.src = 'null';
               }}
             />
           </div>

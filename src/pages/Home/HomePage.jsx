@@ -46,20 +46,14 @@ const AnimatedBox = ({ children, delay = 0, ...props }) => (
 );
 
 const ScrollTopButton = () => {
-  const trigger = useScrollTrigger({ threshold: 100 });
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-
-  return (
-    <Zoom in={trigger}>
-      <Fab onClick={scrollToTop} sx={{ position: 'fixed', bottom: 24, right: 24 }}>
-        <KeyboardArrowDown sx={{ transform: 'rotate(180deg)' }} />
-      </Fab>
-    </Zoom>
-  );
-};
+  const trigger = useScrollTrigger({ 
+    threshold: 100,
+    disableHysteresis: true 
+  });
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   return (
     <Zoom in={trigger}>
       <Fab
@@ -367,7 +361,7 @@ const HomePage = () => {
                     <Box
                       sx={{
                         height: 200,
-                        backgroundImage: `url(${category.image_url || 'https://via.placeholder.com/300x200/6c757d/ffffff?text=Категория'})`,
+                        backgroundImage: `url(${category.image_url || 'null'})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         position: 'relative',
@@ -488,7 +482,7 @@ const HomePage = () => {
                       >
                         <Box
                           component="img"
-                          src={product.images?.[0] || ''}
+                          src={product.images?.[0] || 'null'}
                           alt={product.name}
                           sx={{
                             width: '100%',
@@ -497,7 +491,7 @@ const HomePage = () => {
                             transition: 'transform 0.3s ease'
                           }}
                           onError={(e) => {
-                            e.target.src = '';
+                            e.target.src = 'null';
                           }}
                         />
                         {product.is_new && (

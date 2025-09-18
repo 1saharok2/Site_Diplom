@@ -20,8 +20,7 @@ import {
   DialogActions
 } from '@mui/material';
 import {
-  Visibility as ViewIcon,
-  Edit as EditIcon
+  Visibility as ViewIcon
 } from '@mui/icons-material';
 import { adminService } from '../../../services/adminService';
 

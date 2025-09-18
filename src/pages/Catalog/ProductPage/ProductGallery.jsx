@@ -5,7 +5,7 @@ import './ProductPage_css/ProductGallery.css';
 
 const ProductGallery = ({ product, selectedImageIndex, onSelectImage }) => {
   const images = product.images?.length > 0 ? product.images : 
-    ['https://via.placeholder.com/600x600/8767c2/ffffff?text=Нет+изображения'];
+    ['null'];
 
   return (
     <div className="product-gallery">
@@ -27,7 +27,7 @@ const ProductGallery = ({ product, selectedImageIndex, onSelectImage }) => {
                   className="main-product-image"
                   fluid
                   onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/600x600/8767c2/ffffff?text=Нет+изображения';
+                    e.target.src = 'null';
                   }}
                 />
               </div>

@@ -130,8 +130,7 @@ export const categoryService = {
         isNew: product.is_new || false,
         category: product.category_slug,
         categoryName: product.category_slug,
-        images: product.image_url ? [product.image_url] : 
-               ['https://via.placeholder.com/600x600/8767c2/ffffff?text=Нет+изображения'],
+        images: product.image_url ? [product.image_url] : ['null'],
         specifications: product.specifications || {},
         brand: product.brand || '',
         slug: product.slug

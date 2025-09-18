@@ -18,7 +18,6 @@ import {
   Avatar,
   Chip,
   Card,
-  CardContent,
   Fade,
   Slide,
   useTheme,
@@ -32,7 +31,6 @@ import {
 import {
   Edit,
   Save,
-  Cancel,
   History,
   Favorite,
   RateReview,
@@ -52,7 +50,6 @@ const ProfilePage = () => {
   const { currentUser, updateProfile } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
-  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -429,7 +426,7 @@ const ProfilePage = () => {
                           <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                             {action.title}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          <Typography variant="body2" component="div" color="text.secondary" sx={{ mb: 2 }}>
                             {action.description}
                           </Typography>
                           <Chip
@@ -482,6 +479,8 @@ const ProfilePage = () => {
                               {activity.icon}
                             </ListItemIcon>
                             <ListItemText
+                              primaryTypographyProps={{ component: "div" }}
+                              secondaryTypographyProps={{ component: "div" }}
                               primary={
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                   <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>

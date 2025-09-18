@@ -2,9 +2,8 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { cartService } from '../services/cartService';
 import { useAuth } from './AuthContext';
-import { supabase } from '../services/supabaseClient';
 
-const CartContext = createContext();
+export const CartContext = createContext();
 
 const cartReducer = (state, action) => {
   let newState;
@@ -89,21 +88,20 @@ export const CartProvider = ({ children }) => {
     }
   }, []);
 
-const loadCart = async () => {
-  if (!currentUser) return;
-  
-  try {
-    dispatch({ type: 'SET_LOADING', payload: true });
+  const loadCart = useCallback(async () => {
+    if (!currentUser) return;
     
-    // Используйте cartService вместо прямого вызова supabase
-    const cartItems = await cartService.getCart(currentUser.id);
-    dispatch({ type: 'SET_CART', payload: cartItems || [] });
-    
-  } catch (error) {
-    console.error('Error loading cart:', error);
-    dispatch({ type: 'SET_ERROR', payload: error.message });
-  }
-};
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      
+      const cartItems = await cartService.getCart(currentUser.id);
+      dispatch({ type: 'SET_CART', payload: cartItems || [] });
+      
+    } catch (error) {
+      console.error('Error loading cart:', error);
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+    }
+  }, [currentUser]);
 
   const addToCart = async (productId, quantity = 1) => {
     console.log('🛒 addToCart called:', { productId, quantity, currentUser });
@@ -183,7 +181,7 @@ const loadCart = async () => {
     } else {
       dispatch({ type: 'CLEAR_CART' });
     }
-  }, [currentUser]);
+  }, [currentUser, loadCart]);
 
   const value = {
     items: state.items,
