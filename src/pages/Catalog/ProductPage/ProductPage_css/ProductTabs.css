@@ -224,3 +224,274 @@
     gap: 0.5rem;
   }
 }
+.product-tabs {
+  margin-top: 3rem;
+}
+
+.custom-tabs .nav-link {
+  font-weight: 600;
+  color: #6c757d;
+  border: none;
+  padding: 1rem 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.custom-tabs .nav-link:hover {
+  color: #007bff;
+  border: none;
+}
+
+.custom-tabs .nav-link.active {
+  color: #007bff;
+  background: none;
+  border: none;
+  border-bottom: 3px solid #007bff;
+}
+
+.tab-content {
+  padding: 2rem;
+  background: white;
+  border-radius: 0 0 15px 15px;
+  border: 1px solid #dee2e6;
+  border-top: none;
+}
+
+.tab-content h4 {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.product-description {
+  line-height: 1.6;
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+/* Стили для характеристик */
+.specifications-tab {
+  margin-top: 1rem;
+}
+
+.spec-group {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.spec-group-title {
+  color: #2c3e50;
+  margin-bottom: 1.2rem;
+  font-weight: 700;
+  font-size: 1.2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #007bff;
+}
+
+.spec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.spec-item {
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #e9ecef;
+  margin: 0;
+}
+
+.spec-item:last-child {
+  border-bottom: none;
+}
+
+.spec-label {
+  font-weight: 600;
+  color: #6c757d;
+  font-size: 0.95rem;
+  padding-right: 1rem;
+}
+
+.spec-value {
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 0.95rem;
+}
+
+.no-specs {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  padding: 2rem;
+}
+
+/* Стили для других вкладок */
+.reviews-placeholder {
+  text-align: center;
+  padding: 3rem;
+  color: #6c757d;
+}
+
+.delivery-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.info-item {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.info-item h5 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.info-item ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.info-item li {
+  padding: 0.3rem 0;
+  color: #6c757d;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.info-item li:before {
+  content: "•";
+  color: #007bff;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .custom-tabs .nav-link {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .tab-content {
+    padding: 1.5rem;
+  }
+  
+  .spec-group {
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .spec-item {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  
+  .spec-label, .spec-value {
+    text-align: left;
+    width: 100%;
+  }
+  
+  .delivery-info {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .tab-content {
+    padding: 1rem;
+  }
+  
+  .spec-group {
+    padding: 1rem;
+  }
+  
+  .spec-group-title {
+    font-size: 1.1rem;
+  }
+}
+.no-specs-alert {
+  margin-top: 1rem;
+  border-radius: 12px;
+  border: 1px solid #bee5eb;
+}
+
+.no-specs-alert .alert-heading {
+  color: #0c5460;
+  font-weight: 600;
+}
+/* Стили для универсальных характеристик */
+.spec-item {
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #e9ecef;
+  margin: 0;
+  align-items: center;
+}
+
+.spec-item:last-child {
+  border-bottom: none;
+}
+
+.spec-label {
+  font-weight: 600;
+  color: #6c757d;
+  font-size: 0.95rem;
+  padding-right: 1rem;
+}
+
+.spec-value {
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 0.95rem;
+  word-break: break-word;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+  .spec-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    padding: 0.6rem 0;
+  }
+  
+  .spec-label, .spec-value {
+    width: 100%;
+    text-align: left;
+    padding-right: 0;
+  }
+  
+  .spec-group {
+    padding: 1rem;
+  }
+  
+  .spec-group-title {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .specs-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .spec-item {
+    padding: 0.5rem 0;
+  }
+  
+  .spec-label {
+    font-size: 0.9rem;
+  }
+  
+  .spec-value {
+    font-size: 0.9rem;
+  }
+}
