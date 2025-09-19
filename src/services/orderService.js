@@ -12,7 +12,7 @@ export const orderService = {
       // Подготавливаем данные для заказа согласно структуре БД
       const orderDataToInsert = {
         order_number: orderNumber,
-        customer_name: userData?.first_name || userData?.name || 'null',
+        customer_name: userData?.first_name || userData?.last_name,
         customer_email: userData?.email,
         customer_phone: userData?.phone,
         total_amount: orderData.totalAmount,

@@ -45,7 +45,6 @@ const CategoriesPage = () => {
         <Spinner animation="border" role="status" variant="primary">
           <span className="visually-hidden">Загрузка категорий...</span>
         </Spinner>
-        <p className="mt-3">Загружаем категории...</p>
       </Container>
     );
   }

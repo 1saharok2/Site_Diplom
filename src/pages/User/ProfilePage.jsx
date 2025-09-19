@@ -106,7 +106,6 @@ useEffect(() => {
         console.error('Ошибка загрузки профиля:', error);
         setUserProfile(currentUser);
         
-        // ИСПРАВЛЕНО: используем name вместо комбинации first_name + last_name
         setFormData({
           name: currentUser.name || '',
           email: currentUser.email || '',
