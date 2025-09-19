@@ -1,423 +1,637 @@
-import React from 'react';
+// pages/Cart/CartPage.jsx
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
+  Grid,
   Typography,
   Box,
-  Grid,
-  Card,
-  CardContent,
+  CircularProgress,
   Button,
-  IconButton,
-  Divider,
-  TextField,
-  Chip,
   Paper,
-  alpha,
-  useTheme
+  Alert,
+  Chip
 } from '@mui/material';
+import { useNavigate, Link } from 'react-router-dom';
 import {
-  Delete,
-  Add,
-  Remove,
   ShoppingCart,
+  ArrowBack,
+  Login,
+  Store,
+  Home,
   LocalShipping,
+  AssignmentReturn,
   Security,
-  Replay,
-  ArrowBack
+  Discount,
+  SupportAgent
 } from '@mui/icons-material';
-import { useCart } from '../../context/CartContext';
-import { Link } from 'react-router-dom';
+import CartItems from '../../components/Cart/CartItems';
+import CartSummary from '../../components/Cart/CartSummary';
+import { cartService } from '../../services/cartService';
+import { useAuth } from '../../context/AuthContext';
 
 const CartPage = () => {
-  const theme = useTheme();
-  const { items, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart();
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
-  const cartItems = items || [];
-  const totalPrice = getTotalPrice ? getTotalPrice() : 0;
-  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const fetchCartItems = useCallback(async () => {
+    try {
+      setLoading(true);
+      let items = [];
+      
+      if (isAuthenticated && user) {
+        items = await cartService.getCart(user.id);
+      } else {
+        const localCart = localStorage.getItem('guestCart');
+        if (localCart) {
+          items = JSON.parse(localCart);
+        }
+      }
+      
+      setCartItems(items || []);
+    } catch (error) {
+      console.error('Ошибка загрузки корзины:', error);
+      setCartItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated, user]);
 
-  if (cartItems.length === 0) {
+  useEffect(() => {
+    if (!authLoading) {
+      fetchCartItems();
+    }
+  }, [authLoading, fetchCartItems]);
+
+  const handleClearCart = () => {
+    setCartItems([]);
+    if (isAuthenticated && user) {
+      cartService.clearCart(user.id);
+    } else {
+      localStorage.removeItem('guestCart');
+    }
+  };
+
+  const handleRefreshCart = () => {
+    fetchCartItems();
+  };
+
+  const getTotalItems = () => {
+    return cartItems.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  if (authLoading || loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
-        <Box sx={{ mb: 4 }}>
-          <ShoppingCart sx={{ 
-            fontSize: 120, 
-            color: alpha(theme.palette.primary.main, 0.2),
-            mb: 3
-          }} />
-          <Typography variant="h3" gutterBottom sx={{ 
-            fontWeight: 'bold',
-            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            mb: 2
-          }}>
-            Корзина пуста
+      <Box sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      }}>
+        <Box sx={{ textAlign: 'center', color: 'white' }}>
+          <CircularProgress 
+            size={80} 
+            thickness={4} 
+            sx={{ 
+              color: 'white', 
+              mb: 3,
+              '& .MuiCircularProgress-circle': {
+                strokeLinecap: 'round'
+              }
+            }} 
+          />
+          <Typography variant="h6" sx={{ fontWeight: 500, opacity: 0.9 }}>
+            Загрузка корзины...
           </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>
-            Добавьте товары в корзину, чтобы сделать заказ
-          </Typography>
+        </Box>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ 
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+      py: { xs: 2, md: 4 }
+    }}>
+      <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3 } }}>
+        {/* Header */}
+        <Box sx={{ mb: { xs: 3, md: 4 } }}>
           <Button
-            component={Link}
-            to="/catalog"
-            variant="contained"
-            size="large"
             startIcon={<ArrowBack />}
-            sx={{
+            onClick={() => navigate(-1)}
+            sx={{ 
+              color: 'text.secondary',
+              mb: 2,
               borderRadius: 3,
-              px: 4,
-              py: 1.5,
-              fontSize: '1.1rem',
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+              px: 2,
+              py: 1,
               '&:hover': {
-                transform: 'translateY(-2px)',
-                boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.3)}`
+                bgcolor: 'action.hover',
+                transform: 'translateX(-4px)'
               },
               transition: 'all 0.3s ease'
             }}
           >
-            Вернуться в каталог
+            Назад
           </Button>
-        </Box>
-      </Container>
-    );
-  }
-
-  const handleQuantityChange = (cartItemId, newQuantity) => {
-    if (newQuantity < 1) {
-      removeFromCart(cartItemId);
-    } else {
-      updateQuantity(cartItemId, newQuantity);
-    }
-  };
-
-  return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      {/* Заголовок */}
-      <Box sx={{ mb: 6 }}>
-        <Typography variant="h2" gutterBottom sx={{ 
-          fontWeight: 'bold',
-          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-          backgroundClip: 'text',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
-        }}>
-          🛒 Корзина покупок
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          {totalItems} товар{totalItems % 10 === 1 ? '' : 'а'} на сумму {totalPrice.toLocaleString()} ₽
-        </Typography>
-      </Box>
-
-      <Grid container spacing={4}>
-        {/* Список товаров */}
-        <Grid item xs={12} lg={8}>
-          <Paper elevation={0} sx={{ 
-            p: 3, 
-            borderRadius: 3,
-            background: alpha(theme.palette.background.paper, 0.8),
-            backdropFilter: 'blur(10px)'
+          
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 3,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            p: { xs: 3, md: 4 },
+            borderRadius: 4,
+            color: 'white',
+            boxShadow: '0 20px 40px rgba(102, 126, 234, 0.3)'
           }}>
-            <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-              Товары в корзине
-            </Typography>
+            <Box sx={{
+              width: 60,
+              height: 60,
+              background: 'rgba(255, 255, 255, 0.2)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backdropFilter: 'blur(10px)'
+            }}>
+              <ShoppingCart sx={{ fontSize: 32 }} />
+            </Box>
+            <Box>
+              <Typography variant="h2" sx={{ 
+                fontWeight: 'bold',
+                fontSize: { xs: '2rem', md: '2.8rem' },
+                mb: 1
+              }}>
+                Корзина
+              </Typography>
+              <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400 }}>
+                {cartItems.length > 0 ? `Ваши товары (${getTotalItems()})` : 'Ваши покупки'}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
 
-            {cartItems.map((item) => (
-              <Card 
-                key={item.id} 
+        {!isAuthenticated && (
+          <Alert 
+            severity="info"
+            sx={{ 
+              mb: 4, 
+              borderRadius: 3,
+              p: 3,
+              background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+              border: '2px solid #3b82f6',
+              color: '#1e40af',
+              '& .MuiAlert-icon': { color: '#1e40af' }
+            }}
+          >
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: 2
+            }}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                  🔐 Войдите в аккаунт
+                </Typography>
+                <Typography variant="body2">
+                  Сохраните корзину и получите доступ к истории заказов
+                </Typography>
+              </Box>
+              <Button
+                component={Link}
+                to="/login"
+                state={{ from: '/cart' }}
+                variant="contained"
+                size="large"
+                startIcon={<Login />}
                 sx={{ 
-                  mb: 3, 
                   borderRadius: 3,
-                  border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-                  transition: 'all 0.3s ease',
+                  px: 4,
+                  py: 1.5,
+                  background: 'linear-gradient(45deg, #3b82f6 0%, #1d4ed8 100%)',
+                  fontWeight: 600,
                   '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.1)}`,
-                    borderColor: alpha(theme.palette.primary.main, 0.3)
-                  }
+                    background: 'linear-gradient(45deg, #2563eb 0%, #1e40af 100%)',
+                    transform: 'translateY(-2px)'
+                  },
+                  transition: 'all 0.3s ease'
                 }}
               >
-                <CardContent sx={{ p: 3 }}>
-                  <Grid container alignItems="center" spacing={3}>
-                    {/* Изображение */}
-                    <Grid item xs={12} sm={3}>
-                      <Box
-                        component="img"
-                        src={item.products?.image_url?.[0] || '/placeholder-product.jpg'}
-                        alt={item.products?.name}
-                        sx={{
-                          width: '100%',
-                          height: 120,
-                          objectFit: 'cover',
-                          borderRadius: 2,
-                          boxShadow: theme.shadows[2]
-                        }}
-                        onError={(e) => {
-                          e.target.src = '/placeholder-product.jpg';
-                        }}
-                      />
-                    </Grid>
+                Войти
+              </Button>
+            </Box>
+          </Alert>
+        )}
 
-                    {/* Информация о товаре */}
-                    <Grid item xs={12} sm={4}>
-                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                        {item.products?.name || 'Неизвестный товар'}
-                      </Typography>
-                      <Chip
-                        label={item.products?.category_slug || 'Без категории'}
-                        size="small"
-                        variant="outlined"
-                        sx={{ mb: 1 }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        Артикул: #{item.products?.id}
-                      </Typography>
-                      <Typography variant="h6" color="primary" sx={{ fontWeight: 700, mt: 1 }}>
-                        {item.products?.price?.toLocaleString() || 0} ₽
-                      </Typography>
-                    </Grid>
-
-                    {/* Количество */}
-                    <Grid item xs={12} sm={3}>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        gap: 1 
-                      }}>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                          sx={{
-                            border: `1px solid ${theme.palette.divider}`,
-                            '&:hover': {
-                              backgroundColor: theme.palette.primary.main,
-                              color: 'white'
-                            }
-                          }}
-                        >
-                          <Remove />
-                        </IconButton>
-                        <TextField
-                          value={item.quantity}
-                          size="small"
-                          sx={{ 
-                            width: 70,
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: 2,
-                              fontWeight: 600
-                            }
-                          }}
-                          inputProps={{ 
-                            style: { textAlign: 'center' },
-                            min: 1 
-                          }}
-                          onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
-                        />
-                        <IconButton
-                          size="small"
-                          onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                          sx={{
-                            border: `1px solid ${theme.palette.divider}`,
-                            '&:hover': {
-                              backgroundColor: theme.palette.primary.main,
-                              color: 'white'
-                            }
-                          }}
-                        >
-                          <Add />
-                        </IconButton>
-                      </Box>
-                    </Grid>
-
-                    {/* Сумма и удаление */}
-                    <Grid item xs={12} sm={2}>
-                      <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="h6" sx={{ 
-                          fontWeight: 700,
-                          color: theme.palette.primary.main,
-                          mb: 1
-                        }}>
-                          {((item.products?.price || 0) * item.quantity).toLocaleString()} ₽
-                        </Typography>
-                        <IconButton
-                          onClick={() => removeFromCart(item.id)}
-                          sx={{
-                            color: theme.palette.error.main,
-                            '&:hover': {
-                              backgroundColor: alpha(theme.palette.error.main, 0.1)
-                            }
-                          }}
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            ))}
-          </Paper>
-        </Grid>
-
-        {/* Боковая панель с итогами */}
-        <Grid item xs={12} lg={4}>
-          <Box sx={{ position: 'sticky', top: 100 }}>
-            <Paper elevation={3} sx={{ 
-              p: 4, 
-              borderRadius: 3,
-              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
-              border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
+        {cartItems.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: { xs: 6, md: 10 } }}>
+            <Box sx={{
+              position: 'relative',
+              width: 200,
+              height: 200,
+              mx: 'auto',
+              mb: 4
             }}>
-              <Typography variant="h5" gutterBottom sx={{ 
-                fontWeight: 700,
-                textAlign: 'center',
-                mb: 3
-              }}>
-                💰 Итоги заказа
-              </Typography>
-
-              <Divider sx={{ my: 3 }} />
-
-              {/* Детали стоимости */}
-              <Box sx={{ mb: 3 }}>
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  mb: 2,
-                  p: 2,
-                  backgroundColor: alpha(theme.palette.background.paper, 0.5),
-                  borderRadius: 2
-                }}>
-                  <Typography variant="body1">
-                    Товары ({totalItems})
-                  </Typography>
-                  <Typography variant="body1" fontWeight={600}>
-                    {totalPrice.toLocaleString()} ₽
-                  </Typography>
-                </Box>
-
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  mb: 2,
-                  p: 2,
-                  backgroundColor: alpha(theme.palette.success.main, 0.1),
-                  borderRadius: 2,
-                  border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`
-                }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <LocalShipping fontSize="small" />
-                    <Typography variant="body1">Доставка</Typography>
-                  </Box>
-                  <Chip label="Бесплатно" color="success" size="small" />
-                </Box>
-              </Box>
-
-              <Divider sx={{ my: 3 }} />
-
-              {/* Общая сумма */}
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
+              <Box sx={{
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '50%',
+                display: 'flex',
                 alignItems: 'center',
-                mb: 4,
-                p: 2,
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                borderRadius: 2
+                justifyContent: 'center',
+                animation: 'pulse 2s infinite',
+                '@keyframes pulse': {
+                  '0%': { transform: 'scale(1)', opacity: 1 },
+                  '50%': { transform: 'scale(1.05)', opacity: 0.8 },
+                  '100%': { transform: 'scale(1)', opacity: 1 }
+                }
               }}>
-                <Typography variant="h6" fontWeight={700}>
-                  Общая сумма
-                </Typography>
-                <Typography variant="h5" fontWeight={800} color="primary">
-                  {totalPrice.toLocaleString()} ₽
-                </Typography>
+                <ShoppingCart sx={{ fontSize: 80, color: 'white' }} />
               </Box>
+              <Box sx={{
+                position: 'absolute',
+                top: -10,
+                right: -10,
+                background: 'linear-gradient(45deg, #ff6b6b 0%, #ee5a52 100%)',
+                color: 'white',
+                borderRadius: '50%',
+                width: 60,
+                height: 60,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                fontSize: '1.5rem'
+              }}>
+                0
+              </Box>
+            </Box>
 
-              {/* Кнопки действий */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  size="large"
-                  sx={{
-                    borderRadius: 3,
-                    py: 1.5,
-                    fontSize: '1.1rem',
-                    fontWeight: 600,
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.3)}`
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  🚀 Оформить заказ
-                </Button>
+            <Typography variant="h3" sx={{ 
+              fontWeight: 'bold', 
+              mb: 2,
+              background: 'linear-gradient(45deg, #2d3748 0%, #4a5568 100%)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
+              Корзина пуста
+            </Typography>
+            
+            <Typography variant="h6" sx={{ 
+              color: 'text.secondary', 
+              mb: 4, 
+              maxWidth: 500,
+              mx: 'auto',
+              fontWeight: 400
+            }}>
+              Добавьте товары из нашего каталога, чтобы начать покупки
+            </Typography>
 
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={clearCart}
-                  startIcon={<Replay />}
-                  sx={{
-                    borderRadius: 3,
-                    py: 1.5,
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 3, 
+              justifyContent: 'center', 
+              flexWrap: 'wrap',
+              mb: 6
+            }}>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => navigate('/catalog')}
+                startIcon={<Store />}
+                sx={{ 
+                  px: 5,
+                  py: 2,
+                  borderRadius: 3,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
+                  boxShadow: '0 10px 30px rgba(102, 126, 234, 0.4)',
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #5a67d8 0%, #6b46c1 100%)',
+                    transform: 'translateY(-3px)',
+                    boxShadow: '0 15px 40px rgba(102, 126, 234, 0.6)'
+                  },
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                В каталог
+              </Button>
+              
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={() => navigate('/')}
+                startIcon={<Home />}
+                sx={{ 
+                  px: 5,
+                  py: 2,
+                  borderRadius: 3,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  borderWidth: 2,
+                  borderColor: 'primary.main',
+                  color: 'primary.main',
+                  '&:hover': {
                     borderWidth: 2,
-                    '&:hover': {
-                      borderWidth: 2,
-                      backgroundColor: alpha(theme.palette.error.main, 0.1),
-                      color: theme.palette.error.main
-                    }
-                  }}
-                >
-                  Очистить корзину
-                </Button>
+                    transform: 'translateY(-3px)',
+                    bgcolor: 'primary.main',
+                    color: 'white'
+                  },
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                На главную
+              </Button>
+            </Box>
 
-                <Button
-                  component={Link}
-                  to="/catalog"
-                  variant="text"
-                  startIcon={<ArrowBack />}
-                  sx={{
+            {/* Benefits Section */}
+            <Grid container spacing={3} sx={{ maxWidth: 1000, mx: 'auto' }}>
+              {[
+                {
+                  icon: <LocalShipping sx={{ fontSize: 40, color: '#10b981' }} />,
+                  title: 'Бесплатная доставка',
+                  description: 'При заказе от 5 000 ₽'
+                },
+                {
+                  icon: <AssignmentReturn sx={{ fontSize: 40, color: '#f59e0b' }} />,
+                  title: 'Легкий возврат',
+                  description: '14 дней на возврат товара'
+                },
+                {
+                  icon: <Security sx={{ fontSize: 40, color: '#ef4444' }} />,
+                  title: 'Безопасность',
+                  description: 'SSL шифрование данных'
+                },
+                {
+                  icon: <SupportAgent sx={{ fontSize: 40, color: '#8b5cf6' }} />,
+                  title: 'Поддержка 24/7',
+                  description: 'Всегда готовы помочь'
+                }
+              ].map((benefit, index) => (
+                <Grid item xs={12} sm={6} md={3} key={index}>
+                  <Paper sx={{ 
+                    p: 3, 
+                    textAlign: 'center',
                     borderRadius: 3,
-                    color: theme.palette.text.secondary,
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    transition: 'all 0.3s ease',
                     '&:hover': {
-                      color: theme.palette.primary.main
+                      transform: 'translateY(-5px)',
+                      boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
                     }
-                  }}
-                >
-                  Продолжить покупки
-                </Button>
-              </Box>
+                  }}>
+                    {benefit.icon}
+                    <Typography variant="h6" sx={{ fontWeight: 600, mt: 2, mb: 1 }}>
+                      {benefit.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {benefit.description}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        ) : (
+  <Box sx={{ position: 'relative' }}>
+    {/* Декоративные элементы */}
+    <Box sx={{
+      position: 'absolute',
+      top: -100,
+      right: -100,
+      width: 300,
+      height: 300,
+      background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+      borderRadius: '50%',
+      zIndex: 0,
+      filter: 'blur(40px)'
+    }} />
+    
+    <Box sx={{
+      position: 'absolute',
+      bottom: -50,
+      left: -50,
+      width: 200,
+      height: 200,
+      background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(238, 90, 82, 0.1) 100%)',
+      borderRadius: '50%',
+      zIndex: 0,
+      filter: 'blur(30px)'
+    }} />
 
-              {/* Гарантии */}
-              <Box sx={{ 
-                mt: 4, 
-                p: 2, 
-                backgroundColor: alpha(theme.palette.success.main, 0.05),
-                borderRadius: 2,
-                border: `1px solid ${alpha(theme.palette.success.main, 0.1)}`
+    <Grid container spacing={4} sx={{ position: 'relative', zIndex: 1 }}>
+      {/* Колонка с товарами */}
+      <Grid item xs={12} lg={8}>
+        <Paper sx={{ 
+          p: { xs: 3, md: 4 }, 
+          borderRadius: 4,
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)',
+          position: 'relative',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 4,
+            background: 'linear-gradient(90deg, #667eea 0%, #764ba2 50%, #ff6b6b 100%)'
+          }
+        }}>
+          {/* Заголовок секции товаров */}
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            mb: 4,
+            p: 3,
+            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+            borderRadius: 3,
+            border: '1px solid rgba(226, 232, 240, 0.8)'
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{
+                width: 50,
+                height: 50,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <Security fontSize="small" color="success" />
-                  <Typography variant="body2" fontWeight={600}>
-                    Гарантии и безопасность
-                  </Typography>
-                </Box>
-                <Typography variant="caption" color="text.secondary">
-                  Бесплатная доставка • 14 дней на возврат • Защита покупателя
+                <ShoppingCart sx={{ fontSize: 24, color: 'white' }} />
+              </Box>
+              <Box>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                  Ваша корзина
+                </Typography>
+                <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                  {getTotalItems()} {getTotalItems() === 1 ? 'товар' : 'товаров'} на сумму
                 </Typography>
               </Box>
-            </Paper>
+            </Box>
+            
+            <Chip
+              label={`${getTotalItems()} ${getTotalItems() === 1 ? 'товар' : 'товаров'}`}
+              sx={{
+                background: 'linear-gradient(45deg, #ff6b6b 0%, #ee5a52 100%)',
+                color: 'white',
+                fontWeight: 700,
+                fontSize: '1rem',
+                height: 40,
+                px: 2
+              }}
+            />
           </Box>
-        </Grid>
+
+          {/* Список товаров */}
+          <Box sx={{ 
+            background: 'rgba(248, 250, 252, 0.8)',
+            borderRadius: 3,
+            p: 2,
+            mb: 3
+          }}>
+            <CartItems 
+              cartItems={cartItems}
+              onCartUpdate={setCartItems}
+              onRefreshCart={handleRefreshCart}
+            />
+          </Box>
+
+          {/* Дополнительная информация */}
+          <Box sx={{ 
+            p: 3, 
+            background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
+            borderRadius: 3,
+            border: '1px solid rgba(226, 232, 240, 0.8)'
+          }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Discount sx={{ color: 'primary.main' }} />
+              Специальные предложения
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              Добавьте еще 2 000 ₽ к заказу для бесплатной доставки
+            </Typography>
+          </Box>
+        </Paper>
       </Grid>
-    </Container>
+
+      {/* Боковая панель с итогами и информацией */}
+      <Grid item xs={12} lg={4}>
+        <Box sx={{ position: 'sticky', top: 120 }}>
+          {/* Итоги заказа */}
+          <Paper sx={{ 
+            p: 4, 
+            borderRadius: 4,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            boxShadow: '0 20px 40px rgba(102, 126, 234, 0.4)',
+            mb: 3
+          }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, textAlign: 'center' }}>
+              💰 Итоги заказа
+            </Typography>
+            <CartSummary 
+              cartItems={cartItems}
+              onClearCart={handleClearCart}
+              onRefreshCart={handleRefreshCart}
+            />
+          </Paper>
+
+          {/* Преимущества */}
+          <Paper sx={{ 
+            p: 4, 
+            borderRadius: 4,
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 15px 35px rgba(0, 0, 0, 0.1)'
+          }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, textAlign: 'center' }}>
+              🚀 Почему выбирают нас
+            </Typography>
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {[
+                {
+                  icon: <LocalShipping sx={{ color: '#10b981' }} />,
+                  title: 'Бесплатная доставка',
+                  desc: 'При заказе от 5 000 ₽'
+                },
+                {
+                  icon: <AssignmentReturn sx={{ color: '#f59e0b' }} />,
+                  title: 'Возврат 14 дней',
+                  desc: 'Без лишних вопросов'
+                },
+                {
+                  icon: <Security sx={{ color: '#ef4444' }} />,
+                  title: 'Безопасная оплата',
+                  desc: 'SSL шифрование'
+                },
+                {
+                  icon: <SupportAgent sx={{ color: '#8b5cf6' }} />,
+                  title: 'Поддержка 24/7',
+                  desc: 'Всегда на связи'
+                }
+              ].map((item, index) => (
+                <Box key={index} sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 2,
+                  p: 2,
+                  borderRadius: 2,
+                  background: 'rgba(248, 250, 252, 0.8)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    background: 'rgba(241, 245, 249, 1)',
+                    transform: 'translateX(4px)'
+                  }
+                }}>
+                  <Box sx={{
+                    width: 40,
+                    height: 40,
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                  }}>
+                    {item.icon}
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      {item.title}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      {item.desc}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Paper>
+        </Box>
+      </Grid>
+    </Grid>
+  </Box>
+)}
+      </Container>
+    </Box>
   );
 };
 

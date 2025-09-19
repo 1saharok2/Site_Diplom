@@ -13,7 +13,7 @@ import { CategoriesPage, CategoryPage, ProductPage } from './pages/Catalog';
 import { AboutPage, ContactsPage } from './pages/About';
 import { ProfilePage, OrdersPage, WishlistPage } from './pages/User';
 import { SearchPage } from './pages';
-import { HomePage, CartPage, CheckoutPage, OrderSuccessPage } from './pages';
+import { HomePage, CartPage, CheckoutPage, OrderSuccessPage, OrderDetailPage } from './pages';
 import './App.css';
 
 const theme = createTheme({
@@ -82,6 +82,7 @@ function App() {
                           <OrdersPage />
                         </ProtectedRoute>
                       } />
+                      <Route path="/orders/:orderId" element={<OrderDetailPage />} />
                       <Route path="/wishlist" element={
                         <ProtectedRoute>
                           <WishlistPage />

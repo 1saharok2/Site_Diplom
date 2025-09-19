@@ -354,15 +354,6 @@ deleteProduct: async (id) => {
 
   deleteOrder: async (orderId) => {
     try {
-      // Сначала удаляем элементы заказа (из-за foreign key constraints)
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .delete()
-        .eq('order_id', orderId);
-
-      if (itemsError) throw itemsError;
-
-      // Затем удаляем сам заказ
       const { error } = await supabase
         .from('orders')
         .delete()
@@ -371,7 +362,7 @@ deleteProduct: async (id) => {
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error in deleteOrder:', error);
+      console.error('Error deleting order:', error);
       throw error;
     }
   },
