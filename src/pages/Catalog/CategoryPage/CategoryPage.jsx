@@ -17,7 +17,7 @@ const CategoryPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sortBy, setSortBy] = useState('name');
-  const [filterInStock, setFilterInStock] = useState(false);
+  const [filterInStock, setFilterInStock] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {

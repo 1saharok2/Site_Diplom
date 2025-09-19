@@ -11,6 +11,7 @@ import './ProductPage_css/ProductPage.css';
 const ProductPage = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [currentProduct, setCurrentProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -31,6 +32,7 @@ const ProductPage = () => {
         console.log('📊 Количество изображений:', productData.image_url?.length || 0);
         
         setProduct(productData);
+        setCurrentProduct(productData);
         
       } catch (err) {
         console.error('❌ Ошибка загрузки товара:', err);
@@ -47,6 +49,10 @@ const ProductPage = () => {
       setLoading(false);
     }
   }, [id]);
+
+  const handleVariantChange = (variant) => {
+    setCurrentProduct(variant);
+  };
 
   if (loading) {
     return (
@@ -82,32 +88,35 @@ const ProductPage = () => {
         
         <Breadcrumb.Item 
           linkAs={Link} 
-          linkProps={{ to: `/catalog/${product.category}` }}
+          linkProps={{ to: `/catalog/${product.category_slug || product.category}` }}
           className="d-flex align-items-center"
         >
           <FaChevronRight className="me-1 mx-1" size={10} />
-          {product.categoryName || product.category}
+          {product.categoryName || product.category_slug || product.category || 'Каталог'}
         </Breadcrumb.Item>
         
         <Breadcrumb.Item active className="d-flex align-items-center">
           <FaChevronRight className="me-1 mx-1" size={10} />
-          <span className="text-truncate">{product.name}</span>
+          <span className="text-truncate">{currentProduct?.name || product.name}</span>
         </Breadcrumb.Item>
       </Breadcrumb>
 
       <Row>
         <Col lg={6} className="pe-lg-4">
-          <ProductGallery product={product} />
+          <ProductGallery product={currentProduct || product} />
         </Col>
 
         <Col lg={6} className="ps-lg-4">
-          <ProductInfo product={product} />
+          <ProductInfo 
+            product={currentProduct || product} 
+            onVariantChange={handleVariantChange}
+          />
         </Col>
       </Row>
 
       <Row className="mt-5">
         <Col>
-          <ProductTabs product={product} />
+          <ProductTabs product={currentProduct || product} />
         </Col>
       </Row>
     </Container>
