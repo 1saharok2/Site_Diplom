@@ -14,6 +14,7 @@ import { AboutPage, ContactsPage } from './pages/About';
 import { ProfilePage, OrdersPage, WishlistPage } from './pages/User';
 import { SearchPage } from './pages';
 import { HomePage, CartPage, CheckoutPage, OrderSuccessPage, OrderDetailPage } from './pages';
+import ScrollToTop from './components/ScrollToTop';
 import './App.css';
 
 const theme = createTheme({
@@ -36,6 +37,7 @@ function App() {
           <CategoriesProvider>
             <CartProvider>
               <Router>
+                <ScrollToTop/>
                 <div className="app" style={{
                   display: "flex",
                   flexDirection: 'column',
