@@ -174,18 +174,6 @@ const CategoryPage = () => {
           </div>
         )}
       </div>
-
-      {/* Кнопка для мобильных */}
-      <div className="d-lg-none text-center mt-4">
-        <Button 
-          as={Link} 
-          to="/catalog" 
-          variant="outline-secondary"
-          className="w-100"
-        >
-          ← Вернуться к категориям
-        </Button>
-      </div>
     </Container>
   );
 };
