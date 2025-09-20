@@ -6,7 +6,7 @@ import Header from './components/Layout/Header/Header';
 import Footer from './components/Layout/Footer/Footer';
 import AdminLayout from './components/Admin/AdminLayout/AdminLayout';
 import { AdminRoute, ProtectedRoute, ProtectedCheckoutRoute } from './components/Common';
-import { AuthProvider, CartProvider, ProductsProvider, CategoriesProvider } from './context';
+import { AuthProvider, CartProvider, ProductsProvider, CategoriesProvider, WishlistProvider } from './context';
 import { LoginPage, RegisterPage } from './pages/Auth';
 import { AdminDashboard, AdminProducts, AdminOrders, AdminUsers, AdminCategories } from './pages/Admin';
 import { CategoriesPage, CategoryPage, ProductPage } from './pages/Catalog';
@@ -33,6 +33,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline/>
       <AuthProvider>
+        <WishlistProvider>
         <ProductsProvider>
           <CategoriesProvider>
             <CartProvider>
@@ -126,6 +127,7 @@ function App() {
             </CartProvider>
           </CategoriesProvider>
         </ProductsProvider>
+        </WishlistProvider>
       </AuthProvider>
     </ThemeProvider>
   );

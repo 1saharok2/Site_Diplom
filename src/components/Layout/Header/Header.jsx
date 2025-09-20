@@ -1,6 +1,6 @@
 // src/components/Layout/Header/Header.jsx
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -25,7 +25,8 @@ import {
   alpha,
   Slide,
   Fade,
-  Container
+  Container,
+  Chip
 } from '@mui/material';
 import {
   ShoppingCart,
@@ -42,6 +43,7 @@ import {
 import { useAuth } from '../../../context/AuthContext';
 import { useCart } from '../../../context/CartContext';
 import { useProducts } from '../../../context/ProductsContext';
+import { useWishlist } from '../../../context/WishlistContext';
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -51,11 +53,13 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const { currentUser, logout } = useAuth();
   const { cartItems } = useCart();
+  const { wishlistItems } = useWishlist();
   const { products, loading } = useProducts();
   const navigate = useNavigate();
-  const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const wishlistCount = wishlistItems ? wishlistItems.length : 0;
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -570,21 +574,40 @@ const Header = () => {
               )}
 
               {/* Избранное */}
-              <IconButton
-                component={Link}
-                to="/favorites"
-                sx={{ 
-                  color: scrolled ? 'primary.main' : 'white',
-                  padding: '10px',
+              <Button 
+                component={Link} 
+                to="/wishlist" 
+                startIcon={<Favorite />}
+                sx={{
+                  color: scrolled ? 'text.primary' : 'white',
+                  textTransform: 'none',
+                  fontSize: '0.95rem',
+                  padding: '8px 5px',
+                  borderRadius: '8px',
+                  minWidth: 'auto',
                   '&:hover': {
                     backgroundColor: scrolled ? 'primary.light' : 'rgba(255,255,255,0.1)',
-                    transform: 'scale(1.1)'
+                    transform: 'translateY(-1px)',
+                    boxShadow: scrolled ? '0 4px 12px rgba(102, 126, 234, 0.2)' : '0 4px 12px rgba(0,0,0,0.1)'
                   },
                   transition: 'all 0.2s ease'
                 }}
               >
-                <Favorite />
-              </IconButton>
+                {wishlistCount > 0 && (
+                  <Chip
+                    label={wishlistCount}
+                    size="small"
+                    sx={{ 
+                      ml: 1, 
+                      backgroundColor: 'error.main', 
+                      color: 'white',
+                      fontSize: '0.7rem',
+                      height: '20px',
+                      minWidth: '20px'
+                    }}
+                  />
+                )}
+              </Button>
 
               {/* Корзина */}
               <IconButton
