@@ -14,11 +14,8 @@ const isValidUrl = (url) => {
 const processImageUrls = (imageData) => {
   if (!imageData) return [];
   
-  console.log('🔄 Обработка image_url:', imageData);
-  
   // Вариант 1: Уже массив
   if (Array.isArray(imageData)) {
-    console.log('✅ image_url уже массив');
     return imageData.filter(url => url && typeof url === 'string');
   }
   

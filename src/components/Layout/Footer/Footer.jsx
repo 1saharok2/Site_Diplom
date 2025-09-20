@@ -37,7 +37,7 @@ const Footer = () => {
       <Container maxWidth="lg">
         <Grid container spacing={4}>
           {/* Информация о компании */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
               🛍️ Электроник
             </Typography>
@@ -71,7 +71,7 @@ const Footer = () => {
           </Grid>
 
           {/* Навигационные ссылки */}
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
               Магазин
             </Typography>
@@ -120,7 +120,7 @@ const Footer = () => {
           </Grid>
 
           {/* Полезные ссылки */}
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
               Полезное
             </Typography>
@@ -153,7 +153,7 @@ const Footer = () => {
           </Grid>
 
           {/* Подписка на рассылку */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
               Подписка на новости
             </Typography>

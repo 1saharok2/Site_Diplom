@@ -25,8 +25,7 @@ import {
   alpha,
   Slide,
   Fade,
-  Container,
-  Chip
+  Container
 } from '@mui/material';
 import {
   ShoppingCart,
@@ -53,13 +52,12 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const { currentUser, logout } = useAuth();
   const { cartItems } = useCart();
-  const { wishlistItems } = useWishlist();
+  const { getWishlistCount } = useWishlist();
   const { products, loading } = useProducts();
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const wishlistCount = wishlistItems ? wishlistItems.length : 0;
-
+  const wishlistCount = getWishlistCount();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -574,40 +572,34 @@ const Header = () => {
               )}
 
               {/* Избранное */}
-              <Button 
-                component={Link} 
-                to="/wishlist" 
-                startIcon={<Favorite />}
-                sx={{
-                  color: scrolled ? 'text.primary' : 'white',
-                  textTransform: 'none',
-                  fontSize: '0.95rem',
-                  padding: '8px 5px',
-                  borderRadius: '8px',
-                  minWidth: 'auto',
+              <IconButton
+                component={Link}
+                to="/wishlist"
+                sx={{ 
+                  color: scrolled ? 'primary.main' : 'white',
+                  padding: '10px',
                   '&:hover': {
                     backgroundColor: scrolled ? 'primary.light' : 'rgba(255,255,255,0.1)',
-                    transform: 'translateY(-1px)',
-                    boxShadow: scrolled ? '0 4px 12px rgba(102, 126, 234, 0.2)' : '0 4px 12px rgba(0,0,0,0.1)'
+                    transform: 'scale(1.1)'
                   },
                   transition: 'all 0.2s ease'
                 }}
               >
-                {wishlistCount > 0 && (
-                  <Chip
-                    label={wishlistCount}
-                    size="small"
-                    sx={{ 
-                      ml: 1, 
-                      backgroundColor: 'error.main', 
-                      color: 'white',
+                <Badge 
+                  badgeContent={wishlistCount} 
+                  color="error"
+                  sx={{
+                    '& .MuiBadge-badge': {
                       fontSize: '0.7rem',
                       height: '20px',
-                      minWidth: '20px'
-                    }}
-                  />
-                )}
-              </Button>
+                      minWidth: '20px',
+                      fontWeight: 'bold'
+                    }
+                  }}
+                >
+                  <Favorite sx={{ fontSize: '24px' }} />
+                </Badge>
+              </IconButton>
 
               {/* Корзина */}
               <IconButton

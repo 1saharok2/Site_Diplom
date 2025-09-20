@@ -24,9 +24,7 @@ const fetchWithAuth = async (url, options = {}) => {
       throw new Error('Токен авторизации не найден');
     }
 
-    const fullUrl = `${API_BASE}${url}`; // Теперь URL формируется правильно
-    
-    console.log(`🔄 Making request to: ${fullUrl}`); // Для отладки
+    const fullUrl = `${API_BASE}${url}`;    
 
     const response = await fetch(fullUrl, {
       ...options,
@@ -156,22 +154,12 @@ deleteProduct: async (id) => {
   // Categories
   getCategories: async () => {
     try {
-      console.log('🔄 Fetching categories from server...');
       const data = await fetchWithAuth('/api/categories');
-      console.log('✅ Categories received:', data);
       return data;
     } catch (error) {
       console.error('❌ Error fetching categories:', error);
       // Fallback to demo data
-      return [
-        { id: 1, name: 'Бытовая техника', slug: 'appliances', parent_id: null, products_count: 15 },
-        { id: 2, name: 'Игровые консоли', slug: 'gaming-consoles', parent_id: null, products_count: 8 },
-        { id: 3, name: 'Наушники', slug: 'headphones', parent_id: 1, products_count: 23 },
-        { id: 4, name: 'Ноутбуки', slug: 'laptops', parent_id: null, products_count: 34 },
-        { id: 5, name: 'Смартфоны', slug: 'smartphones', parent_id: 1, products_count: 45 },
-        { id: 6, name: 'Телевизоры', slug: 'tvs', parent_id: 1, products_count: 18 },
-        { id: 7, name: 'Фототехника', slug: 'photo-equipment', parent_id: null, products_count: 12 }
-      ];
+      return;
     }
   },
 

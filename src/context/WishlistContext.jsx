@@ -18,86 +18,94 @@ export const WishlistProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const { currentUser } = useAuth();
 
-  const loadWishlist = useCallback(async () => {
-    if (!currentUser) {
-      setWishlist([]);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      // Здесь ваш код загрузки избранного из API или localStorage
-      // Пример для localStorage:
-      const savedWishlist = localStorage.getItem(`wishlist_${currentUser.uid}`);
-      if (savedWishlist) {
-        setWishlist(JSON.parse(savedWishlist));
-      } else {
-        setWishlist([]);
-      }
-    } catch (error) {
-      console.error('Error loading wishlist:', error);
-      setWishlist([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUser]); // Зависимость только currentUser
-
   useEffect(() => {
-    loadWishlist();
-  }, [loadWishlist]); // Теперь зависимость стабильна благодаря useCallback
+    const fetchWishlist = async () => {
+      if (!currentUser) {
+        setWishlist([]);
+        setLoading(false);
+        return;
+      }
 
-  const addToWishlist = useCallback(async (product) => {
+      try {
+        setLoading(true);
+        const wishlistData = await wishlistService.getUserWishlist(currentUser.id);
+        setWishlist(wishlistData || []);
+      } catch (error) {
+        console.error('Error loading wishlist:', error);
+        setWishlist([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWishlist();
+  }, [currentUser]); // Только currentUser как зависимость
+
+  const addToWishlist = useCallback(async (productId) => {
     if (!currentUser) {
-      // Можно показать уведомление, что нужно войти
-      return;
+      throw new Error('User must be logged in to add to wishlist');
     }
 
     try {
-      const newWishlist = [...wishlist];
-      const existingItemIndex = newWishlist.findIndex(item => item.id === product.id);
-      
-      if (existingItemIndex === -1) {
-        newWishlist.push({ ...product, addedAt: new Date().toISOString() });
-        setWishlist(newWishlist);
-        localStorage.setItem(`wishlist_${currentUser.uid}`, JSON.stringify(newWishlist));
-      }
+      const wishlistItem = await wishlistService.addToWishlist(currentUser.id, productId);
+      // Перезагружаем весь список после добавления
+      const wishlistData = await wishlistService.getUserWishlist(currentUser.id);
+      setWishlist(wishlistData || []);
+      return wishlistItem;
     } catch (error) {
       console.error('Error adding to wishlist:', error);
+      throw error;
     }
-  }, [currentUser, wishlist]);
+  }, [currentUser]);
 
-  const removeFromWishlist = useCallback(async (productId) => {
+  const removeFromWishlist = useCallback(async (wishlistItemId) => {
     if (!currentUser) return;
 
     try {
-      const newWishlist = wishlist.filter(item => item.id !== productId);
-      setWishlist(newWishlist);
-      localStorage.setItem(`wishlist_${currentUser.uid}`, JSON.stringify(newWishlist));
+      await wishlistService.removeFromWishlist(wishlistItemId);
+      setWishlist(prev => prev.filter(item => item.id !== wishlistItemId));
     } catch (error) {
       console.error('Error removing from wishlist:', error);
+      throw error;
     }
-  }, [currentUser, wishlist]);
+  }, [currentUser]);
 
   const removeFromWishlistByProduct = useCallback(async (productId) => {
     if (!currentUser) return;
     
     try {
       await wishlistService.removeFromWishlistByProduct(currentUser.id, productId);
-      await loadWishlist(); // Перезагружаем список
+      setWishlist(prev => prev.filter(item => item.product_id !== productId));
     } catch (error) {
       console.error('Error removing from wishlist:', error);
       throw error;
     }
-  }, [currentUser, loadWishlist]);
+  }, [currentUser]);
 
   const isInWishlist = useCallback((productId) => {
-    return wishlist.some(item => item.id === productId);
+    return wishlist.some(item => item.product_id === productId);
   }, [wishlist]);
 
   const getWishlistCount = useCallback(() => {
     return wishlist.length;
   }, [wishlist]);
+
+  const refreshWishlist = useCallback(async () => {
+    if (!currentUser) {
+      setWishlist([]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const wishlistData = await wishlistService.getUserWishlist(currentUser.id);
+      setWishlist(wishlistData || []);
+    } catch (error) {
+      console.error('Error refreshing wishlist:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser]);
 
   const value = {
     wishlist,
@@ -107,7 +115,7 @@ export const WishlistProvider = ({ children }) => {
     removeFromWishlistByProduct,
     isInWishlist,
     getWishlistCount,
-    refreshWishlist: loadWishlist
+    refreshWishlist
   };
 
   return (

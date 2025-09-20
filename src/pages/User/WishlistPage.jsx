@@ -10,9 +10,11 @@ import {
   Card,
   CardContent,
   CardMedia,
-  IconButton
+  IconButton,
+  Chip,
+  Divider
 } from '@mui/material';
-import { Favorite, ShoppingBasket, ArrowBack } from '@mui/icons-material';
+import { Favorite, ShoppingBasket, ArrowBack, Delete } from '@mui/icons-material';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { useNavigate } from 'react-router-dom';
@@ -21,18 +23,18 @@ import { useAuth } from '../../context/AuthContext';
 const WishlistPage = () => {
   const { wishlist, loading, removeFromWishlist, refreshWishlist } = useWishlist();
   const { addToCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (currentUser) {
       refreshWishlist();
     }
-  }, [isAuthenticated, refreshWishlist]);
+  }, [currentUser, refreshWishlist]);
 
-  const handleRemoveFromWishlist = async (itemId) => {
+  const handleRemoveFromWishlist = async (wishlistItemId) => {
     try {
-      await removeFromWishlist(itemId);
+      await removeFromWishlist(wishlistItemId);
     } catch (error) {
       console.error('Error removing from wishlist:', error);
     }
@@ -40,14 +42,14 @@ const WishlistPage = () => {
 
   const handleAddToCart = async (product) => {
     try {
-      await addToCart(product.id, 1);
+      await addToCart(product, 1);
       // Можно добавить уведомление об успехе
     } catch (error) {
       console.error('Error adding to cart:', error);
     }
   };
 
-  if (!isAuthenticated) {
+  if (!currentUser) {
     return (
       <Container sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="h4" gutterBottom>
@@ -78,7 +80,7 @@ const WishlistPage = () => {
   }
 
   return (
-    <Container sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, gap: 2 }}>
         <IconButton onClick={() => navigate(-1)}>
           <ArrowBack />
@@ -87,7 +89,7 @@ const WishlistPage = () => {
           Избранное
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          ({wishlist.length} товаров)
+          {wishlist.length} товаров
         </Typography>
       </Box>
 
@@ -103,6 +105,7 @@ const WishlistPage = () => {
           <Button
             variant="contained"
             onClick={() => navigate('/catalog')}
+            startIcon={<ShoppingBasket />}
           >
             Перейти в каталог
           </Button>
@@ -111,39 +114,82 @@ const WishlistPage = () => {
         <Grid container spacing={3}>
           {wishlist.map((item) => (
             <Grid item xs={12} sm={6} md={4} key={item.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Card sx={{ 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column',
+                transition: 'transform 0.2s ease',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: 3
+                }
+              }}>
                 <CardMedia
                   component="img"
-                  height="200"
+                  height="250"
                   image={item.products?.image_url?.[0] || '/images/placeholder.jpg'}
                   alt={item.products?.name}
                   sx={{ objectFit: 'cover' }}
                 />
+                
                 <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" gutterBottom noWrap>
                     {item.products?.name}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {item.products?.category_slug}
-                  </Typography>
-                  <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
-                    {item.products?.price?.toLocaleString('ru-RU')} ₽
-                  </Typography>
+                  
+                  <Chip 
+                    label={item.products?.category_slug} 
+                    size="small" 
+                    variant="outlined"
+                    sx={{ mb: 2 }}
+                  />
+                  
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold' }}>
+                      {item.products?.price?.toLocaleString('ru-RU')} ₽
+                    </Typography>
+                    {item.products?.old_price && (
+                      <Typography variant="body2" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
+                        {item.products.old_price.toLocaleString('ru-RU')} ₽
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {item.products?.is_new && (
+                    <Chip label="Новинка" color="success" size="small" sx={{ mr: 1 }} />
+                  )}
+                  {item.products?.discount > 0 && (
+                    <Chip 
+                      label={`-${item.products.discount}%`} 
+                      color="error" 
+                      size="small" 
+                    />
+                  )}
                 </CardContent>
+
+                <Divider />
+                
                 <Box sx={{ p: 2, display: 'flex', gap: 1 }}>
                   <Button
                     variant="contained"
                     startIcon={<ShoppingBasket />}
                     fullWidth
                     onClick={() => handleAddToCart(item.products)}
+                    sx={{ flex: 1 }}
                   >
                     В корзину
                   </Button>
+                  
                   <IconButton
                     color="error"
                     onClick={() => handleRemoveFromWishlist(item.id)}
+                    sx={{
+                      '&:hover': {
+                        backgroundColor: 'rgba(244, 67, 54, 0.1)'
+                      }
+                    }}
                   >
-                    <Favorite />
+                    <Delete />
                   </IconButton>
                 </Box>
               </Card>

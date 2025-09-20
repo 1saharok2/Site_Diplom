@@ -33,7 +33,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Вспомогательная функция для проверки подключения
 export const testConnection = async () => {
   try {
-    console.log('🔌 Testing Supabase connection...')
     const { data, error } = await supabase
       .from('categories')
       .select('id, name')
@@ -45,7 +44,6 @@ export const testConnection = async () => {
     }
 
     console.log('✅ Supabase connected successfully!')
-    console.log('📊 Sample data:', data)
     return { connected: true, data }
   } catch (error) {
     console.error('❌ Supabase connection test failed:', error)
@@ -69,15 +67,9 @@ export const subscribeToTable = (tableName, callback) => {
     .subscribe()
 }
 
-// Экспорт для тестирования
-console.log('🚀 Supabase client initialized:')
-console.log('📍 URL:', supabaseUrl)
-console.log('🔑 Anon Key:', supabaseAnonKey.slice(0, 10) + '...')
-
 // Автоматически тестируем подключение при импорте
 testConnection().then(result => {
   if (result.connected) {
-    console.log('🎉 Supabase is ready to use!')
   } else {
     console.warn('⚠️ Supabase connection issues detected')
   }
