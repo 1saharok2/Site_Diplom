@@ -1,6 +1,7 @@
 // context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiService } from '../services/api';
+import { supabase } from '../services/supabaseClient'; // Добавляем Supabase
 
 const AuthContext = createContext();
 
@@ -36,6 +37,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await apiService.login(credentials);
       let userData, token;
+      
       if (response.user && response.token) {
         userData = response.user;
         token = response.token;
@@ -45,6 +47,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         throw new Error('Неверный формат ответа от сервера');
       }
+      
       if (!userData || !token) {
         throw new Error('Отсутствуют данные пользователя или токен');
       }
@@ -68,6 +71,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await apiService.register(userData);
       let newUser, token;
+      
       if (response.user && response.token) {
         newUser = response.user;
         token = response.token;
@@ -75,14 +79,7 @@ export const AuthProvider = ({ children }) => {
         newUser = response.data.user;
         token = response.data.token;
       } else {
-        newUser = {
-          ...userData,
-          id: Math.floor(Math.random() * 1000) + 3,
-          role: 'user',
-          isActive: true,
-          createdAt: new Date().toISOString()
-        };
-        token = 'mock-jwt-token';
+        throw new Error('Неверный формат ответа от сервера');
       }
       
       localStorage.setItem('authToken', token);
@@ -106,20 +103,66 @@ export const AuthProvider = ({ children }) => {
     setCurrentUser(null);
   };
 
-  const updateProfile = async (userData) => {
-    try {
-      const updatedUser = { ...currentUser, ...userData };
-      localStorage.setItem('userData', JSON.stringify(updatedUser));
-      setCurrentUser(updatedUser);
-      
-      return { success: true, user: updatedUser };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.message || 'Ошибка обновления профиля' 
-      };
+const updateProfile = async (userData) => {
+  try {
+    console.log('🟢 Обновление профиля с данными:', userData);
+    
+    // Подготавливаем данные для обновления
+    const updateData = {
+      updated_at: new Date().toISOString()
+    };
+
+    // Добавляем только те поля, которые есть в базе
+    if (userData.first_name !== undefined) {
+      updateData.first_name = userData.first_name;
     }
-  };
+    if (userData.last_name !== undefined) {
+      updateData.last_name = userData.last_name;
+    }
+    if (userData.phone !== undefined) {
+      updateData.phone = userData.phone;
+    }
+    if (userData.address !== undefined) {
+      updateData.address = userData.address;
+    }
+
+    console.log('🟢 Данные для обновления:', updateData);
+
+    // Обновляем данные в Supabase
+    const { data: updatedUser, error } = await supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', currentUser.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Supabase update error:', error);
+      throw new Error(`Ошибка обновления данных: ${error.message}`);
+    }
+
+    console.log('✅ Профиль обновлен в Supabase:', updatedUser);
+
+    // Обновляем локальные данные пользователя
+    const updatedUserData = {
+      ...currentUser,
+      ...updateData,
+      name: userData.name || currentUser.name
+    };
+
+    localStorage.setItem('userData', JSON.stringify(updatedUserData));
+    setCurrentUser(updatedUserData);
+    
+    return { success: true, user: updatedUserData };
+    
+  } catch (error) {
+    console.error('❌ Update profile error:', error);
+    return { 
+      success: false, 
+      error: error.message || 'Ошибка обновления профиля' 
+    };
+  }
+};
 
   const value = {
     user: currentUser,

@@ -63,9 +63,8 @@ const CategoryPage = () => {
     return (
       <Container className="text-center mt-5">
         <Spinner animation="border" role="status" variant="primary">
-          <span className="visually-hidden">Загрузка...</span>
+          <span className="visually-hidden">Загрузка товаров...</span>
         </Spinner>
-        <p className="mt-3">Загружаем товары...</p>
       </Container>
     );
   }
