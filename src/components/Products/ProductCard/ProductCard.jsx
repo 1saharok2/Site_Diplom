@@ -4,12 +4,14 @@ import { FaHeart, FaShoppingCart, FaStar } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useCart } from '../../../context/CartContext';
+import { useWishlist } from '../../../context/WishlistContext';
 import './ProductCard.css';
 
 const ProductCard = ({ product }) => {
-  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlistByProduct , isInWishlist} = useWishlist();
   const { currentUser } = useAuth();
 
   const {
@@ -20,8 +22,11 @@ const ProductCard = ({ product }) => {
     rating,
     reviewsCount,
     discount,
-    inStock
+    inStock,
+    id: productId
   } = product;
+
+  const isInWishlistState = isInWishlist(productId);
 
 const handleAddToCart = async (e) => {
   e.preventDefault();
@@ -41,10 +46,30 @@ const handleAddToCart = async (e) => {
   }
 };
 
-  const handleAddToWishlist = (e) => {
+  const handleWishlistToggle = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsInWishlist(!isInWishlist);
+
+    if (!currentUser || !currentUser.id) {
+      alert('Пожалуйста, авторизуйтесь чтобы добавить товар в избранное');
+      return;
+    }
+
+    try {
+      setIsAddingToWishlist(true);
+      
+      if (isInWishlistState) {
+        // Удаляем из избранного
+        await removeFromWishlistByProduct(productId);
+      } else {
+        // Добавляем в избранное
+        await addToWishlist(productId);
+      }
+    } catch (error) {
+      alert('Не удалось изменить избранное: ' + error.message);
+    } finally {
+      setIsAddingToWishlist(false);
+    }
   };
 
   return (
@@ -58,16 +83,21 @@ const handleAddToCart = async (e) => {
                 -{discount}%
               </Badge>
             )}
+            {isInWishlistState && (
+              <Badge bg="success" className="wishlist-badge">
+                В избранном
+              </Badge>
+            )}
           </div>
 
           {/* Картинка товара */}
           <div className="product-image-container">
             <img 
-              src={images && images[0] ? images[0] : 'null'}
+              src={images && images[0] ? images[0] : '/images/placeholder.jpg'}
               alt={name}
               className="product-image"
               onError={(e) => {
-                e.target.src = 'null';
+                e.target.src = '/images/placeholder.jpg';
               }}
             />
           </div>
@@ -113,7 +143,7 @@ const handleAddToCart = async (e) => {
                 <div className="action-buttons">
                   <Button 
                     variant="primary" 
-                    className={`btn-cart ${isAddingToCart ? 'added' : ''}`}
+                    className={`btn-cart ${isAddingToCart ? 'adding' : ''}`}
                     onClick={handleAddToCart}
                     disabled={isAddingToCart}
                   >
@@ -122,10 +152,12 @@ const handleAddToCart = async (e) => {
                   </Button>
                   <Button 
                     variant="outline-secondary" 
-                    className={`btn-wishlist ${isInWishlist ? 'added' : ''}`}
-                    onClick={handleAddToWishlist}
+                    className={`btn-wishlist ${isInWishlistState ? 'in-wishlist' : ''} ${isAddingToWishlist ? 'loading' : ''}`}
+                    onClick={handleWishlistToggle} // Исправлено: правильное имя функции
+                    disabled={isAddingToWishlist}
                   >
-                    <FaHeart />
+                    <FaHeart className={isAddingToWishlist ? 'spinning' : ''} />
+                    {isAddingToWishlist ? '' : (isInWishlistState ? 'В избранном' : '')}
                   </Button>
                 </div>
               ) : (
