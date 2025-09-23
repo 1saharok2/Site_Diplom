@@ -11,7 +11,7 @@ const ProductCard = ({ product }) => {
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { addToCart } = useCart();
-  const { addToWishlist, removeFromWishlistByProduct , isInWishlist} = useWishlist();
+  const { addToWishlist, removeFromWishlistByProduct, isInWishlist } = useWishlist();
   const { currentUser } = useAuth();
 
   const {
@@ -28,23 +28,23 @@ const ProductCard = ({ product }) => {
 
   const isInWishlistState = isInWishlist(productId);
 
-const handleAddToCart = async (e) => {
-  e.preventDefault();
-  e.stopPropagation();
+  const handleAddToCart = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-  if (!currentUser || !currentUser.id) {
-    alert('Пожалуйста, авторизуйтесь чтобы добавить товар в корзину');
-    return;
-  }
-  try {
-    setIsAddingToCart(true);
-    await addToCart(product.id, 1);
-    setTimeout(() => setIsAddingToCart(false), 600);
-  } catch (error) {
-    alert('Не удалось добавить товар в корзину: ' + error.message);
-    setIsAddingToCart(false);
-  }
-};
+    if (!currentUser || !currentUser.id) {
+      alert('Пожалуйста, авторизуйтесь чтобы добавить товар в корзину');
+      return;
+    }
+    try {
+      setIsAddingToCart(true);
+      await addToCart(product.id, 1);
+      setTimeout(() => setIsAddingToCart(false), 600);
+    } catch (error) {
+      alert('Не удалось добавить товар в корзину: ' + error.message);
+      setIsAddingToCart(false);
+    }
+  };
 
   const handleWishlistToggle = async (e) => {
     e.preventDefault();
@@ -59,10 +59,8 @@ const handleAddToCart = async (e) => {
       setIsAddingToWishlist(true);
       
       if (isInWishlistState) {
-        // Удаляем из избранного
         await removeFromWishlistByProduct(productId);
       } else {
-        // Добавляем в избранное
         await addToWishlist(productId);
       }
     } catch (error) {
@@ -81,11 +79,6 @@ const handleAddToCart = async (e) => {
             {discount > 0 && (
               <Badge bg="danger" className="discount-badge">
                 -{discount}%
-              </Badge>
-            )}
-            {isInWishlistState && (
-              <Badge bg="success" className="wishlist-badge">
-                В избранном
               </Badge>
             )}
           </div>
@@ -152,12 +145,11 @@ const handleAddToCart = async (e) => {
                   </Button>
                   <Button 
                     variant="outline-secondary" 
-                    className={`btn-wishlist ${isInWishlistState ? 'in-wishlist' : ''} ${isAddingToWishlist ? 'loading' : ''}`}
-                    onClick={handleWishlistToggle} // Исправлено: правильное имя функции
+                    className={`btn-wishlist ${isInWishlistState ? 'added' : ''} ${isAddingToWishlist ? 'loading' : ''}`}
+                    onClick={handleWishlistToggle}
                     disabled={isAddingToWishlist}
                   >
-                    <FaHeart className={isAddingToWishlist ? 'spinning' : ''} />
-                    {isAddingToWishlist ? '' : (isInWishlistState ? 'В избранном' : '')}
+                    <FaHeart />
                   </Button>
                 </div>
               ) : (

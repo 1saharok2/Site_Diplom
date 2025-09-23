@@ -16,6 +16,9 @@ import { SearchPage } from './pages';
 import { HomePage, CartPage, CheckoutPage, OrderSuccessPage, OrderDetailPage } from './pages';
 import ScrollToTop from './components/ScrollToTop';
 import './App.css';
+import { ReviewProvider } from './context/ReviewContext';
+import AdminReviewsPage from '../src/components/Admin/AdminReviewsPage';
+import UserReviewsPage from './pages/User/UserReviewPage';
 
 const theme = createTheme({
   palette: {
@@ -34,6 +37,7 @@ function App() {
       <CssBaseline/>
       <AuthProvider>
         <WishlistProvider>
+          <ReviewProvider>
         <ProductsProvider>
           <CategoriesProvider>
             <CartProvider>
@@ -93,7 +97,7 @@ function App() {
                       } />
                       <Route path="/reviews" element={
                         <ProtectedRoute>
-                          <div>Мои отзывы</div>
+                          <UserReviewsPage />
                         </ProtectedRoute>
                       } />
 
@@ -107,6 +111,7 @@ function App() {
                               <Route path="orders" element={<AdminOrders />} />
                               <Route path="users" element={<AdminUsers />} />
                               <Route path="categories" element={<AdminCategories />} />
+                              <Route path="reviews" element={<AdminReviewsPage />} />
                               <Route path="" element={<Navigate to="dashboard" />} />
                             </Routes>
                           </AdminLayout>
@@ -127,6 +132,7 @@ function App() {
             </CartProvider>
           </CategoriesProvider>
         </ProductsProvider>
+        </ReviewProvider>
         </WishlistProvider>
       </AuthProvider>
     </ThemeProvider>

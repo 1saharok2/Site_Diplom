@@ -40,7 +40,7 @@ const OrdersPage = () => {
       setLoading(false);
     }
   };
-
+  
   const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('ru-RU', {
       year: 'numeric',

@@ -8,7 +8,8 @@ import {
   Typography,
   Box,
   Chip,
-  Avatar
+  Avatar,
+  Badge
 } from '@mui/material';
 import {
   Dashboard,
@@ -18,10 +19,12 @@ import {
   Category,
   ExitToApp,
   Home,
-  Store
+  Store,
+  RateReview
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { useReviews } from '../../../context/ReviewContext';
 
 const menuItems = [
   { text: 'Статистика', icon: <Dashboard />, path: '/admin/dashboard' },
@@ -29,12 +32,17 @@ const menuItems = [
   { text: 'Заказы', icon: <ShoppingCart />, path: '/admin/orders' },
   { text: 'Пользователи', icon: <People />, path: '/admin/users' },
   { text: 'Категории', icon: <Category />, path: '/admin/categories' },
+  { text: 'Модерация отзывов', icon: <RateReview />, path: '/admin/reviews' },
 ];
 
 const AdminSidebar = ({ onItemClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { moderationReviews } = useReviews();
+
+  // Количество отзывов на модерации
+  const pendingReviewsCount = moderationReviews.filter(review => review.status === 'pending').length;
 
   const handleLogout = () => {
     logout();
@@ -53,10 +61,10 @@ const AdminSidebar = ({ onItemClick }) => {
 
   return (
     <Box sx={{ 
-      width: 280, // Фиксированная ширина
+      width: 280,
       minWidth: 280,
       height: '100vh',
-      position: 'fixed', // Фиксированное позиционирование
+      position: 'fixed',
       left: 0,
       top: 0,
       display: 'flex',
@@ -64,7 +72,7 @@ const AdminSidebar = ({ onItemClick }) => {
       background: 'linear-gradient(180deg, #1a237e 0%, #283593 100%)',
       color: 'white',
       overflow: 'hidden',
-      zIndex: 1000, // Высокий z-index чтобы был поверх контента
+      zIndex: 1000,
       boxShadow: '2px 0 8px rgba(0,0,0,0.15)'
     }}>
       {/* Заголовок с логотипом */}
@@ -72,7 +80,7 @@ const AdminSidebar = ({ onItemClick }) => {
         p: 2, 
         textAlign: 'center', 
         borderBottom: '1px solid rgba(255,255,255,0.1)',
-        flexShrink: 0 // Запрещаем сжатие
+        flexShrink: 0
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
           <Store sx={{ fontSize: 28, mr: 1, color: 'white' }} />
@@ -81,7 +89,6 @@ const AdminSidebar = ({ onItemClick }) => {
           </Typography>
         </Box>
         
-        {/* Информация о пользователе */}
         {user && (
           <Box sx={{ mt: 1 }}>
             <Avatar 
@@ -113,74 +120,89 @@ const AdminSidebar = ({ onItemClick }) => {
         )}
       </Box>
       
-      {/* Основное меню с прокруткой */}
+      {/* Основное меню */}
       <Box sx={{ 
-        flex: 1, // Занимает все доступное пространство
+        flex: 1,
         overflow: 'auto',
         py: 1,
-        '&::-webkit-scrollbar': {
-          width: '4px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: 'rgba(255,255,255,0.1)',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: 'rgba(255,255,255,0.3)',
-          borderRadius: '2px',
-        },
+        '&::-webkit-scrollbar': { width: '4px' },
+        '&::-webkit-scrollbar-track': { background: 'rgba(255,255,255,0.1)' },
+        '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.3)', borderRadius: '2px' },
       }}>
         <List>
-          {menuItems.map((item) => (
-            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
-              <ListItemButton
-                selected={location.pathname === item.path}
-                onClick={() => handleNavigate(item.path)}
-                sx={{
-                  mx: 1,
-                  borderRadius: 1,
-                  py: 1.5,
-                  '&.Mui-selected': {
-                    backgroundColor: 'rgba(255,255,255,0.15)',
-                    backdropFilter: 'blur(10px)',
-                    '&:hover': { 
-                      backgroundColor: 'rgba(255,255,255,0.2)',
-                    },
-                    '& .MuiListItemIcon-root': {
-                      color: 'white'
-                    }
-                  },
-                  '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                  }
-                }}
-              >
-                <ListItemIcon sx={{ color: 'rgba(255,255,255,0.8)', minWidth: 40 }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText 
-                  primary={item.text} 
+          {menuItems.map((item) => {
+            const isReviewsItem = item.text === 'Модерация отзывов';
+            
+            return (
+              <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+                <ListItemButton
+                  selected={location.pathname === item.path}
+                  onClick={() => handleNavigate(item.path)}
                   sx={{
-                    '& .MuiTypography-root': {
-                      fontSize: '0.9rem',
-                      fontWeight: location.pathname === item.path ? '600' : '400'
-                    }
+                    mx: 1,
+                    borderRadius: 1,
+                    py: 1.5,
+                    '&.Mui-selected': {
+                      backgroundColor: 'rgba(255,255,255,0.15)',
+                      backdropFilter: 'blur(10px)',
+                      '&:hover': { 
+                        backgroundColor: 'rgba(255,255,255,0.2)',
+                      },
+                      '& .MuiListItemIcon-root': { color: 'white' }
+                    },
+                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
                   }}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
+                >
+                  <ListItemIcon sx={{ color: 'rgba(255,255,255,0.8)', minWidth: 40 }}>
+                    {isReviewsItem && pendingReviewsCount > 0 ? (
+                      <Badge badgeContent={pendingReviewsCount} color="error">
+                        {item.icon}
+                      </Badge>
+                    ) : (
+                      item.icon
+                    )}
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {item.text}
+                        {isReviewsItem && pendingReviewsCount > 0 && (
+                          <Chip 
+                            label={pendingReviewsCount} 
+                            size="small" 
+                            color="error"
+                            sx={{ 
+                              ml: 1, 
+                              height: '20px', 
+                              fontSize: '0.7rem',
+                              minWidth: '20px'
+                            }} 
+                          />
+                        )}
+                      </Box>
+                    }
+                    sx={{
+                      '& .MuiTypography-root': {
+                        fontSize: '0.9rem',
+                        fontWeight: location.pathname === item.path ? '600' : '400'
+                      }
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
         </List>
       </Box>
 
-      {/* ФИКСИРОВАННЫЙ футер внизу */}
+      {/* Футер */}
       <Box sx={{ 
-        flexShrink: 0, // Запрещаем сжатие
+        flexShrink: 0,
         p: 1.5,
         borderTop: '1px solid rgba(255,255,255,0.1)',
         background: 'linear-gradient(180deg, transparent 0%, #1a237e 100%)'
       }}>
         <List sx={{ p: 0 }}>
-          {/* Кнопка для перехода на главную страницу */}
           <ListItem disablePadding sx={{ mb: 1 }}>
             <ListItemButton 
               onClick={handleGoToHome}
@@ -188,9 +210,7 @@ const AdminSidebar = ({ onItemClick }) => {
                 borderRadius: 1,
                 py: 1.2,
                 backgroundColor: 'rgba(255,255,255,0.05)',
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.1)',
-                }
+                '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
               }}
             >
               <ListItemIcon sx={{ color: 'rgba(255,255,255,0.8)', minWidth: 40 }}>
@@ -198,16 +218,11 @@ const AdminSidebar = ({ onItemClick }) => {
               </ListItemIcon>
               <ListItemText 
                 primary="На главную сайта" 
-                sx={{
-                  '& .MuiTypography-root': {
-                    fontSize: '0.85rem'
-                  }
-                }}
+                sx={{ '& .MuiTypography-root': { fontSize: '0.85rem' } }}
               />
             </ListItemButton>
           </ListItem>
           
-          {/* Кнопка выхода */}
           <ListItem disablePadding>
             <ListItemButton 
               onClick={handleLogout}
@@ -215,9 +230,7 @@ const AdminSidebar = ({ onItemClick }) => {
                 borderRadius: 1,
                 py: 1.2,
                 backgroundColor: 'rgba(255,255,255,0.05)',
-                '&:hover': {
-                  backgroundColor: 'rgba(255,99,71,0.2)',
-                }
+                '&:hover': { backgroundColor: 'rgba(255,99,71,0.2)' }
               }}
             >
               <ListItemIcon sx={{ color: 'rgba(255,255,255,0.8)', minWidth: 40 }}>
@@ -225,11 +238,7 @@ const AdminSidebar = ({ onItemClick }) => {
               </ListItemIcon>
               <ListItemText 
                 primary="Выйти из системы" 
-                sx={{
-                  '& .MuiTypography-root': {
-                    fontSize: '0.85rem'
-                  }
-                }}
+                sx={{ '& .MuiTypography-root': { fontSize: '0.85rem' } }}
               />
             </ListItemButton>
           </ListItem>

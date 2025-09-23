@@ -1,23 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Container, Row, Col, Alert, Spinner, Breadcrumb } from 'react-bootstrap';
-import { FaHome, FaChevronRight } from 'react-icons/fa';
+import { FaHome, FaChevronRight, FaStar, FaComment } from 'react-icons/fa';
 import { categoryService } from '../../../services/categoryService';
+import { useAuth } from '../../../context/AuthContext';
+import { useReviews } from '../../../context/ReviewContext';
 import ProductGallery from './ProductGallery';
 import ProductInfo from './ProductInfo';
 import ProductTabs from './ProductsTabs';
+import ReviewForm from '../../../components/Reviews/ReviewForm';
+import ReviewList from '../../../components/Reviews/ReviewList';
 import './ProductPage_css/ProductPage.css';
 
 const ProductPage = () => {
   const { id } = useParams();
+  const { currentUser } = useAuth();
+  const { 
+    reviews, 
+    loading: reviewsLoading, 
+    loadProductReviews, 
+    createReview 
+  } = useReviews();
+
+  console.log('🔴 ProductPage - ID товара:', id);
+  console.log('📊 ProductPage - Отзывы:', reviews);
+  console.log('👤 ProductPage - Пользователь:', currentUser);
+  console.log('⏳ ProductPage - Загрузка:', reviewsLoading);
+  
   const [product, setProduct] = useState(null);
   const [currentProduct, setCurrentProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [reviewFormOpen, setReviewFormOpen] = useState(false);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
+        console.log('🔄 Загрузка данных товара и отзывов...');
         setLoading(true);
         console.log('🔄 Загрузка товара с ID:', id);
         
@@ -34,6 +54,11 @@ const ProductPage = () => {
         setProduct(productData);
         setCurrentProduct(productData);
         
+        // Загружаем отзывы для этого товара
+        await loadProductReviews(id);
+        console.log('🔴 Статус первого отзыва:', reviews[0]?.status);
+        console.log('🔴 Данные первого отзыва:', reviews[0]);
+        
       } catch (err) {
         console.error('❌ Ошибка загрузки товара:', err);
         setError(err.message || 'Ошибка загрузки товара');
@@ -48,10 +73,47 @@ const ProductPage = () => {
       setError('ID товара не указан');
       setLoading(false);
     }
-  }, [id]);
+  }, [id, loadProductReviews]);
+
+  // Проверяем, оставлял ли пользователь уже отзыв
+  const hasUserReviewed = currentUser && 
+    reviews.some(review => review.user_id === currentUser.id);
+
+  // Вычисляем средний рейтинг
+  const averageRating = reviews.length > 0 
+    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
+    : 0;
 
   const handleVariantChange = (variant) => {
     setCurrentProduct(variant);
+  };
+
+  const handleReviewSubmit = async (reviewData) => {
+    try {
+      console.log('📝 Отправка отзыва:', reviewData);
+      
+      await createReview({
+        ...reviewData,
+        product_id: currentProduct?.id || product?.id
+      });
+      
+      // ОБНОВЛЯЕМ отзывы после успешной отправки
+      await loadProductReviews(currentProduct?.id || product?.id);
+      
+      setMessage('✅ Отзыв успешно отправлен на модерацию!');
+    } catch (error) {
+      console.error('❌ Ошибка отправки отзыва:', error);
+      setMessage('❌ Ошибка: ' + error.message);
+    }
+  };
+
+  const handleWriteReview = () => {
+    if (!currentUser) {
+      setMessage('⚠️ Войдите в систему, чтобы оставить отзыв');
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+    setReviewFormOpen(true);
   };
 
   if (loading) {
@@ -101,6 +163,16 @@ const ProductPage = () => {
         </Breadcrumb.Item>
       </Breadcrumb>
 
+      {/* Сообщения */}
+      {message && (
+        <Alert 
+          variant={message.includes('✅') ? 'success' : message.includes('⚠️') ? 'warning' : 'danger'} 
+          className="mt-3"
+        >
+          {message}
+        </Alert>
+      )}
+
       <Row>
         <Col lg={6} className="pe-lg-4">
           <ProductGallery product={currentProduct || product} />
@@ -110,15 +182,36 @@ const ProductPage = () => {
           <ProductInfo 
             product={currentProduct || product} 
             onVariantChange={handleVariantChange}
+            reviewsCount={reviews.length}
+            averageRating={averageRating}
+            onWriteReview={handleWriteReview}
+            hasUserReviewed={hasUserReviewed}
+            isAuthenticated={!!currentUser}
           />
         </Col>
       </Row>
 
       <Row className="mt-5">
         <Col>
-          <ProductTabs product={currentProduct || product} />
+          <ProductTabs 
+            product={currentProduct || product} 
+            reviews={reviews}
+            reviewsLoading={reviewsLoading}
+            onWriteReview={handleWriteReview}
+            hasUserReviewed={hasUserReviewed}
+            isAuthenticated={!!currentUser}
+          />
         </Col>
       </Row>
+
+      {/* Форма отзыва */}
+      <ReviewForm
+        open={reviewFormOpen}
+        onClose={() => setReviewFormOpen(false)}
+        product={currentProduct || product}
+        onSubmit={handleReviewSubmit}
+        loading={reviewsLoading}
+      />
     </Container>
   );
 };

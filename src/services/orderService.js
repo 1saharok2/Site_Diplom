@@ -3,7 +3,6 @@ import { supabase } from "./supabaseClient";
 
 const getUserProfile = async (userId) => {
   try {
-
     // Если в profiles нет данных, пробуем получить из таблицы users
     const { data: user, error: userError } = await supabase
       .from('users')
@@ -140,8 +139,6 @@ export const orderService = {
     }
   },
 
-
-
   // Получение заказов пользователя
   getUserOrders: async (userId) => {
     try {
@@ -152,9 +149,11 @@ export const orderService = {
           order_items (
             *,
             products (
+              id,
               name,
               price,
-              image_url
+              image_url,
+              slug
             )
           )
         `)
@@ -163,20 +162,17 @@ export const orderService = {
 
       if (error) {
         console.error('Error fetching user orders:', error);
-        throw error;
+        // В случае ошибки возвращаем пустой массив вместо вызова несуществующей функции
+        return [];
       }
       
-      // Если нет данных, возвращаем тестовые данные для демонстрации
-      if (!data || data.length === 0) {
-        return await orderService.getMockOrders(userId);
-      }
-      
-      return data;
+      // Если нет данных, возвращаем пустой массив
+      return data || [];
 
     } catch (error) {
       console.error('Error in getUserOrders:', error);
-      // В случае ошибки возвращаем mock данные
-      return await orderService.getMockOrders(userId);
+      // В случае ошибки возвращаем пустой массив
+      return [];
     }
   },
 
@@ -194,8 +190,11 @@ export const orderService = {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching orders:', error);
+        return [];
+      }
+      return data || [];
 
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -204,7 +203,7 @@ export const orderService = {
   },
 
   // Получение деталей заказа
-getOrderById: async (orderId) => {
+  getOrderById: async (orderId) => {
     try {
       const { data, error } = await supabase
         .from('orders')
@@ -223,34 +222,15 @@ getOrderById: async (orderId) => {
         .eq('id', orderId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching order:', error);
+        return null;
+      }
       return data;
 
     } catch (error) {
       console.error('Error fetching order:', error);
-      // Возвращаем mock данные в случае ошибки
-      return {
-        id: orderId,
-        order_number: 'ORD-' + orderId,
-        customer_name: 'Иван Иванов',
-        total_amount: 144980,
-        status: 'processing',
-        created_at: new Date().toISOString(),
-        order_items: [
-          {
-            product_id: 101,
-            quantity: 2,
-            price: 50000,
-            name: 'Пример товара 1',
-            products: {
-              name: 'Пример товара 1',
-              price: 50000,
-              image_url: '/images/product1.jpg',
-              description: 'Описание товара 1'
-            }
-          }
-        ]
-      };
+      return null;
     }
   },
 

@@ -1,5 +1,5 @@
 // pages/User/ProfilePage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   Container,
@@ -54,7 +54,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { orderService } from '../../services/orderService';
 import { favoritesService } from '../../services/favoritesService';
-import { reviewsService } from '../../services/reviewsService';
+import { reviewService } from '../../services/reviewService';
 import { supabase } from '../../services/supabaseClient';
 
 const ProfilePage = () => {
@@ -138,7 +138,7 @@ useEffect(() => {
 }, [currentUser]);
 
   // Загрузка статистики и активности
-  const loadUserData = async () => {
+  const loadUserData = useCallback (async () => {
     if (!currentUser) return;
 
     try {
@@ -169,8 +169,8 @@ useEffect(() => {
       let reviews = [];
       try {
         // Проверяем, существует ли сервис отзывов
-        if (reviewsService && typeof reviewsService.getUserReviews === 'function') {
-          reviews = await reviewsService.getUserReviews(currentUser.id);
+        if (reviewService && typeof reviewService.getUserReviews === 'function') {
+          reviews = await reviewService.getUserReviews(currentUser.id);
         }
         if (!Array.isArray(reviews)) reviews = [];
       } catch (error) {
@@ -258,7 +258,7 @@ useEffect(() => {
       console.error('Ошибка загрузки данных пользователя:', error);
       setFallbackData();
     }
-  };
+  });
 
   const setFallbackData = () => {
     setStats({

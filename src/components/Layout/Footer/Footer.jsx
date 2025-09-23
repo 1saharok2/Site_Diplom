@@ -64,7 +64,7 @@ const Footer = () => {
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <LocationOn sx={{ fontSize: 18, mr: 1, opacity: 0.8 }} />
                 <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                  г. Москва, ул. Примерная, д. 123
+                  г. Курск, ул. Белгородская, д. 14
                 </Typography>
               </Box>
             </Box>

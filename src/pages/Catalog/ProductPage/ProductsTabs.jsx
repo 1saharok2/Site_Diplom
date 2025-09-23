@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
 import { Row, Col, Alert, Container } from 'react-bootstrap';
+import ReviewList from '../../../components/Reviews/ReviewList';
 import './ProductPage_css/ProductTabs.css';
 
-const ProductTabs = ({ product }) => {
+const ProductTabs = ({ 
+  product, 
+  reviews = [],           
+  reviewsLoading = false, 
+  onWriteReview,          
+  hasUserReviewed,        
+  isAuthenticated         
+}) => {
   const [activeTab, setActiveTab] = useState('description');
 
   const tabs = [
@@ -237,11 +245,39 @@ const ProductTabs = ({ product }) => {
       case 'reviews':
         return (
           <div className="tab-content p-4 border">
-            <h4>Отзывы о товаре</h4>
-            <div className="reviews-placeholder text-center py-4">
-              <p>Отзывов пока нет. Будьте первым!</p>
-              <button className="btn btn-primary mt-2">Написать отзыв</button>
+            <h4>Отзывы о товаре ({reviews.length})</h4>
+            
+            {/* Кнопка написания отзыва */}
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <strong>Рейтинг: </strong>
+                {reviews.length > 0 ? (
+                  <span>
+                    {(
+                      reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+                    ).toFixed(1)}/5 ({reviews.length} отзывов)
+                  </span>
+                ) : (
+                  <span>Нет оценок</span>
+                )}
+              </div>
+              
+              {isAuthenticated && !hasUserReviewed && (
+                <button 
+                  className="btn btn-primary"
+                  onClick={onWriteReview}
+                >
+                  Написать отзыв
+                </button>
+              )}
             </div>
+
+            {/* Компонент списка отзывов */}
+            <ReviewList 
+              reviews={reviews}
+              loading={reviewsLoading}
+              currentUser={isAuthenticated ? { id: 'current-user-id' } : null}
+            />
           </div>
         );
       
