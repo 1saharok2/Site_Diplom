@@ -1,8 +1,10 @@
+/* Стили только для компонента ProductGallery */
 .product-gallery {
   position: relative;
+  isolation: isolate; /* Изолируем стили */
 }
 
-.main-image-container {
+.product-gallery .main-image-container {
   position: relative;
   height: 500px;
   background: #f8f9fa;
@@ -12,7 +14,7 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.image-wrapper {
+.product-gallery .image-wrapper {
   width: 100%;
   height: 100%;
   display: flex;
@@ -20,23 +22,104 @@
   justify-content: center;
   padding: 20px;
   position: relative;
+  overflow: hidden;
 }
 
-.main-product-image {
+/* Анимации для переключения изображений */
+.product-gallery .main-product-image {
   max-width: 100%;
   max-height: 100%;
   width: auto;
   height: auto;
   object-fit: contain;
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease-in-out;
+  position: relative;
 }
 
-.main-product-image:hover {
+.product-gallery .main-product-image.none {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.product-gallery .main-product-image.next {
+  animation: productGallerySlideInNext 0.3s ease-in-out forwards;
+}
+
+.product-gallery .main-product-image.prev {
+  animation: productGallerySlideInPrev 0.3s ease-in-out forwards;
+}
+
+@keyframes productGallerySlideInNext {
+  0% {
+    opacity: 0;
+    transform: translateX(30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes productGallerySlideInPrev {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.product-gallery .main-product-image:hover {
   transform: scale(1.02);
 }
 
-/* Кнопки навигации */
-.nav-btn {
+/* Анимации для модального окна галереи */
+.product-gallery .modal-image {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  transition: all 0.3s ease-in-out;
+}
+
+.product-gallery .modal-image.none {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.product-gallery .modal-image.next {
+  animation: productGalleryModalSlideInNext 0.3s ease-in-out forwards;
+}
+
+.product-gallery .modal-image.prev {
+  animation: productGalleryModalSlideInPrev 0.3s ease-in-out forwards;
+}
+
+@keyframes productGalleryModalSlideInNext {
+  0% {
+    opacity: 0;
+    transform: translateX(50px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes productGalleryModalSlideInPrev {
+  0% {
+    opacity: 0;
+    transform: translateX(-50px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Кнопки навигации галереи */
+.product-gallery .nav-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -55,21 +138,21 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.nav-btn:hover {
+.product-gallery .nav-btn:hover {
   background: white;
   transform: translateY(-50%) scale(1.1);
 }
 
-.prev-btn {
+.product-gallery .prev-btn {
   left: 15px;
 }
 
-.next-btn {
+.product-gallery .next-btn {
   right: 15px;
 }
 
-/* Кнопка расширения */
-.expand-btn {
+/* Кнопка расширения галереи */
+.product-gallery .expand-btn {
   position: absolute;
   top: 15px;
   right: 15px;
@@ -87,13 +170,13 @@
   z-index: 10;
 }
 
-.expand-btn:hover {
+.product-gallery .expand-btn:hover {
   background: rgba(0, 0, 0, 0.8);
   transform: scale(1.1);
 }
 
-/* Счетчик изображений */
-.image-counter {
+/* Счетчик изображений галереи */
+.product-gallery .image-counter {
   position: absolute;
   bottom: 15px;
   right: 15px;
@@ -105,12 +188,12 @@
   font-weight: 500;
 }
 
-/* Миниатюры */
-.thumbnails-row {
+/* Миниатюры галереи */
+.product-gallery .thumbnails-row {
   margin: 0;
 }
 
-.thumbnails-container {
+.product-gallery .thumbnails-container {
   display: flex;
   gap: 10px;
   overflow-x: auto;
@@ -118,16 +201,16 @@
   scrollbar-width: thin;
 }
 
-.thumbnails-container::-webkit-scrollbar {
+.product-gallery .thumbnails-container::-webkit-scrollbar {
   height: 4px;
 }
 
-.thumbnails-container::-webkit-scrollbar-thumb {
+.product-gallery .thumbnails-container::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 2px;
 }
 
-.thumbnail-item {
+.product-gallery .thumbnail-item {
   flex: 0 0 auto;
   width: 80px;
   height: 80px;
@@ -138,24 +221,24 @@
   transition: all 0.3s ease;
 }
 
-.thumbnail-item:hover {
+.product-gallery .thumbnail-item:hover {
   border-color: #007bff;
   transform: translateY(-2px);
 }
 
-.thumbnail-item.active {
+.product-gallery .thumbnail-item.active {
   border-color: #007bff;
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
-.thumbnail-image {
+.product-gallery .thumbnail-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* Модальное окно */
-.modal-overlay {
+/* Модальное окно галереи */
+.product-gallery .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -169,13 +252,13 @@
   padding: 20px;
 }
 
-.modal-content {
+.product-gallery .modal-content {
   position: relative;
   max-width: 90vw;
   max-height: 90vh;
 }
 
-.modal-close {
+.product-gallery .modal-close {
   position: absolute;
   top: -40px;
   right: 0;
@@ -189,13 +272,7 @@
   height: 40px;
 }
 
-.modal-image {
-  max-width: 100%;
-  max-height: 80vh;
-  object-fit: contain;
-}
-
-.modal-navigation {
+.product-gallery .modal-navigation {
   position: absolute;
   bottom: -60px;
   left: 50%;
@@ -205,7 +282,7 @@
   gap: 20px;
 }
 
-.modal-nav-btn {
+.product-gallery .modal-nav-btn {
   width: 45px;
   height: 45px;
   border: none;
@@ -219,71 +296,19 @@
   transition: all 0.3s ease;
 }
 
-.modal-nav-btn:hover {
+.product-gallery .modal-nav-btn:hover {
   background: white;
   transform: scale(1.1);
 }
 
-.modal-counter {
+.product-gallery .modal-counter {
   color: white;
   font-size: 1rem;
   font-weight: 500;
 }
 
-/* Адаптивность */
-@media (max-width: 991px) {
-  .main-image-container {
-    height: 400px;
-  }
-  
-  .thumbnail-item {
-    width: 70px;
-    height: 70px;
-  }
-  
-  .nav-btn {
-    width: 35px;
-    height: 35px;
-  }
-}
-
-@media (max-width: 767px) {
-  .main-image-container {
-    height: 350px;
-  }
-  
-  .thumbnail-item {
-    width: 60px;
-    height: 60px;
-  }
-  
-  .expand-btn {
-    width: 30px;
-    height: 30px;
-  }
-}
-
-@media (max-width: 575px) {
-  .main-image-container {
-    height: 300px;
-  }
-  
-  .thumbnail-item {
-    width: 50px;
-    height: 50px;
-  }
-  
-  .nav-btn {
-    width: 30px;
-    height: 30px;
-  }
-  
-  .modal-content {
-    max-width: 95vw;
-  }
-}
-/* Добавьте эти стили */
-.image-loading {
+/* Состояния загрузки и ошибок галереи */
+.product-gallery .image-loading {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -291,13 +316,13 @@
   z-index: 5;
 }
 
-.hidden {
+.product-gallery .hidden {
   opacity: 0;
   visibility: hidden;
 }
 
-.no-image-placeholder,
-.image-error {
+.product-gallery .no-image-placeholder,
+.product-gallery .image-error {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -306,7 +331,81 @@
   color: #6c757d;
 }
 
-.no-image-placeholder svg,
-.image-error svg {
+.product-gallery .no-image-placeholder svg,
+.product-gallery .image-error svg {
   color: #dee2e6;
+}
+
+/* Адаптивность только для галереи */
+@media (max-width: 991px) {
+  .product-gallery .main-image-container {
+    height: 400px;
+  }
+  
+  .product-gallery .thumbnail-item {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .product-gallery .nav-btn {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+@media (max-width: 767px) {
+  .product-gallery .main-image-container {
+    height: 350px;
+  }
+  
+  .product-gallery .thumbnail-item {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .product-gallery .expand-btn {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (max-width: 575px) {
+  .product-gallery .main-image-container {
+    height: 300px;
+  }
+  
+  .product-gallery .thumbnail-item {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .product-gallery .nav-btn {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .product-gallery .modal-content {
+    max-width: 95vw;
+  }
+}
+
+/* Убираем возможные конфликты с глобальными стилями */
+.product-gallery .row {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.product-gallery .col {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Гарантируем, что наши стили не влияют на другие компоненты */
+.product-gallery * {
+  box-sizing: border-box;
+}
+
+.product-gallery img {
+  max-width: 100%;
+  height: auto;
 }

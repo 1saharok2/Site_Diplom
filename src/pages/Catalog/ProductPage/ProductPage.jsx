@@ -8,8 +8,6 @@ import { useReviews } from '../../../context/ReviewContext';
 import ProductGallery from './ProductGallery';
 import ProductInfo from './ProductInfo';
 import ProductTabs from './ProductsTabs';
-import ReviewForm from '../../../components/Reviews/ReviewForm';
-import ReviewList from '../../../components/Reviews/ReviewList';
 import './ProductPage_css/ProductPage.css';
 
 const ProductPage = () => {
@@ -31,8 +29,8 @@ const ProductPage = () => {
   const [currentProduct, setCurrentProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [reviewFormOpen, setReviewFormOpen] = useState(false);
   const [message, setMessage] = useState('');
+  const [reviewFormOpen, setReviewFormOpen] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -88,24 +86,7 @@ const ProductPage = () => {
     setCurrentProduct(variant);
   };
 
-  const handleReviewSubmit = async (reviewData) => {
-    try {
-      console.log('📝 Отправка отзыва:', reviewData);
-      
-      await createReview({
-        ...reviewData,
-        product_id: currentProduct?.id || product?.id
-      });
-      
-      // ОБНОВЛЯЕМ отзывы после успешной отправки
-      await loadProductReviews(currentProduct?.id || product?.id);
-      
-      setMessage('✅ Отзыв успешно отправлен на модерацию!');
-    } catch (error) {
-      console.error('❌ Ошибка отправки отзыва:', error);
-      setMessage('❌ Ошибка: ' + error.message);
-    }
-  };
+
 
   const handleWriteReview = () => {
     if (!currentUser) {
@@ -203,15 +184,6 @@ const ProductPage = () => {
           />
         </Col>
       </Row>
-
-      {/* Форма отзыва */}
-      <ReviewForm
-        open={reviewFormOpen}
-        onClose={() => setReviewFormOpen(false)}
-        product={currentProduct || product}
-        onSubmit={handleReviewSubmit}
-        loading={reviewsLoading}
-      />
     </Container>
   );
 };
