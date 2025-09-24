@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { Row, Col, Alert, Container } from 'react-bootstrap';
+import ReviewForm from '../../../components/Reviews/ReviewForm';
 import ReviewList from '../../../components/Reviews/ReviewList';
 import './ProductPage_css/ProductTabs.css';
 
 const ProductTabs = ({ 
   product, 
-  reviews = [],           
+  reviews = [],           // reviews получаем из props
   reviewsLoading = false, 
   onWriteReview,          
   hasUserReviewed,        
-  isAuthenticated         
+  isAuthenticated        
 }) => {
   const [activeTab, setActiveTab] = useState('description');
+  const [reviewFormOpen, setReviewFormOpen] = useState(false);
+  const [message, setMessage] = useState(''); // Добавил состояние для сообщений
 
   const tabs = [
     { id: 'description', title: 'Описание' },
@@ -20,11 +23,12 @@ const ProductTabs = ({
     { id: 'delivery', title: 'Доставка и оплата' }
   ];
 
+  // УДАЛИЛ дублирующее объявление useReviews() - reviews уже получаем из props
+
   // Функция для определения типа товара
   const determineProductType = (product) => {
     if (!product) return 'unknown';
     
-    // Определяем тип по категории, названию или другим признакам
     const name = product.name?.toLowerCase() || '';
     const category = product.category?.toLowerCase() || '';
     const description = product.description?.toLowerCase() || '';
@@ -94,6 +98,31 @@ const ProductTabs = ({
     });
 
     return filteredSpecs;
+  };
+
+  // Функция для обработки отправки отзыва
+  const handleReviewSubmit = async (reviewData) => {
+    try {
+      console.log('📝 Отправка отзыва:', reviewData);
+      
+      // Здесь должна быть логика отправки отзыва
+      // await createReview({
+      //   ...reviewData,
+      //   product_id: product?.id
+      // });
+      
+      setMessage('✅ Отзыв успешно отправлен на модерацию!');
+      setReviewFormOpen(false);
+      
+      // Закрываем форму через 3 секунды
+      setTimeout(() => {
+        setMessage('');
+      }, 3000);
+      
+    } catch (error) {
+      console.error('❌ Ошибка отправки отзыва:', error);
+      setMessage('❌ Ошибка: ' + error.message);
+    }
   };
 
   // Функция для отображения характеристик
@@ -181,8 +210,6 @@ const ProductTabs = ({
         'Дополнительно': baseGroups['Дополнительно']
       },
       
-      // Добавьте другие типы товаров по необходимости...
-      
       default: baseGroups
     };
 
@@ -247,6 +274,16 @@ const ProductTabs = ({
           <div className="tab-content p-4 border">
             <h4>Отзывы о товаре ({reviews.length})</h4>
             
+            {/* Сообщения */}
+            {message && (
+              <Alert 
+                variant={message.includes('✅') ? 'success' : 'danger'} 
+                className="mt-3"
+              >
+                {message}
+              </Alert>
+            )}
+            
             {/* Кнопка написания отзыва */}
             <div className="d-flex justify-content-between align-items-center mb-4">
               <div>
@@ -265,18 +302,26 @@ const ProductTabs = ({
               {isAuthenticated && !hasUserReviewed && (
                 <button 
                   className="btn btn-primary"
-                  onClick={onWriteReview}
+                  onClick={() => setReviewFormOpen(true)}
                 >
                   Написать отзыв
                 </button>
               )}
             </div>
 
-            {/* Компонент списка отзывов */}
+            {/* Список отзывов */}
             <ReviewList 
-              reviews={reviews}
+              reviews={reviews} 
               loading={reviewsLoading}
-              currentUser={isAuthenticated ? { id: 'current-user-id' } : null}
+            />
+
+            {/* Форма отзыва */}
+            <ReviewForm
+              open={reviewFormOpen}
+              onClose={() => setReviewFormOpen(false)}
+              product={product}
+              onSubmit={handleReviewSubmit}
+              loading={reviewsLoading}
             />
           </div>
         );

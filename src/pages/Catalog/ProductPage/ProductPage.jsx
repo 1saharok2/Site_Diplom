@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Container, Row, Col, Alert, Spinner, Breadcrumb } from 'react-bootstrap';
-import { FaHome, FaChevronRight, FaStar, FaComment } from 'react-icons/fa';
+import { FaHome, FaChevronRight } from 'react-icons/fa';
 import { categoryService } from '../../../services/categoryService';
 import { useAuth } from '../../../context/AuthContext';
 import { useReviews } from '../../../context/ReviewContext';
 import ProductGallery from './ProductGallery';
 import ProductInfo from './ProductInfo';
 import ProductTabs from './ProductsTabs';
-import ReviewForm from '../../../components/Reviews/ReviewForm';
-import ReviewList from '../../../components/Reviews/ReviewList';
 import './ProductPage_css/ProductPage.css';
 
 const ProductPage = () => {
@@ -31,7 +29,7 @@ const ProductPage = () => {
   const [currentProduct, setCurrentProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [reviewFormOpen, setReviewFormOpen] = useState(false);
+  const [setReviewFormOpen] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -203,15 +201,6 @@ const ProductPage = () => {
           />
         </Col>
       </Row>
-
-      {/* Форма отзыва */}
-      <ReviewForm
-        open={reviewFormOpen}
-        onClose={() => setReviewFormOpen(false)}
-        product={currentProduct || product}
-        onSubmit={handleReviewSubmit}
-        loading={reviewsLoading}
-      />
     </Container>
   );
 };
