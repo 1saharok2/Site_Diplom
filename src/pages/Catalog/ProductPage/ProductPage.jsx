@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Container, Row, Col, Alert, Spinner, Breadcrumb } from 'react-bootstrap';
-import { FaHome, FaChevronRight, FaStar, FaComment } from 'react-icons/fa';
+import { FaHome, FaChevronRight } from 'react-icons/fa';
 import { categoryService } from '../../../services/categoryService';
 import { useAuth } from '../../../context/AuthContext';
 import { useReviews } from '../../../context/ReviewContext';

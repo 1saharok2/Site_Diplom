@@ -22,7 +22,16 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  Snackbar
+  Snackbar,
+  TextField,
+  InputAdornment,
+  Grid,
+  Card,
+  CardContent,
+  FormControl,
+  InputLabel,
+  Select,
+  OutlinedInput
 } from '@mui/material';
 import {
   Visibility as ViewIcon,
@@ -31,12 +40,16 @@ import {
   Edit as EditIcon,
   CheckCircle as CompleteIcon,
   Cancel as CancelIcon,
-  LocalShipping as ShippedIcon
+  LocalShipping as ShippedIcon,
+  Search as SearchIcon,
+  FilterList as FilterIcon,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { adminService } from '../../../services/adminService';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -47,9 +60,19 @@ const AdminOrders = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
 
+  // Состояния для поиска и фильтров
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [amountFilter, setAmountFilter] = useState('all');
+
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    filterOrders();
+  }, [orders, searchTerm, statusFilter, dateFilter, amountFilter]);
 
   const fetchOrders = async () => {
     try {
@@ -63,6 +86,67 @@ const AdminOrders = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterOrders = () => {
+    let filtered = [...orders];
+
+    // Поиск по номеру заказа, имени клиента, email, телефону
+    if (searchTerm) {
+      filtered = filtered.filter(order =>
+        (order.order_number?.toString().toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (order.user_email?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (order.customer_phone?.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    // Фильтр по статусу
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(order => order.status === statusFilter);
+    }
+
+    // Фильтр по дате
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.created_at);
+        
+        switch (dateFilter) {
+          case 'today':
+            return orderDate.toDateString() === now.toDateString();
+          case 'week':
+            const weekAgo = new Date(now);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return orderDate >= weekAgo;
+          case 'month':
+            const monthAgo = new Date(now);
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            return orderDate >= monthAgo;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Фильтр по сумме
+    if (amountFilter !== 'all') {
+      filtered = filtered.filter(order => {
+        switch (amountFilter) {
+          case 'low':
+            return order.total_amount < 1000;
+          case 'medium':
+            return order.total_amount >= 1000 && order.total_amount < 5000;
+          case 'high':
+            return order.total_amount >= 5000;
+          default:
+            return true;
+        }
+      });
+    }
+
+    setFilteredOrders(filtered);
   };
 
   const updateOrderStatus = async (orderId, newStatus) => {
@@ -81,7 +165,7 @@ const AdminOrders = () => {
       await adminService.deleteOrder(orderId);
       setSuccessMessage('Заказ успешно удален');
       setDeleteDialogOpen(false);
-      fetchOrders(); // Обновляем список
+      fetchOrders();
     } catch (error) {
       console.error('Error deleting order:', error);
       setError('Ошибка при удалении заказа');
@@ -92,7 +176,7 @@ const AdminOrders = () => {
   const handleDeleteClick = (order) => {
     setOrderToDelete(order);
     setDeleteDialogOpen(true);
-    setAnchorEl(null); // Закрываем меню
+    setAnchorEl(null);
   };
 
   const handleMenuOpen = (event, orderId) => {
@@ -143,6 +227,19 @@ const AdminOrders = () => {
     }
   };
 
+  const getStats = () => {
+    const total = orders.length;
+    const pending = orders.filter(order => order.status === 'pending').length;
+    const processing = orders.filter(order => order.status === 'processing').length;
+    const shipped = orders.filter(order => order.status === 'shipped').length;
+    const completed = orders.filter(order => order.status === 'completed').length;
+    const cancelled = orders.filter(order => order.status === 'cancelled').length;
+
+    return { total, pending, processing, shipped, completed, cancelled };
+  };
+
+  const stats = getStats();
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
@@ -153,9 +250,18 @@ const AdminOrders = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-        Управление заказами
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4" gutterBottom>
+          Управление заказами
+        </Typography>
+        <Button
+          variant="outlined"
+          startIcon={<RefreshIcon />}
+          onClick={fetchOrders}
+        >
+          Обновить
+        </Button>
+      </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
@@ -163,11 +269,178 @@ const AdminOrders = () => {
         </Alert>
       )}
 
-      {orders.length === 0 ? (
+      {/* Статистика */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={6} md={2}>
+          <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+            <CardContent sx={{ textAlign: 'center', p: 2 }}>
+              <Typography variant="h5">{stats.total}</Typography>
+              <Typography variant="body2">Всего</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} md={2}>
+          <Card sx={{ background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)', color: 'white' }}>
+            <CardContent sx={{ textAlign: 'center', p: 2 }}>
+              <Typography variant="h5">{stats.pending}</Typography>
+              <Typography variant="body2">Ожидание</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} md={2}>
+          <Card sx={{ background: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)', color: 'white' }}>
+            <CardContent sx={{ textAlign: 'center', p: 2 }}>
+              <Typography variant="h5">{stats.processing}</Typography>
+              <Typography variant="body2">В обработке</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} md={2}>
+          <Card sx={{ background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)', color: 'white' }}>
+            <CardContent sx={{ textAlign: 'center', p: 2 }}>
+              <Typography variant="h5">{stats.completed}</Typography>
+              <Typography variant="body2">Завершены</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} md={2}>
+          <Card sx={{ background: 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)', color: 'white' }}>
+            <CardContent sx={{ textAlign: 'center', p: 2 }}>
+              <Typography variant="h5">{stats.cancelled}</Typography>
+              <Typography variant="body2">Отменены</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Панель поиска и фильтров */}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={4}>
+            <TextField
+              fullWidth
+              placeholder="Поиск по номеру, имени, email или телефону..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                )
+              }}
+            />
+          </Grid>
+          
+          <Grid item xs={12} md={2}>
+            <FormControl fullWidth>
+              <InputLabel>Статус</InputLabel>
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                input={<OutlinedInput label="Статус" />}
+              >
+                <MenuItem value="all">Все статусы</MenuItem>
+                <MenuItem value="pending">Ожидание</MenuItem>
+                <MenuItem value="processing">В обработке</MenuItem>
+                <MenuItem value="shipped">Отправлен</MenuItem>
+                <MenuItem value="completed">Завершен</MenuItem>
+                <MenuItem value="cancelled">Отменен</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth>
+              <InputLabel>Дата</InputLabel>
+              <Select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                input={<OutlinedInput label="Дата" />}
+              >
+                <MenuItem value="all">За все время</MenuItem>
+                <MenuItem value="today">Сегодня</MenuItem>
+                <MenuItem value="week">За неделю</MenuItem>
+                <MenuItem value="month">За месяц</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth>
+              <InputLabel>Сумма</InputLabel>
+              <Select
+                value={amountFilter}
+                onChange={(e) => setAmountFilter(e.target.value)}
+                input={<OutlinedInput label="Сумма" />}
+              >
+                <MenuItem value="all">Любая сумма</MenuItem>
+                <MenuItem value="low">До 1 000 ₽</MenuItem>
+                <MenuItem value="medium">1 000 - 5 000 ₽</MenuItem>
+                <MenuItem value="high">От 5 000 ₽</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+
+        {/* Быстрые фильтры */}
+        <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Chip
+            icon={<FilterIcon />}
+            label="Быстрый фильтр:"
+            variant="outlined"
+          />
+          <Chip
+            label={`Все (${orders.length})`}
+            onClick={() => {
+              setStatusFilter('all');
+              setDateFilter('all');
+              setAmountFilter('all');
+              setSearchTerm('');
+            }}
+            color={statusFilter === 'all' && dateFilter === 'all' && amountFilter === 'all' && !searchTerm ? 'primary' : 'default'}
+            clickable
+          />
+          <Chip
+            label={`Ожидание (${stats.pending})`}
+            onClick={() => setStatusFilter('pending')}
+            color={statusFilter === 'pending' ? 'warning' : 'default'}
+            clickable
+          />
+          <Chip
+            label={`В обработке (${stats.processing})`}
+            onClick={() => setStatusFilter('processing')}
+            color={statusFilter === 'processing' ? 'primary' : 'default'}
+            clickable
+          />
+        </Box>
+      </Paper>
+
+      {/* Результаты поиска */}
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          Найдено заказов: {filteredOrders.length} из {orders.length}
+        </Typography>
+      </Box>
+
+      {filteredOrders.length === 0 ? (
         <Paper sx={{ p: 3, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
-            Заказов пока нет
+            {orders.length === 0 ? 'Заказов пока нет' : 'Заказы по вашему запросу не найдены'}
           </Typography>
+          {orders.length > 0 && (
+            <Button 
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setDateFilter('all');
+                setAmountFilter('all');
+              }}
+              sx={{ mt: 1 }}
+            >
+              Сбросить фильтры
+            </Button>
+          )}
         </Paper>
       ) : (
         <TableContainer component={Paper} elevation={2}>
@@ -184,7 +457,7 @@ const AdminOrders = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <TableRow key={order.id} hover>
                   <TableCell>
                     <Typography fontWeight="bold">
