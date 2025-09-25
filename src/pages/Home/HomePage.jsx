@@ -23,8 +23,6 @@ import {
   LocalShipping,
   Security,
   SupportAgent,
-  Star,
-  Favorite,
   KeyboardArrowUp,
   Category,
   ChevronLeft,
@@ -38,11 +36,11 @@ import { useProducts } from '../../context/ProductsContext';
 const HomePage = () => {
   const { addToCart } = useCart();
   const { products, categories, loading, error, refreshData } = useProducts();
-  const [featuredProducts, setFeaturedProducts] = useState([]);
+  // featuredProducts удален, так как не используется
   const [carouselProducts, setCarouselProducts] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [imageErrors, setImageErrors] = useState({});
+  // imageErrors удален, так как не используется
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const carouselRef = useRef(null);
@@ -58,7 +56,7 @@ const HomePage = () => {
     return () => clearInterval(interval);
   }, [isPlaying, carouselProducts.length]);
 
-  // Загрузка товаров для карусели и хитов
+  // Загрузка товаров для карусели
   useEffect(() => {
     if (products.length > 0) {
       // Для карусели берем товары с высоким рейтингом и с изображениями
@@ -69,13 +67,7 @@ const HomePage = () => {
         })
         .slice(0, 6);
       
-      // Для хитов продаж берем популярные товары
-      const featured = products
-        .filter(product => product.rating >= 3.5)
-        .slice(0, 8);
-      
       setCarouselProducts(carouselItems.length > 0 ? carouselItems : products.slice(0, 4));
-      setFeaturedProducts(featured.length > 0 ? featured : products.slice(0, 8));
     }
   }, [products]);
 
@@ -185,12 +177,6 @@ const HomePage = () => {
   const handleImageError = (e, imageId, type = 'product') => {
     console.log(`Ошибка загрузки изображения: ${imageId}`);
     e.target.src = getPlaceholderImage(type);
-    
-    // Запоминаем ошибку чтобы не пытаться загружать снова
-    setImageErrors(prev => ({
-      ...prev,
-      [imageId]: true
-    }));
   };
 
   const handleAddToCart = (product) => {
