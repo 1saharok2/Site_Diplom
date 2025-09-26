@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Container,
@@ -15,16 +15,13 @@ import {
   useTheme,
   Fab,
   IconButton,
-  CardMedia,
-  useMediaQuery
+  CardMedia
 } from '@mui/material';
 import {
   ShoppingBasket,
   LocalShipping,
   Security,
   SupportAgent,
-  Star,
-  Favorite,
   KeyboardArrowUp,
   Category,
   ChevronLeft,
@@ -38,30 +35,16 @@ import { useProducts } from '../../context/ProductsContext';
 const HomePage = () => {
   const { addToCart } = useCart();
   const { products, categories, loading, error, refreshData } = useProducts();
-  const [featuredProducts, setFeaturedProducts] = useState([]);
   const [carouselProducts, setCarouselProducts] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [imageErrors, setImageErrors] = useState({});
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const carouselRef = useRef(null);
 
-  // Автопрокрутка карусели
-  useEffect(() => {
-    if (!isPlaying || carouselProducts.length === 0) return;
-
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % carouselProducts.length);
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [isPlaying, carouselProducts.length]);
-
-  // Загрузка товаров для карусели и хитов
+  // Загрузка товаров для карусели
   useEffect(() => {
     if (products.length > 0) {
-      // Для карусели берем товары с высоким рейтингом и с изображениями
       const carouselItems = products
         .filter(product => {
           const hasImages = Array.isArray(product.image_url) && product.image_url.length > 0;
@@ -69,144 +52,85 @@ const HomePage = () => {
         })
         .slice(0, 6);
       
-      // Для хитов продаж берем популярные товары
-      const featured = products
-        .filter(product => product.rating >= 3.5)
-        .slice(0, 8);
-      
       setCarouselProducts(carouselItems.length > 0 ? carouselItems : products.slice(0, 4));
-      setFeaturedProducts(featured.length > 0 ? featured : products.slice(0, 8));
     }
   }, [products]);
 
-  // Функция для проверки и обработки изображений
-  const getImageUrl = (imageUrl, type = 'product') => {
-    // Проверяем, что imageUrl - строка
-    if (typeof imageUrl !== 'string') {
-      return getPlaceholderImage(type);
-    }
+  const getImageUrl = (imageUrl) => {
+    if (typeof imageUrl !== 'string') return '/images/placeholder.jpg';
     
-    // Убираем лишние пробелы
     imageUrl = imageUrl.trim();
-    
-    // Проверяем пустые значения
-    if (!imageUrl || imageUrl === 'null' || imageUrl === 'undefined' || imageUrl === '') {
-      return getPlaceholderImage(type);
+    if (!imageUrl || imageUrl === 'null' || imageUrl === 'undefined') {
+      return '/images/placeholder.jpg';
     }
     
-    // Проверяем корректность URL
-    try {
-      // Если URL относительный, добавляем базовый путь
-      if (imageUrl.startsWith('/')) {
-        return `http://localhost:3001${imageUrl}`; // Замените на ваш базовый URL
-      }
-      
-      // Если URL абсолютный, используем как есть
-      if (imageUrl.startsWith('http')) {
-        return imageUrl;
-      }
-      
-      // Если это просто имя файла, добавляем базовый путь
-      return `http://localhost:3001/images/${imageUrl}`;
-    } catch (error) {
-      console.error('Ошибка обработки URL:', imageUrl, error);
-      return getPlaceholderImage(type);
-    }
-  };
-
-  const getPlaceholderImage = (type) => {
-    const placeholders = {
-      product: 'https://images.unsplash.com/photo-1556656793-08538906a9f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-      category: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-      default: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
-    };
+    if (imageUrl.startsWith('http')) return imageUrl;
+    if (imageUrl.startsWith('/')) return `http://localhost:3001${imageUrl}`;
     
-    return placeholders[type] || placeholders.default;
+    return `http://localhost:3001/images/${imageUrl}`;
   };
 
-  // Безопасное получение изображения товара из массива image_url
   const getProductImage = (product) => {
-    if (!product) return getPlaceholderImage('product');
+    if (!product) return '/images/placeholder.jpg';
     
-    // Проверяем массив image_url (основное поле из базы)
     if (Array.isArray(product.image_url) && product.image_url.length > 0) {
       const firstImage = product.image_url[0];
-      if (typeof firstImage === 'string' && firstImage.trim()) {
-        const url = getImageUrl(firstImage, 'product');
-        if (url !== getPlaceholderImage('product')) {
-          return url;
-        }
+      if (typeof firstImage === 'string') {
+        return getImageUrl(firstImage);
       }
     }
     
-    // Пробуем другие возможные поля с изображениями (для обратной совместимости)
-    const possibleImageFields = [
-      product.images?.[0],
-      product.image,
-      product.thumbnail,
-      product.picture
-    ];
-    
-    for (const imageField of possibleImageFields) {
-      if (typeof imageField === 'string' && imageField.trim()) {
-        const url = getImageUrl(imageField, 'product');
-        if (url !== getPlaceholderImage('product')) {
-          return url;
-        }
-      }
-    }
-    
-    return getPlaceholderImage('product');
+    return '/images/placeholder.jpg';
   };
 
-  // Безопасное получение изображения категории
   const getCategoryImage = (category) => {
-    if (!category) return getPlaceholderImage('category');
-    
-    const possibleImageFields = [
-      category.image_url,
-      category.image,
-      category.thumbnail,
-      category.picture
-    ];
-    
-    for (const imageField of possibleImageFields) {
-      if (typeof imageField === 'string' && imageField.trim()) {
-        const url = getImageUrl(imageField, 'category');
-        if (url !== getPlaceholderImage('category')) {
-          return url;
-        }
-      }
+    if (!category) return '/images/placeholder.jpg';
+    if (category.image_url && typeof category.image_url === 'string') {
+      return getImageUrl(category.image_url);
     }
-    
-    return getPlaceholderImage('category');
-  };
-
-  const handleImageError = (e, imageId, type = 'product') => {
-    console.log(`Ошибка загрузки изображения: ${imageId}`);
-    e.target.src = getPlaceholderImage(type);
-    
-    // Запоминаем ошибку чтобы не пытаться загружать снова
-    setImageErrors(prev => ({
-      ...prev,
-      [imageId]: true
-    }));
+    return '/images/placeholder.jpg';
   };
 
   const handleAddToCart = (product) => {
     addToCart(product.id, 1);
   };
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % carouselProducts.length);
-  };
+  // Используем useCallback для стабильной ссылки на функцию
+  const handleNextSlide = useCallback(() => {
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
+    const nextSlide = (currentSlide + 1) % carouselProducts.length;
+    
+    setCurrentSlide(nextSlide);
+    
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 600);
+  }, [isTransitioning, currentSlide, carouselProducts.length]);
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + carouselProducts.length) % carouselProducts.length);
+  const handlePrevSlide = () => {
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
+    const prevSlide = (currentSlide - 1 + carouselProducts.length) % carouselProducts.length;
+    
+    setCurrentSlide(prevSlide);
+    
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 600);
   };
 
   const goToSlide = (index) => {
+    if (isTransitioning || index === currentSlide) return;
+    
+    setIsTransitioning(true);
     setCurrentSlide(index);
+    
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 600);
   };
 
   const toggleAutoplay = () => {
@@ -217,15 +141,16 @@ const HomePage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Функция для отладки - посмотреть структуру данных товаров
+  // Автопрокрутка карусели с использованием useCallback
   useEffect(() => {
-    if (products.length > 0) {
-      console.log('Структура данных товаров:', products[0]);
-      console.log('Image_url поле:', products[0].image_url);
-      console.log('Тип image_url:', typeof products[0].image_url);
-      console.log('Является ли массивом:', Array.isArray(products[0].image_url));
-    }
-  }, [products]);
+    if (!isPlaying || carouselProducts.length === 0 || isTransitioning) return;
+
+    const interval = setInterval(() => {
+      handleNextSlide();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, carouselProducts.length, isTransitioning, handleNextSlide]);
 
   if (loading) {
     return (
@@ -278,21 +203,25 @@ const HomePage = () => {
       <Box
         sx={{
           position: 'relative',
-          height: isMobile ? '60vh' : '80vh',
+          height: { xs: '70vh', md: '90vh' },
+          minHeight: { xs: '600px', md: '800px' },
           overflow: 'hidden',
-          bgcolor: 'grey.900'
+          bgcolor: 'grey.900',
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.95)} 0%, ${alpha(theme.palette.secondary.dark, 0.95)} 100%)`
         }}
       >
         {carouselProducts.length > 0 ? (
           <>
-            {/* Слайды */}
+            {/* Контейнер слайдов */}
             <Box
               ref={carouselRef}
               sx={{
-                display: 'flex',
+                position: 'relative',
+                width: '100%',
                 height: '100%',
-                transition: 'transform 0.5s ease-in-out',
-                transform: `translateX(-${currentSlide * 100}%)`
+                transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: `translateX(-${currentSlide * 100}%)`,
+                display: 'flex'
               }}
             >
               {carouselProducts.map((product, index) => {
@@ -304,57 +233,80 @@ const HomePage = () => {
                     sx={{
                       minWidth: '100%',
                       height: '100%',
-                      position: 'relative',
                       display: 'flex',
                       alignItems: 'center',
-                      background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.8)} 0%, ${alpha(theme.palette.secondary.main, 0.8)} 100%)`
+                      flexShrink: 0
                     }}
                   >
-                    <Container maxWidth="lg">
-                      <Grid container spacing={4} alignItems="center">
+                    <Container maxWidth="xl" sx={{ height: '100%', display: 'flex', alignItems: 'center' }}>
+                      <Grid container spacing={6} alignItems="center" sx={{ height: '100%' }}>
                         <Grid item xs={12} md={6}>
-                          <Box sx={{ color: 'white', zIndex: 2, position: 'relative' }}>
+                          <Box 
+                            sx={{ 
+                              color: 'white',
+                              textAlign: { xs: 'center', md: 'left' },
+                              opacity: isTransitioning ? 0.7 : 1,
+                              transition: 'opacity 0.3s ease'
+                            }}
+                          >
                             <Chip
-                              label="Хит продаж"
+                              label="ХИТ ПРОДАЖ"
                               color="secondary"
-                              sx={{ mb: 2, color: 'white', fontWeight: 'bold' }}
+                              sx={{ 
+                                mb: 3, 
+                                color: 'white', 
+                                fontWeight: 'bold',
+                                background: `linear-gradient(45deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.light})`
+                              }}
                             />
+                            
                             <Typography
-                              variant="h2"
+                              variant="h1"
                               sx={{
                                 fontWeight: 800,
-                                fontSize: { xs: '2rem', md: '3rem' },
-                                lineHeight: 1.2,
-                                mb: 2
+                                fontSize: { xs: '2.5rem', md: '4rem' },
+                                lineHeight: 1.1,
+                                mb: 3,
+                                textShadow: '2px 2px 8px rgba(0,0,0,0.5)'
                               }}
                             >
-                              {product.name || 'Название товара'}
+                              {product.name}
                             </Typography>
+                            
                             <Typography
                               variant="h6"
                               sx={{
-                                mb: 3,
+                                mb: 4,
                                 opacity: 0.9,
-                                fontWeight: 300
+                                fontWeight: 300,
+                                lineHeight: 1.6
                               }}
                             >
-                              {product.description?.substring(0, 150) || 'Отличный товар по выгодной цене'}...
+                              {product.description?.substring(0, 120) || 'Премиум качество по доступной цене'}...
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                            
+                            <Box sx={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: 3, 
+                              mb: 4,
+                              justifyContent: { xs: 'center', md: 'flex-start' } 
+                            }}>
                               <Typography
-                                variant="h4"
+                                variant="h2"
                                 sx={{
                                   color: 'secondary.main',
-                                  fontWeight: 'bold'
+                                  fontWeight: 'bold',
+                                  fontSize: { xs: '2.5rem', md: '3.5rem' }
                                 }}
                               >
-                                {product.price?.toLocaleString('ru-RU') || '0'} ₽
+                                {product.price?.toLocaleString('ru-RU')} ₽
                               </Typography>
                               {product.old_price && (
                                 <Typography
-                                  variant="h6"
+                                  variant="h5"
                                   sx={{
-                                    color: 'grey.400',
+                                    color: 'grey.300',
                                     textDecoration: 'line-through'
                                   }}
                                 >
@@ -362,17 +314,31 @@ const HomePage = () => {
                                 </Typography>
                               )}
                             </Box>
-                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                            
+                            <Box sx={{ 
+                              display: 'flex', 
+                              gap: 3, 
+                              flexWrap: 'wrap',
+                              justifyContent: { xs: 'center', md: 'flex-start' } 
+                            }}>
                               <Button
                                 variant="contained"
                                 size="large"
                                 onClick={() => handleAddToCart(product)}
                                 startIcon={<ShoppingBasket />}
                                 sx={{
-                                  px: 4,
-                                  py: 1.5,
-                                  borderRadius: 2,
-                                  fontWeight: 600
+                                  px: 5,
+                                  py: 1.8,
+                                  borderRadius: 3,
+                                  fontWeight: 700,
+                                  fontSize: '1.1rem',
+                                  background: `linear-gradient(45deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.light})`,
+                                  boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
+                                  transition: 'all 0.3s ease',
+                                  '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: '0 12px 35px rgba(0,0,0,0.4)'
+                                  }
                                 }}
                               >
                                 В корзину
@@ -384,13 +350,18 @@ const HomePage = () => {
                                 size="large"
                                 sx={{
                                   px: 4,
-                                  py: 1.5,
-                                  borderRadius: 2,
+                                  py: 1.8,
+                                  borderRadius: 3,
+                                  borderWidth: 2,
                                   borderColor: 'white',
                                   color: 'white',
+                                  fontWeight: 600,
+                                  fontSize: '1.1rem',
+                                  transition: 'all 0.3s ease',
                                   '&:hover': {
                                     borderColor: 'white',
-                                    bgcolor: 'rgba(255,255,255,0.1)'
+                                    bgcolor: 'rgba(255,255,255,0.1)',
+                                    transform: 'translateY(-2px)'
                                   }
                                 }}
                               >
@@ -399,6 +370,7 @@ const HomePage = () => {
                             </Box>
                           </Box>
                         </Grid>
+                        
                         <Grid item xs={12} md={6}>
                           <Box
                             sx={{
@@ -411,14 +383,16 @@ const HomePage = () => {
                             <Box
                               component="img"
                               src={imageUrl}
-                              alt={product.name || 'Товар'}
-                              onError={(e) => handleImageError(e, product.id, 'product')}
+                              alt={product.name}
                               sx={{
                                 maxWidth: '100%',
-                                maxHeight: '400px',
+                                maxHeight: { xs: '300px', md: '500px' },
                                 borderRadius: 4,
-                                boxShadow: theme.shadows[10],
-                                objectFit: 'contain'
+                                boxShadow: '0 25px 50px rgba(0,0,0,0.4)',
+                                objectFit: 'contain',
+                                transition: 'transform 0.5s ease',
+                                transform: isTransitioning ? 'scale(0.95)' : 'scale(1)',
+                                opacity: isTransitioning ? 0.8 : 1
                               }}
                             />
                           </Box>
@@ -432,63 +406,84 @@ const HomePage = () => {
 
             {/* Навигационные кнопки */}
             <IconButton
-              onClick={prevSlide}
+              onClick={handlePrevSlide}
+              disabled={isTransitioning}
               sx={{
                 position: 'absolute',
-                left: 20,
+                left: { xs: 10, md: 30 },
                 top: '50%',
                 transform: 'translateY(-50%)',
-                bgcolor: 'rgba(255,255,255,0.2)',
-                color: 'white',
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.3)'
+                bgcolor: 'rgba(255,255,255,0.9)',
+                color: 'grey.800',
+                width: { xs: 50, md: 60 },
+                height: { xs: 50, md: 60 },
+                transition: 'all 0.3s ease',
+                '&:hover:not(:disabled)': {
+                  bgcolor: 'white',
+                  transform: 'translateY(-50%) scale(1.1)',
+                  boxShadow: '0 8px 25px rgba(0,0,0,0.3)'
+                },
+                '&:disabled': {
+                  opacity: 0.5
                 }
               }}
             >
-              <ChevronLeft />
+              <ChevronLeft sx={{ fontSize: { xs: 28, md: 32 } }} />
             </IconButton>
 
             <IconButton
-              onClick={nextSlide}
+              onClick={handleNextSlide}
+              disabled={isTransitioning}
               sx={{
                 position: 'absolute',
-                right: 20,
+                right: { xs: 10, md: 30 },
                 top: '50%',
                 transform: 'translateY(-50%)',
-                bgcolor: 'rgba(255,255,255,0.2)',
-                color: 'white',
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.3)'
+                bgcolor: 'rgba(255,255,255,0.9)',
+                color: 'grey.800',
+                width: { xs: 50, md: 60 },
+                height: { xs: 50, md: 60 },
+                transition: 'all 0.3s ease',
+                '&:hover:not(:disabled)': {
+                  bgcolor: 'white',
+                  transform: 'translateY(-50%) scale(1.1)',
+                  boxShadow: '0 8px 25px rgba(0,0,0,0.3)'
+                },
+                '&:disabled': {
+                  opacity: 0.5
                 }
               }}
             >
-              <ChevronRight />
+              <ChevronRight sx={{ fontSize: { xs: 28, md: 32 } }} />
             </IconButton>
 
             {/* Индикаторы слайдов */}
             <Box
               sx={{
                 position: 'absolute',
-                bottom: 20,
+                bottom: { xs: 20, md: 40 },
                 left: '50%',
                 transform: 'translateX(-50%)',
                 display: 'flex',
-                gap: 1
+                gap: 2,
+                alignItems: 'center'
               }}
             >
               {carouselProducts.map((_, index) => (
                 <Box
                   key={index}
-                  onClick={() => goToSlide(index)}
+                  onClick={() => !isTransitioning && goToSlide(index)}
                   sx={{
-                    width: 12,
-                    height: 12,
+                    width: { xs: 12, md: 14 },
+                    height: { xs: 12, md: 14 },
                     borderRadius: '50%',
                     bgcolor: index === currentSlide ? 'secondary.main' : 'rgba(255,255,255,0.5)',
-                    cursor: 'pointer',
+                    cursor: isTransitioning ? 'default' : 'pointer',
                     transition: 'all 0.3s ease',
-                    '&:hover': {
-                      bgcolor: index === currentSlide ? 'secondary.main' : 'rgba(255,255,255,0.7)'
+                    transform: index === currentSlide ? 'scale(1.3)' : 'scale(1)',
+                    '&:hover:not(:disabled)': {
+                      bgcolor: index === currentSlide ? 'secondary.main' : 'rgba(255,255,255,0.7)',
+                      transform: index === currentSlide ? 'scale(1.4)' : 'scale(1.2)'
                     }
                   }}
                 />
@@ -500,17 +495,38 @@ const HomePage = () => {
               onClick={toggleAutoplay}
               sx={{
                 position: 'absolute',
-                top: 20,
-                right: 20,
-                bgcolor: 'rgba(255,255,255,0.2)',
-                color: 'white',
+                top: { xs: 20, md: 30 },
+                right: { xs: 70, md: 100 },
+                bgcolor: 'rgba(255,255,255,0.9)',
+                color: 'grey.800',
+                width: { xs: 45, md: 50 },
+                height: { xs: 45, md: 50 },
+                transition: 'all 0.3s ease',
                 '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.3)'
+                  bgcolor: 'white',
+                  transform: 'scale(1.1)'
                 }
               }}
             >
               {isPlaying ? <Pause /> : <PlayArrow />}
             </IconButton>
+
+            {/* Счетчик слайдов */}
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: { xs: 20, md: 40 },
+                right: { xs: 20, md: 30 },
+                color: 'white',
+                bgcolor: 'rgba(0,0,0,0.3)',
+                px: 2,
+                py: 1,
+                borderRadius: 2,
+                fontSize: '0.9rem'
+              }}
+            >
+              {currentSlide + 1} / {carouselProducts.length}
+            </Box>
           </>
         ) : (
           <Box
@@ -519,38 +535,39 @@ const HomePage = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-              color: 'white'
+              color: 'white',
+              textAlign: 'center'
             }}
           >
-            <Container maxWidth="lg">
-              <Typography variant="h2" align="center" gutterBottom>
-                Добро пожаловать в наш магазин
+            <Container>
+              <Typography variant="h1" gutterBottom sx={{ fontWeight: 800 }}>
+                Добро пожаловать
               </Typography>
-              <Typography variant="h6" align="center" sx={{ mb: 4, opacity: 0.9 }}>
+              <Typography variant="h4" sx={{ mb: 4, opacity: 0.9, fontWeight: 300 }}>
                 Лучшие товары по доступным ценам
               </Typography>
-              <Box sx={{ textAlign: 'center' }}>
-                <Button
-                  component={Link}
-                  to="/catalog"
-                  variant="contained"
-                  size="large"
-                  sx={{
-                    px: 6,
-                    py: 1.5,
-                    fontSize: '1.1rem',
-                    borderRadius: 3,
-                    bgcolor: 'white',
-                    color: 'primary.main',
-                    '&:hover': {
-                      bgcolor: 'grey.100'
-                    }
-                  }}
-                >
-                  Перейти к покупкам
-                </Button>
-              </Box>
+              <Button
+                component={Link}
+                to="/catalog"
+                variant="contained"
+                size="large"
+                sx={{
+                  px: 6,
+                  py: 1.8,
+                  fontSize: '1.1rem',
+                  borderRadius: 3,
+                  bgcolor: 'white',
+                  color: 'primary.main',
+                  fontWeight: 700,
+                  '&:hover': {
+                    bgcolor: 'grey.100',
+                    transform: 'translateY(-2px)'
+                  },
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Начать покупки
+              </Button>
             </Container>
           </Box>
         )}
@@ -662,7 +679,6 @@ const HomePage = () => {
                       height="200"
                       image={categoryImageUrl}
                       alt={category.name || 'Категория'}
-                      onError={(e) => handleImageError(e, category.id, 'category')}
                     />
                     <CardContent sx={{ textAlign: 'center' }}>
                       <Category sx={{ fontSize: 32, color: 'primary.main', mb: 1 }} />
@@ -695,8 +711,10 @@ const HomePage = () => {
           right: 24,
           bgcolor: 'primary.main',
           color: 'white',
+          transition: 'all 0.3s ease',
           '&:hover': {
-            bgcolor: 'primary.dark'
+            bgcolor: 'primary.dark',
+            transform: 'translateY(-2px)'
           }
         }}
       >
