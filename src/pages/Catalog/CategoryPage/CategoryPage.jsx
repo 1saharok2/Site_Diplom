@@ -252,7 +252,7 @@ const CategoryPage = () => {
     <Container className="category-page">
       <Row>
         {/* Левая колонка - фильтры */}
-        <Col lg={3} className="filters-sidebar">
+        <Col lg={3} className="filters-column">
           <Card className="filters-card">
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Фильтры</h5>
@@ -584,8 +584,8 @@ const CategoryPage = () => {
         </Col>
 
         {/* Правая колонка - сортировка и товары */}
-        <Col lg={9}>
-          {/* Только сортировка без фильтров */}
+        <Col lg={9} className="products-column">
+          {/* Сортировка над товарами */}
           <SortingCard sortBy={sortBy} setSortBy={setSortBy} />
 
           <div className="products-section">
