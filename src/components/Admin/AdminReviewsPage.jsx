@@ -22,7 +22,6 @@ import {
   Snackbar,
   Avatar,
   Rating,
-  Divider,
   MenuItem
 } from '@mui/material';
 import {
@@ -33,8 +32,6 @@ import {
   ThumbUp,
   ThumbDown,
   Person,
-  ShoppingBag,
-  Star,
   Comment,
   Refresh,
   Delete,
@@ -65,7 +62,7 @@ const AdminReviewsPage = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const theme = useTheme();
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       if (loadModerationReviews) {
         await loadModerationReviews();
@@ -78,7 +75,7 @@ const AdminReviewsPage = () => {
       console.error('❌ Ошибка загрузки данных:', error);
       showSnackbar('Ошибка загрузки данных', 'error');
     }
-  };
+  }, [loadModerationReviews, getReviewStats]);
 
   const filterReviews = useCallback(() => {
     let filtered = moderationReviews.filter(review =>
@@ -96,7 +93,7 @@ const AdminReviewsPage = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   useEffect(() => {
     filterReviews();

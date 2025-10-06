@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, Spinner, Badge, Row, Col } from 'react-bootstrap';
-import { FaUser, FaStar, FaCheckCircle, FaClock, FaQuoteLeft, FaHeart, FaRegStar } from 'react-icons/fa';
+import { Spinner } from 'react-bootstrap';
+import { FaStar, FaCheckCircle, FaClock, FaQuoteLeft, FaHeart, FaRegStar } from 'react-icons/fa';
 
 const ReviewList = ({ reviews, loading, currentUser }) => {
   console.log('🔴 ReviewList - получены отзывы:', reviews);
@@ -69,7 +69,6 @@ const ReviewList = ({ reviews, loading, currentUser }) => {
     return Array.from({ length: 5 }, (_, i) => {
       const starNumber = i + 1;
       const isFilled = starNumber <= rating;
-      const isHalf = starNumber - 0.5 === rating;
       
       return (
         <span key={i} className="star-container" title={`${rating}/5`}>

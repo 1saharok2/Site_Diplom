@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -70,25 +70,7 @@ const AdminOrders = () => {
     fetchOrders();
   }, []);
 
-  useEffect(() => {
-    filterOrders();
-  }, [orders, searchTerm, statusFilter, dateFilter, amountFilter]);
-
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const ordersData = await adminService.getOrders();
-      setOrders(Array.isArray(ordersData) ? ordersData : []);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      setError('Ошибка при загрузке заказов');
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterOrders = () => {
+  const filterOrders = useCallback(() => {
     let filtered = [...orders];
 
     // Поиск по номеру заказа, имени клиента, email, телефону
@@ -147,6 +129,24 @@ const AdminOrders = () => {
     }
 
     setFilteredOrders(filtered);
+  }, [orders, searchTerm, statusFilter, dateFilter, amountFilter]);
+
+  useEffect(() => {
+    filterOrders();
+  }, [filterOrders]);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const ordersData = await adminService.getOrders();
+      setOrders(Array.isArray(ordersData) ? ordersData : []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      setError('Ошибка при загрузке заказов');
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateOrderStatus = async (orderId, newStatus) => {

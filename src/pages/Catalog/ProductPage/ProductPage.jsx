@@ -16,8 +16,7 @@ const ProductPage = () => {
   const { 
     reviews, 
     loading: reviewsLoading, 
-    loadProductReviews, 
-    createReview 
+    loadProductReviews 
   } = useReviews();
 
   console.log('🔴 ProductPage - ID товара:', id);
@@ -30,7 +29,6 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [reviewFormOpen, setReviewFormOpen] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -71,7 +69,7 @@ const ProductPage = () => {
       setError('ID товара не указан');
       setLoading(false);
     }
-  }, [id, loadProductReviews]);
+  }, [id, loadProductReviews]); // Убрана зависимость reviews
 
   // Проверяем, оставлял ли пользователь уже отзыв
   const hasUserReviewed = currentUser && 
@@ -86,15 +84,14 @@ const ProductPage = () => {
     setCurrentProduct(variant);
   };
 
-
-
   const handleWriteReview = () => {
     if (!currentUser) {
       setMessage('⚠️ Войдите в систему, чтобы оставить отзыв');
       setTimeout(() => setMessage(''), 3000);
       return;
     }
-    setReviewFormOpen(true);
+    setMessage('Функция оставления отзыва будет доступна в следующем обновлении');
+    setTimeout(() => setMessage(''), 3000);
   };
 
   if (loading) {

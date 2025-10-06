@@ -12,17 +12,13 @@ import {
   CircularProgress
 } from '@mui/material';
 import { Send, Star, RateReview } from '@mui/icons-material';
-import { useReviews } from '../../context/ReviewContext';
 import { useAuth } from '../../context/AuthContext';
 
-const ReviewForm = ({ product, productName, open, onClose, onSubmit, loading }) => {
+const ReviewForm = ({ product, productName, onClose, onSubmit }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState('success');
   const [error, setError] = useState('');
-  const { createReview } = useReviews();
   const { currentUser } = useAuth();
 
   const handleSubmit = async (e) => {
@@ -45,26 +41,29 @@ const ReviewForm = ({ product, productName, open, onClose, onSubmit, loading }) 
     }
 
     setError('');
+    setIsSubmitting(true);
     
     try {
       console.log('🔄 Отправка отзыва для товара:', product.id);
       
       // Убедимся, что rating - целое число
-      const integerRating = Math.round(rating); // ← Преобразуем в целое число
+      const integerRating = Math.round(rating);
       console.log('🔢 Рейтинг (исходный/целый):', rating, integerRating);
       
       await onSubmit({
         product_id: product.id,
-        rating: integerRating, // ← Передаем целое число
+        rating: integerRating,
         comment: comment.trim()
       });
       
       setRating(0);
       setComment('');
-      onClose();
+      if (onClose) onClose();
     } catch (error) {
       console.error('❌ Ошибка в форме отзыва:', error);
       setError('Ошибка при отправке отзыва: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -100,9 +99,9 @@ const ReviewForm = ({ product, productName, open, onClose, onSubmit, loading }) 
         Расскажите о вашем опыте использования товара "{productName}"
       </Typography>
 
-      {message && (
-        <Alert severity={messageType} sx={{ mb: 2, borderRadius: 2 }}>
-          {message}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+          {error}
         </Alert>
       )}
 

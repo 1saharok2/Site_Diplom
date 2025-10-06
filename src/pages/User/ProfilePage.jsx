@@ -86,59 +86,80 @@ const ProfilePage = () => {
   });
   const [userProfile, setUserProfile] = useState(null);
 
-  // Загрузка данных профиля из базы данных
-// В useEffect:
-useEffect(() => {
-  const loadUserProfile = async () => {
-    if (!currentUser) return;
+  // Вспомогательные функции с useCallback
+  const getOrderStatusText = useCallback((status) => {
+    const statusMap = {
+      'pending': 'создан',
+      'processing': 'в обработке',
+      'shipped': 'отправлен',
+      'delivered': 'доставлен',
+      'completed': 'завершен',
+      'cancelled': 'отменен'
+    };
+    return statusMap[status] || status;
+  }, []);
+
+  const getOrderStatusIcon = useCallback((status) => {
+    const statusIcons = {
+      'pending': <ShoppingBag />,
+      'processing': <Payment />,
+      'shipped': <LocalShipping />,
+      'delivered': <CheckCircle />,
+      'completed': <CheckCircle />,
+      'cancelled': <Close />
+    };
+    return statusIcons[status] || <ShoppingBag />;
+  }, []);
+
+  const getOrderStatusColor = useCallback((status) => {
+    const statusColors = {
+      'pending': theme.palette.info.main,
+      'processing': theme.palette.warning.main,
+      'shipped': theme.palette.primary.main,
+      'delivered': theme.palette.success.main,
+      'completed': theme.palette.success.main,
+      'cancelled': theme.palette.error.main
+    };
+    return statusColors[status] || theme.palette.primary.main;
+  }, [theme]);
+
+  const formatRelativeTime = useCallback((dateString) => {
+    if (!dateString) return 'Недавно';
     
-    try {
-      setProfileLoading(true);
-      
-      // Загружаем полный профиль пользователя из базы
-      const { data: profile, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', currentUser.id)
-        .single();
-        
-      if (error) {
-        console.error('Ошибка загрузки профиля:', error);
-        setUserProfile(currentUser);
-        
-        setFormData({
-          name: currentUser.name || '',
-          email: currentUser.email || '',
-          phone: currentUser.phone || '',
-          address: currentUser.address || ''
-        });
-      } else {
-        setUserProfile(profile);
-        
-        // ИСПРАВЛЕНО: используем name вместо комбинации first_name + last_name
-        setFormData({
-          name: profile.name || '',
-          email: profile.email || '',
-          phone: profile.phone || '',
-          address: profile.address || ''
-        });
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'Только что';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} мин назад`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} ч назад`;
+    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} дн назад`;
+    
+    return date.toLocaleDateString('ru-RU');
+  }, []);
+
+  const setFallbackData = useCallback(() => {
+    setStats({
+      totalOrders: 0,
+      favoriteItems: 0,
+      writtenReviews: 0
+    });
+
+    setRecentActivities([
+      {
+        type: 'welcome',
+        title: 'Добро пожаловать!',
+        description: 'Здесь будет отображаться ваша активность',
+        date: 'Только что',
+        icon: <AccountCircle />,
+        color: theme.palette.primary.main
       }
-      
-      await loadUserData();
-      
-    } catch (error) {
-      console.error('Ошибка загрузки данных:', error);
-      setUserProfile(currentUser);
-    } finally {
-      setProfileLoading(false);
-    }
-  };
+    ]);
+  }, [theme]);
 
-  loadUserProfile();
-}, [currentUser]);
-
+  // Загрузка данных профиля из базы данных
   // Загрузка статистики и активности
-  const loadUserData = useCallback (async () => {
+  const loadUserData = useCallback(async () => {
     if (!currentUser) return;
 
     try {
@@ -258,77 +279,66 @@ useEffect(() => {
       console.error('Ошибка загрузки данных пользователя:', error);
       setFallbackData();
     }
-  });
+  }, [
+    currentUser, 
+    navigate, 
+    theme, 
+    getOrderStatusText, 
+    getOrderStatusIcon, 
+    getOrderStatusColor, 
+    formatRelativeTime, 
+    setFallbackData
+  ]);
 
-  const setFallbackData = () => {
-    setStats({
-      totalOrders: 0,
-      favoriteItems: 0,
-      writtenReviews: 0
-    });
-
-    setRecentActivities([
-      {
-        type: 'welcome',
-        title: 'Добро пожаловать!',
-        description: 'Здесь будет отображаться ваша активность',
-        date: 'Только что',
-        icon: <AccountCircle />,
-        color: theme.palette.primary.main
+  // В useEffect:
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!currentUser) return;
+      
+      try {
+        setProfileLoading(true);
+        
+        // Загружаем полный профиль пользователя из базы
+        const { data: profile, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+          
+        if (error) {
+          console.error('Ошибка загрузки профиля:', error);
+          setUserProfile(currentUser);
+          
+          setFormData({
+            name: currentUser.name || '',
+            email: currentUser.email || '',
+            phone: currentUser.phone || '',
+            address: currentUser.address || ''
+          });
+        } else {
+          setUserProfile(profile);
+          
+          // ИСПРАВЛЕНО: используем name вместо комбинации first_name + last_name
+          setFormData({
+            name: profile.name || '',
+            email: profile.email || '',
+            phone: profile.phone || '',
+            address: profile.address || ''
+          });
+        }
+        
+        await loadUserData();
+        
+      } catch (error) {
+        console.error('Ошибка загрузки данных:', error);
+        setUserProfile(currentUser);
+      } finally {
+        setProfileLoading(false);
       }
-    ]);
-  };
-
-  const getOrderStatusText = (status) => {
-    const statusMap = {
-      'pending': 'создан',
-      'processing': 'в обработке',
-      'shipped': 'отправлен',
-      'delivered': 'доставлен',
-      'completed': 'завершен',
-      'cancelled': 'отменен'
     };
-    return statusMap[status] || status;
-  };
 
-  const getOrderStatusIcon = (status) => {
-    const statusIcons = {
-      'pending': <ShoppingBag />,
-      'processing': <Payment />,
-      'shipped': <LocalShipping />,
-      'delivered': <CheckCircle />,
-      'completed': <CheckCircle />,
-      'cancelled': <Close />
-    };
-    return statusIcons[status] || <ShoppingBag />;
-  };
-
-  const getOrderStatusColor = (status) => {
-    const statusColors = {
-      'pending': theme.palette.info.main,
-      'processing': theme.palette.warning.main,
-      'shipped': theme.palette.primary.main,
-      'delivered': theme.palette.success.main,
-      'completed': theme.palette.success.main,
-      'cancelled': theme.palette.error.main
-    };
-    return statusColors[status] || theme.palette.primary.main;
-  };
-
-  const formatRelativeTime = (dateString) => {
-    if (!dateString) return 'Недавно';
-    
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
-    
-    if (diffInSeconds < 60) return 'Только что';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} мин назад`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} ч назад`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} дн назад`;
-    
-    return date.toLocaleDateString('ru-RU');
-  };
+    loadUserProfile();
+  }, [currentUser, loadUserData]);
 
   const handleEdit = () => {
     setEditDialogOpen(true);

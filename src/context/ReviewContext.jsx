@@ -162,4 +162,4 @@ export const ReviewProvider = ({ children }) => {
   );
 };
 
-export default { ReviewProvider, useReviews };
+export default ReviewProvider;

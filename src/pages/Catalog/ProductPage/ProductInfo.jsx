@@ -174,7 +174,7 @@ const ProductInfo = ({ product, onVariantChange }) => {
     } else {
       setExactMatch(null);
     }
-  }, [selectedColor, selectedStorage, variants]);
+  }, [selectedColor, selectedStorage, variants, onVariantChange, selectedVariant.id]);
 
   // Получаем доступные цвета и объемы памяти (с нормализацией)
   const availableColors = [...new Set(variants
