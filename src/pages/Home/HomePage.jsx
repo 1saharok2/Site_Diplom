@@ -15,7 +15,8 @@ import {
   useTheme,
   Fab,
   IconButton,
-  CardMedia
+  CardMedia,
+  useMediaQuery
 } from '@mui/material';
 import {
   ShoppingBasket,
@@ -40,6 +41,8 @@ const HomePage = () => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const carouselRef = useRef(null);
 
   // Загрузка товаров для карусели
@@ -95,9 +98,8 @@ const HomePage = () => {
     addToCart(product.id, 1);
   };
 
-  // Используем useCallback для стабильной ссылки на функцию
   const handleNextSlide = useCallback(() => {
-    if (isTransitioning) return;
+    if (isTransitioning || carouselProducts.length === 0) return;
     
     setIsTransitioning(true);
     const nextSlide = (currentSlide + 1) % carouselProducts.length;
@@ -106,11 +108,11 @@ const HomePage = () => {
     
     setTimeout(() => {
       setIsTransitioning(false);
-    }, 600);
+    }, 500);
   }, [isTransitioning, currentSlide, carouselProducts.length]);
 
   const handlePrevSlide = () => {
-    if (isTransitioning) return;
+    if (isTransitioning || carouselProducts.length === 0) return;
     
     setIsTransitioning(true);
     const prevSlide = (currentSlide - 1 + carouselProducts.length) % carouselProducts.length;
@@ -119,18 +121,18 @@ const HomePage = () => {
     
     setTimeout(() => {
       setIsTransitioning(false);
-    }, 600);
+    }, 500);
   };
 
   const goToSlide = (index) => {
-    if (isTransitioning || index === currentSlide) return;
+    if (isTransitioning || index === currentSlide || carouselProducts.length === 0) return;
     
     setIsTransitioning(true);
     setCurrentSlide(index);
     
     setTimeout(() => {
       setIsTransitioning(false);
-    }, 600);
+    }, 500);
   };
 
   const toggleAutoplay = () => {
@@ -141,7 +143,7 @@ const HomePage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Автопрокрутка карусели с использованием useCallback
+  // Автопрокрутка карусели
   useEffect(() => {
     if (!isPlaying || carouselProducts.length === 0 || isTransitioning) return;
 
@@ -176,35 +178,35 @@ const HomePage = () => {
 
   const features = [
     {
-      icon: <LocalShipping sx={{ fontSize: 40 }} />,
+      icon: <LocalShipping sx={{ fontSize: { xs: 32, md: 40 } }} />,
       title: 'Бесплатная доставка',
       description: 'При заказе от 3000 рублей'
     },
     {
-      icon: <Security sx={{ fontSize: 40 }} />,
+      icon: <Security sx={{ fontSize: { xs: 32, md: 40 } }} />,
       title: 'Гарантия качества',
       description: '14 дней на возврат товара'
     },
     {
-      icon: <SupportAgent sx={{ fontSize: 40 }} />,
+      icon: <SupportAgent sx={{ fontSize: { xs: 32, md: 40 } }} />,
       title: 'Поддержка 24/7',
       description: 'Всегда готовы помочь'
     },
     {
-      icon: <ShoppingBasket sx={{ fontSize: 40 }} />,
+      icon: <ShoppingBasket sx={{ fontSize: { xs: 32, md: 40 } }} />,
       title: 'Широкий ассортимент',
       description: `Более ${products.length} товаров`
     }
   ];
 
   return (
-    <Box sx={{ pt: 0 }}>
-      {/* Карусель товаров */}
+    <Box sx={{ pt: 0, overflow: 'hidden' }}>
+      {/* Карусель товаров - ИСПРАВЛЕННАЯ */}
       <Box
         sx={{
           position: 'relative',
-          height: { xs: '70vh', md: '90vh' },
-          minHeight: { xs: '600px', md: '800px' },
+          height: { xs: 'auto', md: '80vh' },
+          minHeight: { xs: '500px', md: '600px' },
           overflow: 'hidden',
           bgcolor: 'grey.900',
           background: `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.95)} 0%, ${alpha(theme.palette.secondary.dark, 0.95)} 100%)`
@@ -212,16 +214,15 @@ const HomePage = () => {
       >
         {carouselProducts.length > 0 ? (
           <>
-            {/* Контейнер слайдов */}
+            {/* Контейнер слайдов - ИСПРАВЛЕННЫЙ */}
             <Box
-              ref={carouselRef}
               sx={{
-                position: 'relative',
-                width: '100%',
+                display: 'flex',
+                width: `${carouselProducts.length * 100}%`,
                 height: '100%',
-                transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                transform: `translateX(-${currentSlide * 100}%)`,
-                display: 'flex'
+                transform: `translateX(-${(currentSlide * 100) / carouselProducts.length}%)`,
+                transition: isTransitioning ? 'transform 0.5s ease-in-out' : 'none',
+                willChange: 'transform'
               }}
             >
               {carouselProducts.map((product, index) => {
@@ -231,83 +232,100 @@ const HomePage = () => {
                   <Box
                     key={product.id}
                     sx={{
-                      minWidth: '100%',
+                      width: `${100 / carouselProducts.length}%`,
                       height: '100%',
                       display: 'flex',
                       alignItems: 'center',
                       flexShrink: 0
                     }}
                   >
-                    <Container maxWidth="xl" sx={{ height: '100%', display: 'flex', alignItems: 'center' }}>
-                      <Grid container spacing={6} alignItems="center" sx={{ height: '100%' }}>
+                    <Container 
+                      maxWidth="lg" 
+                      sx={{ 
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        py: { xs: 2, md: 0 }
+                      }}
+                    >
+                      <Grid 
+                        container 
+                        spacing={3}
+                        alignItems="center"
+                        sx={{ 
+                          height: '100%',
+                          flexDirection: { xs: 'column-reverse', md: 'row' }
+                        }}
+                      >
+                        {/* Текстовая часть */}
                         <Grid item xs={12} md={6}>
                           <Box 
                             sx={{ 
                               color: 'white',
                               textAlign: { xs: 'center', md: 'left' },
-                              opacity: isTransitioning ? 0.7 : 1,
-                              transition: 'opacity 0.3s ease'
+                              px: { xs: 1, md: 0 }
                             }}
                           >
                             <Chip
                               label="ХИТ ПРОДАЖ"
                               color="secondary"
                               sx={{ 
-                                mb: 3, 
-                                color: 'white', 
+                                mb: 3,
                                 fontWeight: 'bold',
-                                background: `linear-gradient(45deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.light})`
+                                fontSize: { xs: '0.7rem', md: '0.8rem' }
                               }}
                             />
                             
                             <Typography
-                              variant="h1"
+                              variant="h2"
                               sx={{
-                                fontWeight: 800,
-                                fontSize: { xs: '2.5rem', md: '4rem' },
-                                lineHeight: 1.1,
-                                mb: 3,
-                                textShadow: '2px 2px 8px rgba(0,0,0,0.5)'
+                                fontWeight: 700,
+                                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem', lg: '3rem' },
+                                lineHeight: 1.2,
+                                mb: 2
                               }}
                             >
                               {product.name}
                             </Typography>
                             
                             <Typography
-                              variant="h6"
+                              variant="body1"
                               sx={{
-                                mb: 4,
+                                mb: 3,
                                 opacity: 0.9,
-                                fontWeight: 300,
-                                lineHeight: 1.6
+                                lineHeight: 1.6,
+                                fontSize: { xs: '0.9rem', md: '1rem' },
+                                display: { xs: 'none', sm: 'block' }
                               }}
                             >
                               {product.description?.substring(0, 120) || 'Премиум качество по доступной цене'}...
                             </Typography>
                             
+                            {/* Цена */}
                             <Box sx={{ 
                               display: 'flex', 
                               alignItems: 'center', 
-                              gap: 3, 
-                              mb: 4,
-                              justifyContent: { xs: 'center', md: 'flex-start' } 
+                              gap: 2,
+                              mb: 3,
+                              justifyContent: { xs: 'center', md: 'flex-start' }
                             }}>
                               <Typography
-                                variant="h2"
+                                variant="h3"
                                 sx={{
                                   color: 'secondary.main',
                                   fontWeight: 'bold',
-                                  fontSize: { xs: '2.5rem', md: '3.5rem' }
+                                  fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }
                                 }}
                               >
                                 {product.price?.toLocaleString('ru-RU')} ₽
                               </Typography>
                               {product.old_price && (
                                 <Typography
-                                  variant="h5"
+                                  variant="h6"
                                   sx={{
                                     color: 'grey.300',
-                                    textDecoration: 'line-through'
+                                    textDecoration: 'line-through',
+                                    fontSize: { xs: '1rem', md: '1.25rem' }
                                   }}
                                 >
                                   {product.old_price?.toLocaleString('ru-RU')} ₽
@@ -315,9 +333,10 @@ const HomePage = () => {
                               )}
                             </Box>
                             
+                            {/* Кнопки */}
                             <Box sx={{ 
                               display: 'flex', 
-                              gap: 3, 
+                              gap: 2,
                               flexWrap: 'wrap',
                               justifyContent: { xs: 'center', md: 'flex-start' } 
                             }}>
@@ -327,18 +346,11 @@ const HomePage = () => {
                                 onClick={() => handleAddToCart(product)}
                                 startIcon={<ShoppingBasket />}
                                 sx={{
-                                  px: 5,
-                                  py: 1.8,
-                                  borderRadius: 3,
-                                  fontWeight: 700,
-                                  fontSize: '1.1rem',
-                                  background: `linear-gradient(45deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.light})`,
-                                  boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
-                                  transition: 'all 0.3s ease',
-                                  '&:hover': {
-                                    transform: 'translateY(-2px)',
-                                    boxShadow: '0 12px 35px rgba(0,0,0,0.4)'
-                                  }
+                                  px: 4,
+                                  py: 1.5,
+                                  borderRadius: 2,
+                                  fontWeight: 600,
+                                  minWidth: '140px'
                                 }}
                               >
                                 В корзину
@@ -350,18 +362,16 @@ const HomePage = () => {
                                 size="large"
                                 sx={{
                                   px: 4,
-                                  py: 1.8,
-                                  borderRadius: 3,
+                                  py: 1.5,
+                                  borderRadius: 2,
                                   borderWidth: 2,
                                   borderColor: 'white',
                                   color: 'white',
                                   fontWeight: 600,
-                                  fontSize: '1.1rem',
-                                  transition: 'all 0.3s ease',
+                                  minWidth: '140px',
                                   '&:hover': {
                                     borderColor: 'white',
-                                    bgcolor: 'rgba(255,255,255,0.1)',
-                                    transform: 'translateY(-2px)'
+                                    bgcolor: 'rgba(255,255,255,0.1)'
                                   }
                                 }}
                               >
@@ -371,13 +381,14 @@ const HomePage = () => {
                           </Box>
                         </Grid>
                         
+                        {/* Изображение */}
                         <Grid item xs={12} md={6}>
                           <Box
                             sx={{
                               display: 'flex',
                               justifyContent: 'center',
                               alignItems: 'center',
-                              height: '100%'
+                              height: { xs: '250px', sm: '350px', md: '100%' }
                             }}
                           >
                             <Box
@@ -386,13 +397,10 @@ const HomePage = () => {
                               alt={product.name}
                               sx={{
                                 maxWidth: '100%',
-                                maxHeight: { xs: '300px', md: '500px' },
-                                borderRadius: 4,
-                                boxShadow: '0 25px 50px rgba(0,0,0,0.4)',
-                                objectFit: 'contain',
-                                transition: 'transform 0.5s ease',
-                                transform: isTransitioning ? 'scale(0.95)' : 'scale(1)',
-                                opacity: isTransitioning ? 0.8 : 1
+                                maxHeight: { xs: '200px', sm: '300px', md: '400px' },
+                                height: 'auto',
+                                borderRadius: 2,
+                                objectFit: 'contain'
                               }}
                             />
                           </Box>
@@ -405,130 +413,105 @@ const HomePage = () => {
             </Box>
 
             {/* Навигационные кнопки */}
-            <IconButton
-              onClick={handlePrevSlide}
-              disabled={isTransitioning}
-              sx={{
-                position: 'absolute',
-                left: { xs: 10, md: 30 },
-                top: '50%',
-                transform: 'translateY(-50%)',
-                bgcolor: 'rgba(255,255,255,0.9)',
-                color: 'grey.800',
-                width: { xs: 50, md: 60 },
-                height: { xs: 50, md: 60 },
-                transition: 'all 0.3s ease',
-                '&:hover:not(:disabled)': {
-                  bgcolor: 'white',
-                  transform: 'translateY(-50%) scale(1.1)',
-                  boxShadow: '0 8px 25px rgba(0,0,0,0.3)'
-                },
-                '&:disabled': {
-                  opacity: 0.5
-                }
-              }}
-            >
-              <ChevronLeft sx={{ fontSize: { xs: 28, md: 32 } }} />
-            </IconButton>
+            {carouselProducts.length > 1 && (
+              <>
+                <IconButton
+                  onClick={handlePrevSlide}
+                  disabled={isTransitioning}
+                  sx={{
+                    position: 'absolute',
+                    left: { xs: 10, md: 20 },
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    bgcolor: 'rgba(255,255,255,0.9)',
+                    color: 'grey.800',
+                    width: { xs: 40, md: 50 },
+                    height: { xs: 40, md: 50 },
+                    '&:hover': {
+                      bgcolor: 'white'
+                    },
+                    display: { xs: 'none', md: 'flex' }
+                  }}
+                >
+                  <ChevronLeft />
+                </IconButton>
 
-            <IconButton
-              onClick={handleNextSlide}
-              disabled={isTransitioning}
-              sx={{
-                position: 'absolute',
-                right: { xs: 10, md: 30 },
-                top: '50%',
-                transform: 'translateY(-50%)',
-                bgcolor: 'rgba(255,255,255,0.9)',
-                color: 'grey.800',
-                width: { xs: 50, md: 60 },
-                height: { xs: 50, md: 60 },
-                transition: 'all 0.3s ease',
-                '&:hover:not(:disabled)': {
-                  bgcolor: 'white',
-                  transform: 'translateY(-50%) scale(1.1)',
-                  boxShadow: '0 8px 25px rgba(0,0,0,0.3)'
-                },
-                '&:disabled': {
-                  opacity: 0.5
-                }
-              }}
-            >
-              <ChevronRight sx={{ fontSize: { xs: 28, md: 32 } }} />
-            </IconButton>
+                <IconButton
+                  onClick={handleNextSlide}
+                  disabled={isTransitioning}
+                  sx={{
+                    position: 'absolute',
+                    right: { xs: 10, md: 20 },
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    bgcolor: 'rgba(255,255,255,0.9)',
+                    color: 'grey.800',
+                    width: { xs: 40, md: 50 },
+                    height: { xs: 40, md: 50 },
+                    '&:hover': {
+                      bgcolor: 'white'
+                    },
+                    display: { xs: 'none', md: 'flex' }
+                  }}
+                >
+                  <ChevronRight />
+                </IconButton>
+              </>
+            )}
 
             {/* Индикаторы слайдов */}
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: { xs: 20, md: 40 },
-                left: '50%',
-                transform: 'translateX(-50%)',
-                display: 'flex',
-                gap: 2,
-                alignItems: 'center'
-              }}
-            >
-              {carouselProducts.map((_, index) => (
-                <Box
-                  key={index}
-                  onClick={() => !isTransitioning && goToSlide(index)}
-                  sx={{
-                    width: { xs: 12, md: 14 },
-                    height: { xs: 12, md: 14 },
-                    borderRadius: '50%',
-                    bgcolor: index === currentSlide ? 'secondary.main' : 'rgba(255,255,255,0.5)',
-                    cursor: isTransitioning ? 'default' : 'pointer',
-                    transition: 'all 0.3s ease',
-                    transform: index === currentSlide ? 'scale(1.3)' : 'scale(1)',
-                    '&:hover:not(:disabled)': {
-                      bgcolor: index === currentSlide ? 'secondary.main' : 'rgba(255,255,255,0.7)',
-                      transform: index === currentSlide ? 'scale(1.4)' : 'scale(1.2)'
-                    }
-                  }}
-                />
-              ))}
-            </Box>
+            {carouselProducts.length > 1 && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  bottom: 20,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  display: 'flex',
+                  gap: 1
+                }}
+              >
+                {carouselProducts.map((_, index) => (
+                  <Box
+                    key={index}
+                    onClick={() => goToSlide(index)}
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      bgcolor: index === currentSlide ? 'secondary.main' : 'rgba(255,255,255,0.5)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        bgcolor: index === currentSlide ? 'secondary.main' : 'rgba(255,255,255,0.7)'
+                      }
+                    }}
+                  />
+                ))}
+              </Box>
+            )}
 
-            {/* Кнопка автопрокрутки */}
-            <IconButton
-              onClick={toggleAutoplay}
-              sx={{
-                position: 'absolute',
-                top: { xs: 20, md: 30 },
-                right: { xs: 70, md: 100 },
-                bgcolor: 'rgba(255,255,255,0.9)',
-                color: 'grey.800',
-                width: { xs: 45, md: 50 },
-                height: { xs: 45, md: 50 },
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  bgcolor: 'white',
-                  transform: 'scale(1.1)'
-                }
-              }}
-            >
-              {isPlaying ? <Pause /> : <PlayArrow />}
-            </IconButton>
-
-            {/* Счетчик слайдов */}
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: { xs: 20, md: 40 },
-                right: { xs: 20, md: 30 },
-                color: 'white',
-                bgcolor: 'rgba(0,0,0,0.3)',
-                px: 2,
-                py: 1,
-                borderRadius: 2,
-                fontSize: '0.9rem'
-              }}
-            >
-              {currentSlide + 1} / {carouselProducts.length}
-            </Box>
+            {/* Управление автопрокруткой */}
+            {carouselProducts.length > 1 && (
+              <IconButton
+                onClick={toggleAutoplay}
+                sx={{
+                  position: 'absolute',
+                  top: 20,
+                  right: 20,
+                  bgcolor: 'rgba(255,255,255,0.9)',
+                  color: 'grey.800',
+                  '&:hover': {
+                    bgcolor: 'white'
+                  }
+                }}
+              >
+                {isPlaying ? <Pause /> : <PlayArrow />}
+              </IconButton>
+            )}
           </>
         ) : (
+          /* Заглушка если нет товаров для карусели */
           <Box
             sx={{
               height: '100%',
@@ -540,10 +523,23 @@ const HomePage = () => {
             }}
           >
             <Container>
-              <Typography variant="h1" gutterBottom sx={{ fontWeight: 800 }}>
+              <Typography 
+                variant="h2" 
+                gutterBottom 
+                sx={{ 
+                  fontWeight: 700,
+                  fontSize: { xs: '2rem', md: '3rem' }
+                }}
+              >
                 Добро пожаловать
               </Typography>
-              <Typography variant="h4" sx={{ mb: 4, opacity: 0.9, fontWeight: 300 }}>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  mb: 4, 
+                  opacity: 0.9 
+                }}
+              >
                 Лучшие товары по доступным ценам
               </Typography>
               <Button
@@ -553,17 +549,14 @@ const HomePage = () => {
                 size="large"
                 sx={{
                   px: 6,
-                  py: 1.8,
+                  py: 1.5,
                   fontSize: '1.1rem',
-                  borderRadius: 3,
                   bgcolor: 'white',
                   color: 'primary.main',
-                  fontWeight: 700,
+                  fontWeight: 600,
                   '&:hover': {
-                    bgcolor: 'grey.100',
-                    transform: 'translateY(-2px)'
-                  },
-                  transition: 'all 0.3s ease'
+                    bgcolor: 'grey.100'
+                  }
                 }}
               >
                 Начать покупки
@@ -573,8 +566,13 @@ const HomePage = () => {
         )}
       </Box>
 
-      {/* Преимущества */}
-      <Container sx={{ py: 8 }}>
+      {/* Преимущества - ВЫРОВНЕННЫЕ */}
+      <Container 
+        sx={{ 
+          py: { xs: 6, md: 8 },
+          px: { xs: 2, sm: 3, md: 4 } // Добавил горизонтальные отступы
+        }}
+      >
         <Typography
           variant="h2"
           align="center"
@@ -582,47 +580,65 @@ const HomePage = () => {
           sx={{
             fontWeight: 700,
             mb: 6,
-            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
+            fontSize: { xs: '2rem', md: '2.5rem' }
           }}
         >
           Почему выбирают нас
         </Typography>
 
-        <Grid container spacing={4}>
+        <Grid 
+          container 
+          spacing={3}
+          justifyContent="center" // Центрируем элементы
+        >
           {features.map((feature, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
+            <Grid 
+              item 
+              xs={12} 
+              sm={6} 
+              md={3} 
+              key={index}
+              sx={{
+                display: 'flex',
+                justifyContent: 'center'
+              }}
+            >
               <Box
                 sx={{
                   textAlign: 'center',
                   p: 3,
+                  maxWidth: 280, // Фиксируем максимальную ширину
+                  width: '100%',
                   transition: 'all 0.3s ease',
-                  borderRadius: 3,
+                  borderRadius: 2,
                   '&:hover': {
-                    transform: 'translateY(-8px)',
-                    bgcolor: alpha(theme.palette.primary.main, 0.05),
-                    boxShadow: theme.shadows[4]
+                    transform: 'translateY(-4px)',
+                    boxShadow: 3
                   }
                 }}
               >
                 <Box
                   sx={{
                     color: 'primary.main',
-                    mb: 2,
-                    transition: 'transform 0.3s ease',
-                    '&:hover': {
-                      transform: 'scale(1.1)'
-                    }
+                    mb: 2
                   }}
                 >
                   {feature.icon}
                 </Box>
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                <Typography 
+                  variant="h6" 
+                  gutterBottom 
+                  sx={{ 
+                    fontWeight: 600
+                  }}
+                >
                   {feature.title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{ lineHeight: 1.6 }}
+                >
                   {feature.description}
                 </Typography>
               </Box>
@@ -631,67 +647,117 @@ const HomePage = () => {
         </Grid>
       </Container>
 
-      {/* Популярные категории */}
-      <Box sx={{ py: 8, backgroundColor: 'grey.50' }}>
+      {/* Популярные категории - ВЫРОВНЕННЫЕ */}
+      <Box 
+        sx={{ 
+          py: { xs: 6, md: 8 }, 
+          backgroundColor: 'grey.50',
+          px: { xs: 0, sm: 0 } // Убираем горизонтальные отступы у контейнера
+        }}
+      >
         <Container>
-          <Box textAlign="center" mb={6}>
+          <Box 
+            textAlign="center" 
+            mb={6}
+            sx={{ px: { xs: 2, sm: 3 } }} // Добавляем отступы только для текста
+          >
             <Typography
               variant="h2"
               sx={{
                 fontWeight: 700,
                 mb: 2,
-                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
+                fontSize: { xs: '2rem', md: '2.5rem' }
               }}
             >
               Популярные категории
             </Typography>
-            <Typography variant="h6" color="text.secondary">
+            <Typography 
+              variant="h6" 
+              color="text.secondary"
+            >
               Выберите категорию и откройте для себя лучшие товары
             </Typography>
           </Box>
 
-          <Grid container spacing={3}>
+          <Grid 
+            container 
+            spacing={3}
+            justifyContent="center" // Центрируем карточки
+            sx={{ px: { xs: 2, sm: 3 } }} // Добавляем отступы для сетки
+          >
             {categories.slice(0, 4).map((category) => {
               const categoryImageUrl = getCategoryImage(category);
               
               return (
-                <Grid item xs={12} sm={6} md={3} key={category.id}>
+                <Grid 
+                  item 
+                  xs={12} 
+                  sm={6} 
+                  md={3} 
+                  key={category.id}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center'
+                  }}
+                >
                   <Card
                     component={Link}
                     to={`/catalog?category=${category.slug || category.id}`}
                     sx={{
                       textDecoration: 'none',
                       color: 'inherit',
-                      height: '100%',
+                      width: '100%',
+                      maxWidth: 280, // Фиксируем максимальную ширину
                       transition: 'all 0.3s ease',
-                      borderRadius: 3,
+                      borderRadius: 2,
                       '&:hover': {
-                        transform: 'translateY(-8px)',
-                        boxShadow: theme.shadows[8]
+                        transform: 'translateY(-4px)',
+                        boxShadow: 4
                       }
                     }}
                   >
                     <CardMedia
                       component="img"
-                      height="200"
+                      height="160"
                       image={categoryImageUrl}
                       alt={category.name || 'Категория'}
+                      sx={{
+                        objectFit: 'cover'
+                      }}
                     />
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <Category sx={{ fontSize: 32, color: 'primary.main', mb: 1 }} />
-                      <Typography variant="h6" gutterBottom>
+                    <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                      <Category 
+                        sx={{ 
+                          fontSize: 32, 
+                          color: 'primary.main', 
+                          mb: 1 
+                        }} 
+                      />
+                      <Typography 
+                        variant="h6" 
+                        gutterBottom
+                        sx={{ fontWeight: 600 }}
+                      >
                         {category.name || 'Категория'}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary" 
+                        sx={{ 
+                          mb: 2,
+                          minHeight: '40px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
                         {category.description || 'Описание категории'}
                       </Typography>
                       <Chip
                         label={`${category.product_count || 0} товаров`}
                         color="primary"
                         variant="outlined"
+                        size="small"
                       />
                     </CardContent>
                   </Card>
@@ -705,16 +771,15 @@ const HomePage = () => {
       {/* Кнопка "Наверх" */}
       <Fab
         onClick={scrollToTop}
+        size="medium"
         sx={{
           position: 'fixed',
           bottom: 24,
           right: 24,
           bgcolor: 'primary.main',
           color: 'white',
-          transition: 'all 0.3s ease',
           '&:hover': {
-            bgcolor: 'primary.dark',
-            transform: 'translateY(-2px)'
+            bgcolor: 'primary.dark'
           }
         }}
       >

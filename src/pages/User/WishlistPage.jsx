@@ -23,7 +23,8 @@ import {
   Fade,
   Avatar,
   Tooltip,
-  Badge
+  Badge,
+  useMediaQuery
 } from '@mui/material';
 import { 
   Favorite,
@@ -61,6 +62,11 @@ const WishlistPage = () => {
   const [addingToCart, setAddingToCart] = useState({});
   const [hoveredCard, setHoveredCard] = useState(null);
   const [mounted, setMounted] = useState(false);
+
+  // Медиа-запросы для адаптивности
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
 
   const cartItemsCount = cartItems ? cartItems.reduce((total, item) => total + item.quantity, 0) : 0;
 
@@ -218,25 +224,35 @@ const WishlistPage = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        py: 8
+        py: 8,
+        px: 2
       }}>
         <Container maxWidth="sm">
           <Slide direction="down" in={mounted} timeout={800}>
             <Box sx={{ textAlign: 'center', color: 'white' }}>
               <Avatar sx={{ 
-                width: 120, 
-                height: 120, 
+                width: { xs: 80, sm: 100, md: 120 }, 
+                height: { xs: 80, sm: 100, md: 120 }, 
                 mx: 'auto', 
                 mb: 3,
                 background: 'rgba(255,255,255,0.2)',
                 backdropFilter: 'blur(10px)'
               }}>
-                <Favorite sx={{ fontSize: 60 }} />
+                <Favorite sx={{ fontSize: { xs: 40, sm: 50, md: 60 } }} />
               </Avatar>
-              <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+              <Typography variant="h3" gutterBottom sx={{ 
+                fontWeight: 'bold', 
+                mb: 2,
+                fontSize: { xs: '1.8rem', sm: '2.5rem', md: '3rem' }
+              }}>
                 💝 Избранное
               </Typography>
-              <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
+              <Typography variant="h6" sx={{ 
+                mb: 4, 
+                opacity: 0.9,
+                fontSize: { xs: '1rem', md: '1.25rem' },
+                px: { xs: 1, sm: 0 }
+              }}>
                 Войдите в систему, чтобы сохранять понравившиеся товары
               </Typography>
               <Button
@@ -248,9 +264,9 @@ const WishlistPage = () => {
                   background: 'rgba(255,255,255,0.2)',
                   backdropFilter: 'blur(10px)',
                   borderRadius: 3,
-                  px: 4,
+                  px: { xs: 3, sm: 4 },
                   py: 1.5,
-                  fontSize: '1.1rem',
+                  fontSize: { xs: '1rem', sm: '1.1rem' },
                   color: 'white',
                   border: '1px solid rgba(255,255,255,0.3)',
                   '&:hover': {
@@ -275,21 +291,28 @@ const WishlistPage = () => {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
+        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+        px: 2
       }}>
         <Box sx={{ textAlign: 'center' }}>
           <CircularProgress 
-            size={80} 
+            size={isMobile ? 60 : 80} 
             thickness={3}
             sx={{ 
               color: 'primary.main',
               mb: 3
             }} 
           />
-          <Typography variant="h5" color="text.secondary" sx={{ fontWeight: 'bold' }}>
+          <Typography variant="h5" color="text.secondary" sx={{ 
+            fontWeight: 'bold',
+            fontSize: { xs: '1.3rem', sm: '1.5rem' }
+          }}>
             Загружаем ваши желания...
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+          <Typography variant="body1" color="text.secondary" sx={{ 
+            mt: 1,
+            fontSize: { xs: '0.9rem', sm: '1rem' }
+          }}>
             Это займет всего секунду
           </Typography>
         </Box>
@@ -303,14 +326,17 @@ const WishlistPage = () => {
       background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #ffffff 100%)',
       pb: 8
     }}>
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth="xl" sx={{ 
+        py: { xs: 2, sm: 3, md: 4 },
+        px: { xs: 1, sm: 2, md: 3 }
+      }}>
         {/* Анимированный хедер */}
         <Slide direction="down" in={mounted} timeout={600}>
           <Box sx={{ 
             background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.1)} 100%)`,
-            borderRadius: 4,
-            p: 4,
-            mb: 4,
+            borderRadius: { xs: 2, sm: 3, md: 4 },
+            p: { xs: 2, sm: 3, md: 4 },
+            mb: { xs: 2, sm: 3, md: 4 },
             textAlign: 'center',
             position: 'relative',
             overflow: 'hidden',
@@ -320,7 +346,7 @@ const WishlistPage = () => {
               top: 0,
               left: 0,
               right: 0,
-              height: '4px',
+              height: '3px',
               background: 'linear-gradient(90deg, #667eea, #764ba2, #f093fb)',
             }
           }}>
@@ -334,32 +360,49 @@ const WishlistPage = () => {
               borderRadius: '50%'
             }} />
             
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2, position: 'relative' }}>
-              <IconButton 
-                onClick={() => navigate(-1)}
-                sx={{ 
-                  mr: 2,
-                  background: 'rgba(255,255,255,0.9)',
-                  '&:hover': { 
-                    background: 'white',
-                    transform: 'scale(1.1)'
-                  },
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <ArrowBack />
-              </IconButton>
-              
-              <Avatar sx={{ 
-                width: 60, 
-                height: 60, 
-                mr: 2,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: { xs: 'center', sm: 'flex-start' },
+              mb: 2, 
+              position: 'relative',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: { xs: 2, sm: 0 }
+            }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                justifyContent: 'center'
               }}>
-                <Favorite sx={{ fontSize: 30 }} />
-              </Avatar>
+                <IconButton 
+                  onClick={() => navigate(-1)}
+                  sx={{ 
+                    mr: { xs: 0, sm: 2 },
+                    background: 'rgba(255,255,255,0.9)',
+                    '&:hover': { 
+                      background: 'white',
+                      transform: 'scale(1.1)'
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <ArrowBack />
+                </IconButton>
+                
+                <Avatar sx={{ 
+                  width: { xs: 50, sm: 60 }, 
+                  height: { xs: 50, sm: 60 }, 
+                  mr: { xs: 1, sm: 2 },
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                }}>
+                  <Favorite sx={{ fontSize: { xs: 24, sm: 30 } }} />
+                </Avatar>
+              </Box>
               
-              <Box sx={{ textAlign: 'left' }}>
+              <Box sx={{ 
+                textAlign: { xs: 'center', sm: 'left' },
+                flex: 1
+              }}>
                 <Typography variant="h2" component="h1" sx={{ 
                   fontWeight: 'bold', 
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -367,11 +410,18 @@ const WishlistPage = () => {
                   textFillColor: 'transparent',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
-                  mb: 1
+                  mb: 1,
+                  fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }
                 }}>
                   Мое избранное
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h6" color="text.secondary" sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1,
+                  justifyContent: { xs: 'center', sm: 'flex-start' },
+                  fontSize: { xs: '0.9rem', sm: '1rem' }
+                }}>
                   {wishlist.length} {wishlist.length === 1 ? 'желанный товар' : wishlist.length < 5 ? 'желанных товара' : 'желанных товаров'}
                 </Typography>
               </Box>
@@ -379,7 +429,14 @@ const WishlistPage = () => {
             
             {wishlist.length > 0 && (
               <Fade in={mounted} timeout={1000}>
-                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  gap: 2, 
+                  justifyContent: 'center', 
+                  mt: 2, 
+                  flexWrap: 'wrap',
+                  flexDirection: { xs: 'column', sm: 'row' }
+                }}>
                   <Button
                     variant="outlined"
                     onClick={() => navigate('/catalog')}
@@ -387,7 +444,9 @@ const WishlistPage = () => {
                     sx={{ 
                       borderRadius: 3,
                       borderWidth: 2,
-                      fontWeight: 'bold'
+                      fontWeight: 'bold',
+                      fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                      px: { xs: 2, sm: 3 }
                     }}
                   >
                     Найти больше товаров
@@ -401,6 +460,8 @@ const WishlistPage = () => {
                       borderRadius: 3,
                       background: 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
                       fontWeight: 'bold',
+                      fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                      px: { xs: 2, sm: 3 },
                       '&:hover': {
                         transform: 'translateY(-2px)',
                         boxShadow: '0 8px 25px rgba(0, 176, 155, 0.3)'
@@ -418,16 +479,23 @@ const WishlistPage = () => {
         {/* Пустой список */}
         {wishlist.length === 0 ? (
           <Zoom in={mounted} timeout={800}>
-            <Box sx={{ textAlign: 'center', py: 12 }}>
+            <Box sx={{ 
+              textAlign: 'center', 
+              py: { xs: 6, sm: 8, md: 12 },
+              px: 2
+            }}>
               <Avatar sx={{ 
-                width: 140, 
-                height: 140, 
+                width: { xs: 100, sm: 120, md: 140 }, 
+                height: { xs: 100, sm: 120, md: 140 }, 
                 mx: 'auto', 
                 mb: 3,
                 background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.1)} 100%)`,
                 border: `3px dashed ${alpha(theme.palette.primary.main, 0.3)}`
               }}>
-                <HeartBroken sx={{ fontSize: 60, color: 'text.secondary' }} />
+                <HeartBroken sx={{ 
+                  fontSize: { xs: 40, sm: 50, md: 60 }, 
+                  color: 'text.secondary' 
+                }} />
               </Avatar>
               
               <Typography variant="h3" gutterBottom sx={{ 
@@ -435,12 +503,19 @@ const WishlistPage = () => {
                 mb: 2,
                 background: 'linear-gradient(135deg, #666 0%, #999 100%)',
                 backgroundClip: 'text',
-                textFillColor: 'transparent'
+                textFillColor: 'transparent',
+                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }
               }}>
                 Список желаний пуст
               </Typography>
               
-              <Typography variant="h6" color="text.secondary" sx={{ mb: 4, maxWidth: 500, mx: 'auto', lineHeight: 1.6 }}>
+              <Typography variant="h6" color="text.secondary" sx={{ 
+                mb: 4, 
+                maxWidth: 500, 
+                mx: 'auto', 
+                lineHeight: 1.6,
+                fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' }
+              }}>
                 Ваше избранное пока пусто. Находите интересные товары и добавляйте их сюда, чтобы не потерять!
               </Typography>
               
@@ -452,9 +527,9 @@ const WishlistPage = () => {
                 sx={{
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   borderRadius: 3,
-                  px: 5,
+                  px: { xs: 4, sm: 5 },
                   py: 1.5,
-                  fontSize: '1.1rem',
+                  fontSize: { xs: '1rem', sm: '1.1rem' },
                   fontWeight: 'bold',
                   boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
                   '&:hover': {
@@ -468,7 +543,7 @@ const WishlistPage = () => {
             </Box>
           </Zoom>
         ) : (
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
             {wishlist.map((item, index) => {
               const product = item.products;
               const isAdding = addingToCart[product?.id];
@@ -480,8 +555,8 @@ const WishlistPage = () => {
                 <Grid item xs={12} sm={6} lg={4} key={item.id}>
                   <Slide direction="up" in={mounted} timeout={400 + index * 100}>
                     <Card 
-                      onMouseEnter={() => setHoveredCard(product.id)}
-                      onMouseLeave={() => setHoveredCard(null)}
+                      onMouseEnter={() => !isMobile && setHoveredCard(product.id)}
+                      onMouseLeave={() => !isMobile && setHoveredCard(null)}
                       onClick={() => handleViewProduct(product)}
                       sx={{ 
                         height: '100%', 
@@ -489,15 +564,15 @@ const WishlistPage = () => {
                         flexDirection: 'column',
                         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                         border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                        borderRadius: 4,
+                        borderRadius: { xs: 2, sm: 3, md: 4 },
                         overflow: 'hidden',
                         cursor: 'pointer',
                         background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
                         position: 'relative',
-                        transform: hoveredCard === product.id ? 'translateY(-12px) scale(1.02)' : 'translateY(0) scale(1)',
-                        boxShadow: hoveredCard === product.id 
-                          ? '0 25px 50px rgba(0,0,0,0.15)' 
-                          : '0 8px 25px rgba(0,0,0,0.08)',
+                        transform: !isMobile && hoveredCard === product.id ? 'translateY(-8px) scale(1.02)' : 'translateY(0) scale(1)',
+                        boxShadow: !isMobile && hoveredCard === product.id 
+                          ? '0 20px 40px rgba(0,0,0,0.12)' 
+                          : '0 4px 12px rgba(0,0,0,0.05)',
                         '&::before': {
                           content: '""',
                           position: 'absolute',
@@ -506,7 +581,7 @@ const WishlistPage = () => {
                           right: 0,
                           height: '3px',
                           background: 'linear-gradient(90deg, #667eea, #764ba2, #f093fb)',
-                          transform: hoveredCard === product.id ? 'scaleX(1)' : 'scaleX(0)',
+                          transform: !isMobile && hoveredCard === product.id ? 'scaleX(1)' : 'scaleX(0)',
                           transition: 'transform 0.3s ease',
                         }
                       }}
@@ -515,13 +590,13 @@ const WishlistPage = () => {
                       <Box sx={{ position: 'relative' }}>
                         <CardMedia
                           component="img"
-                          height="300"
+                          height={isMobile ? 200 : 250}
                           image={product?.image_url?.[0] || '/images/placeholder.jpg'}
                           alt={product?.name}
                           sx={{ 
                             objectFit: 'cover',
-                            transition: 'transform 0.4s ease',
-                            transform: hoveredCard === product.id ? 'scale(1.1)' : 'scale(1)'
+                            transition: !isMobile ? 'transform 0.4s ease' : 'none',
+                            transform: !isMobile && hoveredCard === product.id ? 'scale(1.05)' : 'scale(1)'
                           }}
                         />
                         
@@ -533,35 +608,44 @@ const WishlistPage = () => {
                           right: 0,
                           height: '60%',
                           background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)',
-                          opacity: hoveredCard === product.id ? 1 : 0,
+                          opacity: !isMobile && hoveredCard === product.id ? 1 : 0,
                           transition: 'opacity 0.3s ease'
                         }} />
                         
                         {/* Бейджи */}
-                        <Box sx={{ position: 'absolute', top: 16, left: 16, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <Box sx={{ 
+                          position: 'absolute', 
+                          top: 12, 
+                          left: 12, 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: 1 
+                        }}>
                           {product?.is_new && (
                             <Chip 
-                              icon={<NewReleases />}
+                              icon={<NewReleases sx={{ fontSize: 16 }} />}
                               label="Новинка" 
                               size="small"
                               sx={{ 
                                 background: 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
                                 color: 'white',
                                 fontWeight: 'bold',
-                                boxShadow: '0 4px 15px rgba(0, 176, 155, 0.3)'
+                                fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                height: { xs: 24, sm: 28 }
                               }}
                             />
                           )}
                           {product?.discount > 0 && (
                             <Chip 
-                              icon={<LocalOffer />}
+                              icon={<LocalOffer sx={{ fontSize: 16 }} />}
                               label={`-${product.discount}%`} 
                               size="small"
                               sx={{ 
                                 background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
                                 color: 'white',
                                 fontWeight: 'bold',
-                                boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)'
+                                fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                height: { xs: 24, sm: 28 }
                               }}
                             />
                           )}
@@ -570,13 +654,13 @@ const WishlistPage = () => {
                         {/* Кнопки действий */}
                         <Box sx={{ 
                           position: 'absolute', 
-                          top: 16, 
-                          right: 16, 
+                          top: 12, 
+                          right: 12, 
                           display: 'flex', 
                           flexDirection: 'column', 
                           gap: 1,
-                          opacity: hoveredCard === product.id ? 1 : 0.7,
-                          transform: hoveredCard === product.id ? 'translateX(0)' : 'translateX(10px)',
+                          opacity: !isMobile ? (hoveredCard === product.id ? 1 : 0.7) : 1,
+                          transform: !isMobile ? (hoveredCard === product.id ? 'translateX(0)' : 'translateX(10px)') : 'translateX(0)',
                           transition: 'all 0.3s ease'
                         }}>
                           <Tooltip title="Поделиться">
@@ -620,23 +704,28 @@ const WishlistPage = () => {
                         {/* Цена на изображении */}
                         <Box sx={{ 
                           position: 'absolute',
-                          bottom: 16,
-                          left: 16,
-                          opacity: hoveredCard === product.id ? 1 : 0,
-                          transform: hoveredCard === product.id ? 'translateY(0)' : 'translateY(10px)',
+                          bottom: 12,
+                          left: 12,
+                          opacity: !isMobile && hoveredCard === product.id ? 1 : 0,
+                          transform: !isMobile && hoveredCard === product.id ? 'translateY(0)' : 'translateY(10px)',
                           transition: 'all 0.3s ease'
                         }}>
                           <Typography variant="h5" sx={{ 
                             color: 'white', 
                             fontWeight: 'bold',
-                            textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                            textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                            fontSize: { xs: '1rem', sm: '1.25rem' }
                           }}>
                             {product?.price?.toLocaleString('ru-RU')} ₽
                           </Typography>
                         </Box>
                       </Box>
                       
-                      <CardContent sx={{ flexGrow: 1, p: 3, pb: 2 }}>
+                      <CardContent sx={{ 
+                        flexGrow: 1, 
+                        p: { xs: 2, sm: 3 }, 
+                        pb: { xs: 1, sm: 2 } 
+                      }}>
                         <Typography 
                           variant="h6" 
                           gutterBottom 
@@ -646,20 +735,30 @@ const WishlistPage = () => {
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
                             overflow: 'hidden',
-                            minHeight: 64,
-                            lineHeight: 1.3
+                            minHeight: { xs: 48, sm: 64 },
+                            lineHeight: 1.3,
+                            fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' }
                           }}
                         >
                           {product?.name}
                         </Typography>
                         
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                          <Inventory sx={{ fontSize: 18, color: stockColor }} />
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 1, 
+                          mb: 2 
+                        }}>
+                          <Inventory sx={{ 
+                            fontSize: { xs: 16, sm: 18 }, 
+                            color: stockColor 
+                          }} />
                           <Typography 
                             variant="body2" 
                             sx={{ 
                               fontWeight: 'bold',
-                              color: stockColor
+                              color: stockColor,
+                              fontSize: { xs: '0.75rem', sm: '0.8rem' }
                             }}
                           >
                             {stockText}
@@ -668,25 +767,43 @@ const WishlistPage = () => {
 
                         {product?.old_price && product.old_price > product?.price && (
                           <Box sx={{ mb: 2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, flexWrap: 'wrap' }}>
-                              <Typography variant="h4" color="primary" sx={{ fontWeight: 'bold' }}>
+                            <Box sx={{ 
+                              display: 'flex', 
+                              alignItems: 'baseline', 
+                              gap: { xs: 1, sm: 2 }, 
+                              flexWrap: 'wrap' 
+                            }}>
+                              <Typography variant="h4" color="primary" sx={{ 
+                                fontWeight: 'bold',
+                                fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                              }}>
                                 {product?.price?.toLocaleString('ru-RU')} ₽
                               </Typography>
-                              <Typography variant="body1" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
+                              <Typography variant="body1" color="text.secondary" sx={{ 
+                                textDecoration: 'line-through',
+                                fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                              }}>
                                 {product.old_price.toLocaleString('ru-RU')} ₽
                               </Typography>
                               <Chip 
                                 label={`Экономия ${((product.old_price - product.price) / product.old_price * 100).toFixed(0)}%`}
                                 size="small"
                                 color="success"
-                                sx={{ fontWeight: 'bold' }}
+                                sx={{ 
+                                  fontWeight: 'bold',
+                                  fontSize: { xs: '0.7rem', sm: '0.75rem' }
+                                }}
                               />
                             </Box>
                           </Box>
                         )}
 
                         {(!product?.old_price || product.old_price <= product?.price) && (
-                          <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold', mb: 2 }}>
+                          <Typography variant="h5" color="primary" sx={{ 
+                            fontWeight: 'bold', 
+                            mb: 2,
+                            fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                          }}>
                             {product?.price?.toLocaleString('ru-RU')} ₽
                           </Typography>
                         )}
@@ -694,7 +811,12 @@ const WishlistPage = () => {
 
                       <Divider sx={{ mx: 2 }} />
                       
-                      <Box sx={{ p: 2, display: 'flex', gap: 1 }}>
+                      <Box sx={{ 
+                        p: 2, 
+                        display: 'flex', 
+                        gap: 1,
+                        flexDirection: { xs: 'column', sm: 'row' }
+                      }}>
                         <Button
                           variant="contained"
                           startIcon={isAdding ? <CircularProgress size={16} color="inherit" /> : <ShoppingCart />}
@@ -705,18 +827,19 @@ const WishlistPage = () => {
                           }}
                           disabled={isAdding || !inStock}
                           sx={{ 
-                            borderRadius: 3,
-                            py: 1.2,
+                            borderRadius: 2,
+                            py: { xs: 1, sm: 1.2 },
                             background: inStock 
                               ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                               : 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)',
                             fontWeight: 'bold',
-                            fontSize: '0.95rem',
+                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
                             '&:hover': inStock ? {
                               transform: 'translateY(-2px)',
                               boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)'
                             } : {},
-                            transition: 'all 0.3s ease'
+                            transition: 'all 0.3s ease',
+                            order: { xs: 2, sm: 1 }
                           }}
                         >
                           {isAdding ? 'Добавление...' : inStock ? 'В корзину' : 'Нет в наличии'}
@@ -736,10 +859,15 @@ const WishlistPage = () => {
                                 background: 'rgba(244, 67, 54, 0.2)',
                                 transform: 'scale(1.1)'
                               },
-                              transition: 'all 0.3s ease'
+                              transition: 'all 0.3s ease',
+                              order: { xs: 1, sm: 2 },
+                              alignSelf: { xs: 'flex-end', sm: 'center' },
+                              minWidth: 'auto',
+                              width: { xs: 40, sm: 48 },
+                              height: { xs: 40, sm: 48 }
                             }}
                           >
-                            <Delete />
+                            <Delete sx={{ fontSize: { xs: 20, sm: 24 } }} />
                           </IconButton>
                         </Tooltip>
                       </Box>
@@ -760,17 +888,29 @@ const WishlistPage = () => {
               onClick={() => navigate('/cart')}
               sx={{
                 position: 'fixed',
-                bottom: 24,
-                right: 24,
+                bottom: { xs: 16, sm: 24 },
+                right: { xs: 16, sm: 24 },
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                width: { xs: 56, sm: 64 },
+                height: { xs: 56, sm: 64 },
                 '&:hover': {
                   transform: 'scale(1.1)',
                   background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)'
                 }
               }}
             >
-              <Badge badgeContent={cartItemsCount} color="error">
-                <ShoppingCart />
+              <Badge 
+                badgeContent={cartItemsCount} 
+                color="error"
+                sx={{
+                  '& .MuiBadge-badge': {
+                    fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                    height: { xs: 18, sm: 20 },
+                    minWidth: { xs: 18, sm: 20 }
+                  }
+                }}
+              >
+                <ShoppingCart sx={{ fontSize: { xs: 24, sm: 28 } }} />
               </Badge>
             </Fab>
           </Zoom>
@@ -782,19 +922,23 @@ const WishlistPage = () => {
           autoHideDuration={4000}
           onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          sx={{
+            bottom: { xs: 80, sm: 24 }
+          }}
         >
           <Alert 
             severity={snackbar.severity} 
             onClose={handleCloseSnackbar}
             sx={{ 
-              borderRadius: 3,
+              borderRadius: 2,
               boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
-              alignItems: 'center'
+              alignItems: 'center',
+              fontSize: { xs: '0.9rem', sm: '1rem' }
             }}
             iconMapping={{
-              success: <Star sx={{ fontSize: 24 }} />,
-              error: <Favorite sx={{ fontSize: 24 }} />,
-              warning: <FlashOn sx={{ fontSize: 24 }} />
+              success: <Star sx={{ fontSize: { xs: 20, sm: 24 } }} />,
+              error: <Favorite sx={{ fontSize: { xs: 20, sm: 24 } }} />,
+              warning: <FlashOn sx={{ fontSize: { xs: 20, sm: 24 } }} />
             }}
           >
             <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
