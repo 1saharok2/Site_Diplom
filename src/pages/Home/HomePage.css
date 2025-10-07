@@ -1,192 +1,188 @@
-.homepage {
-  min-height: 100vh;
-}
+/* ==== HERO SECTION ==== */
 
-/* Герой секция */
 .hero-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 100px 20px;
-  text-align: center;
-}
-
-.hero-content h1 {
-  font-size: 3rem;
-  margin-bottom: 20px;
-  font-weight: 700;
-}
-
-.hero-content p {
-  font-size: 1.2rem;
-  margin-bottom: 30px;
-  opacity: 0.9;
-}
-
-.cta-button {
-  display: inline-block;
-  padding: 15px 30px;
-  background: #ff6b6b;
-  color: white;
-  text-decoration: none;
-  border-radius: 30px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.cta-button:hover {
-  background: #ff5252;
-  transform: translateY(-2px);
-}
-
-/* Популярные товары */
-.featured-products {
-  padding: 80px 20px;
-  background: #f8f9fa;
-}
-
-.featured-products h2 {
-  text-align: center;
-  font-size: 2.5rem;
-  margin-bottom: 50px;
-  color: #333;
-}
-
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 30px;
-  margin-bottom: 40px;
-}
-
-.view-all-container {
-  text-align: center;
-}
-
-.view-all-button {
-  display: inline-block;
-  padding: 12px 25px;
-  border: 2px solid #667eea;
-  color: #667eea;
-  text-decoration: none;
-  border-radius: 25px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.view-all-button:hover {
-  background: #667eea;
-  color: white;
-}
-
-/* Преимущества */
-.features-section {
-  padding: 80px 20px;
-  background: white;
-}
-
-.features-section h2 {
-  text-align: center;
-  font-size: 2.5rem;
-  margin-bottom: 50px;
-  color: #333;
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 40px;
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.feature-item {
-  text-align: center;
-  padding: 30px;
-  border-radius: 15px;
-  background: #f8f9fa;
-  transition: transform 0.3s ease;
-}
-
-.feature-item:hover {
-  transform: translateY(-5px);
-}
-
-.feature-icon {
-  font-size: 3rem;
-  margin-bottom: 20px;
-}
-
-.feature-item h3 {
-  font-size: 1.5rem;
-  margin-bottom: 15px;
-  color: #333;
-}
-
-.feature-item p {
-  color: #666;
-  line-height: 1.6;
-}
-
-/* Добавьте эти стили для Material-UI компонентов */
-.hero-title {
-  font-weight: bold;
-  font-size: 3rem;
-  margin-bottom: 20px;
-  line-height: 1.2;
-}
-
-.hero-description {
-  margin-bottom: 30px;
-  opacity: 0.9;
-  font-weight: 300;
-}
-
-.cta-button {
-  background: white;
-  color: #667eea;
-}
-
-.cta-button:hover {
-  background: #f8f9fa;
-  transform: translateY(-2px);
-}
-
-.cta-button-secondary {
-  border-color: white;
-  color: white;
-}
-
-.cta-button-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* Добавьте в ваш CSS */
-.image-placeholder {
+  position: relative;
   width: 100%;
-  height: 200px;
-  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+  overflow: hidden;
+  background: linear-gradient(135deg, #5b5bd6, #6b4dc7);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
-  border-radius: 8px;
+  padding: 60px 0;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-  .hero-content h1 {
+.hero-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  z-index: 0;
+}
+
+/* ==== CONTENT WRAPPER ==== */
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1400px;
+  width: 100%;
+  padding: 0 100px;
+  gap: 60px;
+}
+
+/* ==== TEXT SIDE ==== */
+
+.hero-text {
+  flex: 1;
+  z-index: 3;
+  position: relative;
+  color: #fff;
+}
+
+.hero-text h1 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+.hero-text p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin-bottom: 25px;
+}
+
+.hero-text .price {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ff4b91;
+  margin-bottom: 25px;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.hero-buttons .btn {
+  background: #4e5ef7;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  padding: 12px 26px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hero-buttons .btn:hover {
+  background: #3944d4;
+}
+
+.hero-buttons .btn-outline {
+  background: transparent;
+  border: 2px solid #fff;
+}
+
+.hero-buttons .btn-outline:hover {
+  background: #fff;
+  color: #4e5ef7;
+}
+
+/* ==== IMAGE SIDE (CAROUSEL) ==== */
+
+.hero-image {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-image img,
+.hero-image .swiper,
+.hero-image .carousel {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+  height: auto;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* ==== NAV BUTTONS IN CAROUSEL ==== */
+.swiper-button-prev,
+.swiper-button-next {
+  color: #fff !important;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* ==== RESPONSIVE ==== */
+
+@media (max-width: 1200px) {
+  .hero-content {
+    gap: 40px;
+    padding: 0 60px;
+  }
+
+  .hero-text h1 {
+    font-size: 2.4rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .hero-content {
+    flex-direction: column;
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .hero-image {
+    justify-content: center;
+    margin-top: 30px;
+  }
+
+  .hero-text h1 {
     font-size: 2rem;
   }
-  
-  .hero-content p {
+
+  .hero-text p {
     font-size: 1rem;
   }
-  
-  .featured-products h2,
-  .features-section h2 {
-    font-size: 2rem;
+
+  .hero-buttons {
+    justify-content: center;
   }
-  
-  .products-grid {
-    grid-template-columns: 1fr;
+
+  .hero-image img,
+  .hero-image .swiper,
+  .hero-image .carousel {
+    max-width: 360px;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero-text h1 {
+    font-size: 1.8rem;
+  }
+
+  .hero-buttons .btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
   }
 }

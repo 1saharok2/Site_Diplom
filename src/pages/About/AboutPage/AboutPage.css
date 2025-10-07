@@ -1,0 +1,107 @@
+.about-page {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  overflow: hidden;
+}
+
+/* Герой */
+.hero-section {
+  position: relative;
+  padding-top: 8rem;
+  padding-bottom: 5rem;
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+  color: white;
+  text-align: center;
+}
+.hero-title {
+  font-weight: 900;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+.hero-subtitle {
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+/* Карточки преимуществ */
+.feature-card {
+  text-align: center;
+  padding: 2rem;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+.feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+.feature-icon {
+  color: #1976d2;
+  margin-bottom: 1rem;
+}
+
+/* Команда */
+.team-card {
+  text-align: center;
+  padding: 2rem;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+.team-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+.team-avatar {
+  width: 120px !important;
+  height: 120px !important;
+  margin: 0 auto 1rem;
+  border: 3px solid #1976d2;
+}
+
+/* Статистика */
+.stats-section {
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+  color: white;
+  border-radius: 24px;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+.stat-value {
+  font-weight: 800;
+}
+.stat-icon {
+  margin-bottom: 0.5rem;
+}
+
+/* 📱 Адаптация под мобильные устройства */
+@media (max-width: 900px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+  .team-avatar {
+    width: 100px !important;
+    height: 100px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero-section {
+    padding-top: 5rem;
+    padding-bottom: 3rem;
+  }
+  .feature-card, .team-card {
+    padding: 1.5rem;
+  }
+  .feature-icon {
+    font-size: 2rem;
+  }
+  .hero-title {
+    font-size: 1.8rem;
+  }
+  .hero-subtitle {
+    font-size: 0.95rem;
+  }
+}
