@@ -9,10 +9,11 @@ import {
   Col,
   Form,
   Card,
-  Accordion
+  Badge
 } from 'react-bootstrap';
 import { categoryService } from '../../../services/categoryService';
 import ProductCard from '../../../components/Products/ProductCard/ProductCard';
+import SortingCard from './SortingCard';
 import './CategoryPage.css';
 
 const CategoryPage = () => {
@@ -38,6 +39,11 @@ const CategoryPage = () => {
         ]);
         setCategory(categoryData);
         setProducts(productsData);
+        
+        if (productsData.length > 0) {
+          const maxPrice = Math.max(...productsData.map(p => p.price));
+          setPriceRange([0, maxPrice]);
+        }
       } catch (err) {
         setError('Ошибка загрузки данных категории');
         console.error('Error fetching category data:', err);
@@ -51,7 +57,6 @@ const CategoryPage = () => {
     }
   }, [slug]);
 
-  // Извлекаем все возможные характеристики из товаров
   const getAllSpecifications = () => {
     const specs = {};
     
@@ -73,7 +78,6 @@ const CategoryPage = () => {
       }
     });
 
-    // Преобразуем Set в массив и сортируем
     const result = {};
     Object.keys(specs).forEach(key => {
       result[key] = Array.from(specs[key]).sort();
@@ -83,27 +87,16 @@ const CategoryPage = () => {
   };
 
   const specifications = getAllSpecifications();
-
-  // Получаем уникальные бренды
   const brands = [...new Set(products.map(p => p.brand).filter(Boolean))].sort();
-
-  // Находим максимальную цену для диапазона
   const maxPrice = products.length > 0 
     ? Math.max(...products.map(p => p.price)) 
     : 500000;
 
-  // Функция для проверки соответствия товара фильтрам
   const productMatchesFilters = (product) => {
-    // Фильтр по наличию
     if (filterInStock && product.stock <= 0) return false;
-
-    // Фильтр по цене
     if (product.price < priceRange[0] || product.price > priceRange[1]) return false;
-
-    // Фильтр по брендам
     if (selectedBrands.length > 0 && !selectedBrands.includes(product.brand)) return false;
 
-    // Фильтр по характеристикам
     if (Object.keys(filters).length > 0) {
       try {
         const productSpecs = product.specifications 
@@ -146,7 +139,6 @@ const CategoryPage = () => {
       }
     });
 
-  // Обработчики фильтров
   const handleBrandToggle = (brand) => {
     setSelectedBrands(prev => 
       prev.includes(brand) 
@@ -205,6 +197,19 @@ const CategoryPage = () => {
     return nameMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (filterInStock) count++;
+    if (priceRange[0] > 0 || priceRange[1] < maxPrice) count++;
+    count += selectedBrands.length;
+    Object.values(filters).forEach(values => {
+      count += values.length;
+    });
+    return count;
+  };
+
+  const activeFiltersCount = getActiveFiltersCount();
+
   if (loading) {
     return (
       <Container className="text-center mt-5">
@@ -245,178 +250,347 @@ const CategoryPage = () => {
 
   return (
     <Container className="category-page">
-      {/* Заголовок категории */}
-      <div className="category-header">
-        <h1 className="category-title">{category.name}</h1>
-        <p className="category-description">{category.description}</p>
-        <div className="products-count">
-          Найдено товаров: {filteredAndSortedProducts.length} из {products.length}
-        </div>
-      </div>
-
-      {/* Основной контент с фильтрами и товарами */}
       <Row>
-        {/* Боковая панель с фильтрами */}
-        <Col lg={3} className="filters-sidebar">
-          <Card className="filters-card">
-            <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Фильтры</h5>
-              <Button 
-                variant="link" 
-                size="sm" 
-                onClick={clearAllFilters}
-                className="p-0 text-decoration-none text-primary"
-              >
-                Сбросить все
-              </Button>
-            </Card.Header>
-            
-            <Card.Body>
-              {/* Переключатель показа фильтров для мобильных */}
-              <div className="d-lg-none mb-3">
-                <Button
-                  variant="outline-primary"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="w-100"
-                >
-                  {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
-                </Button>
-              </div>
-
-              <div className={!showFilters ? 'd-none d-lg-block' : ''}>
-                {/* Фильтр по наличию */}
-                <div className="filter-group">
-                  <div className="switch-container">
-                    <label className="switch">
-                      <input
-                        type="checkbox"
-                        id="stock-filter"
-                        checked={filterInStock}
-                        onChange={(e) => setFilterInStock(e.target.checked)}
-                      />
-                      <span className="slider"></span>
-                    </label>
-                    <span className="switch-label">Только в наличии</span>
-                  </div>
+        {/* Левая колонка - фильтры */}
+        <Col lg={3} className="filters-column">
+          {/* Sticky контейнер для фильтров */}
+          <div className="sticky-filters">
+            <Card className="filters-card">
+              <Card.Header className="d-flex justify-content-between align-items-center">
+                <h5 className="mb-0">Фильтры</h5>
+                <div className="d-flex align-items-center gap-2">
+                  {activeFiltersCount > 0 && (
+                    <Badge bg="primary" className="me-2">
+                      {activeFiltersCount}
+                    </Badge>
+                  )}
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    onClick={clearAllFilters}
+                    className="p-0 text-decoration-none text-primary"
+                    disabled={activeFiltersCount === 0}
+                  >
+                    Сбросить все
+                  </Button>
+                </div>
+              </Card.Header>
+              
+              <Card.Body>
+                <div className="d-lg-none mb-3">
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="w-100 d-flex justify-content-between align-items-center"
+                  >
+                    <span>{showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}</span>
+                    <Badge bg="primary">{activeFiltersCount}</Badge>
+                  </Button>
                 </div>
 
-                {/* Фильтр по цене */}
-                <div className="filter-group">
-                  <h6>Цена, ₽</h6>
-                  <div className="price-inputs d-flex gap-2 mb-2">
-                    <Form.Control
-                      type="number"
-                      placeholder="От"
-                      value={priceRange[0]}
-                      onChange={(e) => handlePriceRangeChange(0, e.target.value)}
-                      min="0"
-                      max={maxPrice}
-                    />
-                    <Form.Control
-                      type="number"
-                      placeholder="До"
-                      value={priceRange[1]}
-                      onChange={(e) => handlePriceRangeChange(1, e.target.value)}
-                      min="0"
-                      max={maxPrice}
-                    />
-                  </div>
-                  <div className="price-range-info text-muted small">
-                    Диапазон: 0 - {maxPrice.toLocaleString('ru-RU')} ₽
-                  </div>
-                </div>
-
-                {/* Фильтр по брендам */}
-                {brands.length > 0 && (
+                <div className={!showFilters ? 'd-none d-lg-block' : ''}>
+                  {/* Секция "Наличие в магазинах" */}
                   <div className="filter-group">
-                    <h6>Бренды ({selectedBrands.length})</h6>
-                    <div className="brands-list">
-                      {brands.map(brand => (
+                    <h6>Наличие в магазинах</h6>
+                    <div className="filter-toggle-group">
+                      <div className="filter-toggle-item">
                         <Form.Check
-                          key={brand}
-                          type="checkbox"
-                          id={`brand-${brand}`}
-                          label={brand}
-                          checked={selectedBrands.includes(brand)}
-                          onChange={() => handleBrandToggle(brand)}
-                          className="mb-2"
+                          type="radio"
+                          name="availability"
+                          id="availability-all"
+                          label="В любом из 13 магазинов"
+                          className="mb-0"
+                          defaultChecked
                         />
-                      ))}
+                      </div>
+                      <div className="filter-toggle-item">
+                        <Form.Check
+                          type="radio"
+                          name="availability"
+                          id="availability-instock"
+                          label="В наличии"
+                          className="mb-0"
+                        />
+                      </div>
+                      <div className="filter-toggle-item">
+                        <Form.Check
+                          type="radio"
+                          name="availability"
+                          id="availability-today"
+                          label="Под заказ: сегодня"
+                          className="mb-0"
+                        />
+                      </div>
+                      <div className="filter-toggle-item">
+                        <Form.Check
+                          type="radio"
+                          name="availability"
+                          id="availability-tomorrow"
+                          label="Под заказ: завтра"
+                          className="mb-0"
+                        />
+                      </div>
+                      <div className="filter-toggle-item">
+                        <Form.Check
+                          type="radio"
+                          name="availability"
+                          id="availability-later"
+                          label="Под заказ: позже"
+                          className="mb-0"
+                        />
+                      </div>
+                      <div className="filter-toggle-item">
+                        <Form.Check
+                          type="radio"
+                          name="availability"
+                          id="availability-out"
+                          label="Отсутствующие в продаже"
+                          className="mb-0"
+                        />
+                      </div>
                     </div>
                   </div>
-                )}
 
-                {/* Фильтры по характеристикам */}
-                {Object.keys(specifications).length > 0 && (
+                  <hr className="filter-divider" />
+
+                  {/* Секция дополнительных фильтров */}
                   <div className="filter-group">
-                    <h6>Характеристики</h6>
-                    <Accordion flush>
-                      {Object.entries(specifications).map(([key, values]) => (
-                        <Accordion.Item key={key} eventKey={key}>
-                          <Accordion.Header>
-                            {getDisplayName(key)} 
-                            {(filters[key] && filters[key].length > 0) && (
-                              <span className="badge bg-primary ms-2">
-                                {filters[key].length}
-                              </span>
-                            )}
-                          </Accordion.Header>
-                          <Accordion.Body>
-                            <div className="specs-list">
-                              {values.map(value => (
-                                <Form.Check
-                                  key={value}
-                                  type="checkbox"
-                                  id={`${key}-${value}`}
-                                  label={value}
-                                  checked={(filters[key] || []).includes(value)}
-                                  onChange={() => handleSpecificationToggle(key, value)}
-                                  className="mb-2"
-                                />
-                              ))}
-                            </div>
-                          </Accordion.Body>
-                        </Accordion.Item>
-                      ))}
-                    </Accordion>
+                    <div className="filter-toggle-group">
+                      <div className="filter-toggle-item">
+                        <Form.Check
+                          type="checkbox"
+                          id="rating-4"
+                          label="Рейтинг 4 и выше (1628)"
+                          className="mb-0"
+                        />
+                      </div>
+                      <div className="filter-toggle-item">
+                        <Form.Check
+                          type="checkbox"
+                          id="reliable-models"
+                          label="Надёжные модели (1239) минимум обращений в сервис"
+                          className="mb-0"
+                        />
+                      </div>
+                      <div className="filter-toggle-item">
+                        <Form.Check
+                          type="checkbox"
+                          id="has-review"
+                          label="Есть обзор (891)"
+                          className="mb-0"
+                        />
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
 
-        {/* Основной контент с товарами */}
-        <Col lg={9}>
-          {/* Панель сортировки и информации */}
-          <div className="filters-section">
-            <div className="filters-container">
-              <div className="filter-group">
-                <label className="filter-label" htmlFor="sort-select">Сортировка</label>
-                <select 
-                  id="sort-select"
-                  aria-label="Сортировка товаров"
-                  value={sortBy} 
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="form-select-custom"
-                >
-                  <option value="name">По названию</option>
-                  <option value="price-asc">Цена по возрастанию</option>
-                  <option value="price-desc">Цена по убыванию</option>
-                  <option value="rating">По рейтингу</option>
-                  <option value="newest">Сначала новинки</option>
-                </select>
-              </div>
+                  <hr className="filter-divider" />
 
-              <div className="filter-group back-button">
-                <Link to="/catalog" className="btn-back-custom">
-                  ← Все категории
-                </Link>
-              </div>
-            </div>
+                  {/* Секция цены */}
+                  <div className="filter-group">
+                    <h6>Цена</h6>
+                    <div className="price-inputs mb-3">
+                      <Form.Control
+                        type="number"
+                        placeholder="от 50"
+                        size="sm"
+                      />
+                      <Form.Control
+                        type="number"
+                        placeholder="до 564 999"
+                        size="sm"
+                      />
+                    </div>
+                    <div className="price-ranges">
+                      <div className="price-range-item">
+                        <Form.Check
+                          type="radio"
+                          name="price-range"
+                          id="price-less-4000"
+                          label="Менее 4 000 ₽"
+                          className="mb-0"
+                        />
+                      </div>
+                      <div className="price-range-item">
+                        <Form.Check
+                          type="radio"
+                          name="price-range"
+                          id="price-4001-10000"
+                          label="4 001 - 10 000 ₽ (184)"
+                          className="mb-0"
+                        />
+                      </div>
+                      <div className="price-range-item">
+                        <Form.Check
+                          type="radio"
+                          name="price-range"
+                          id="price-10001-18000"
+                          label="10 001 - 18 000 ₽ (349)"
+                          className="mb-0"
+                        />
+                      </div>
+                      <div className="price-range-item">
+                        <Form.Check
+                          type="radio"
+                          name="price-range"
+                          id="price-18001-27000"
+                          label="18 001 - 27 000 ₽ (231)"
+                          className="mb-0"
+                        />
+                      </div>
+                      <div className="price-range-item">
+                        <Form.Check
+                          type="radio"
+                          name="price-range"
+                          id="price-27001-40000"
+                          label="27 001 - 40 000 ₽ (218)"
+                          className="mb-0"
+                        />
+                      </div>
+                      <div className="price-range-item">
+                        <Form.Check
+                          type="radio"
+                          name="price-range"
+                          id="price-40001-more"
+                          label="40 001 ₽ и более (709)"
+                          className="mb-0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Функциональные фильтры */}
+                  <div className="filter-group">
+                    <div className="switch-container">
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          id="stock-filter"
+                          checked={filterInStock}
+                          onChange={(e) => setFilterInStock(e.target.checked)}
+                        />
+                        <span className="slider"></span>
+                      </label>
+                      <span className="switch-label">Только в наличии</span>
+                    </div>
+                  </div>
+
+                  <div className="filter-group">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <h6>Цена, ₽</h6>
+                      <span className="price-range-value">
+                        {priceRange[0].toLocaleString('ru-RU')} - {priceRange[1].toLocaleString('ru-RU')}
+                      </span>
+                    </div>
+                    <div className="price-inputs d-flex gap-2">
+                      <Form.Control
+                        type="number"
+                        placeholder="От"
+                        value={priceRange[0]}
+                        onChange={(e) => handlePriceRangeChange(0, e.target.value)}
+                        min="0"
+                        max={maxPrice}
+                        size="sm"
+                      />
+                      <Form.Control
+                        type="number"
+                        placeholder="До"
+                        value={priceRange[1]}
+                        onChange={(e) => handlePriceRangeChange(1, e.target.value)}
+                        min="0"
+                        max={maxPrice}
+                        size="sm"
+                      />
+                    </div>
+                  </div>
+
+                  {brands.length > 0 && (
+                    <div className="filter-group">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <h6>Бренды</h6>
+                        {selectedBrands.length > 0 && (
+                          <Badge bg="primary">{selectedBrands.length}</Badge>
+                        )}
+                      </div>
+                      <div className="brands-list">
+                        {brands.map(brand => (
+                          <div key={brand} className="brand-item">
+                            <Form.Check
+                              type="checkbox"
+                              id={`brand-${brand}`}
+                              label={brand}
+                              checked={selectedBrands.includes(brand)}
+                              onChange={() => handleBrandToggle(brand)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Характеристики */}
+                  {Object.keys(specifications).length > 0 && (
+                    <div className="filter-group">
+                      <h6 className="specifications-title">
+                        Характеристики
+                        {Object.values(filters).flat().length > 0 && (
+                          <Badge bg="primary" className="ms-2">
+                            {Object.values(filters).flat().length}
+                          </Badge>
+                        )}
+                      </h6>
+                      <div className="specifications-list-simple">
+                        {Object.entries(specifications).slice(0, 8).map(([key, values]) => 
+                          values.slice(0, 4).map(value => (
+                            <div key={`${key}-${value}`} className="specification-item-simple">
+                              <Form.Check
+                                type="checkbox"
+                                id={`${key}-${value}`}
+                                checked={(filters[key] || []).includes(value)}
+                                onChange={() => handleSpecificationToggle(key, value)}
+                                className="spec-checkbox-simple mb-0"
+                              />
+                              <label 
+                                htmlFor={`${key}-${value}`}
+                                className="spec-label-simple"
+                              >
+                                <span>{getDisplayName(key)}: {value}</span>
+                                <span className="spec-count">
+                                  {products.filter(p => {
+                                    try {
+                                      const specs = p.specifications ? 
+                                        (typeof p.specifications === 'string' ? 
+                                          JSON.parse(p.specifications) : p.specifications) : {};
+                                      return specs[key] === value;
+                                    } catch {
+                                      return false;
+                                    }
+                                  }).length}
+                                </span>
+                              </label>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card.Body>
+            </Card>
           </div>
 
-          {/* Список товаров */}
+          {/* Кнопка возврата - ВНЕ sticky контейнера */}
+          <div className="back-button-container mt-5">
+            <Link to="/catalog" className="btn-back-custom w-100 text-center">
+              ← Все категории
+            </Link>
+          </div>
+        </Col>
+
+        {/* Правая колонка - сортировка и товары */}
+        <Col lg={9} className="products-column">
+          {/* Сортировка над товарами */}
+          <SortingCard sortBy={sortBy} setSortBy={setSortBy} />
+
           <div className="products-section">
             {filteredAndSortedProducts.length === 0 ? (
               <div className="no-products-alert">
@@ -427,6 +601,13 @@ const CategoryPage = () => {
                     : 'Попробуйте изменить параметры фильтров'
                   }
                 </p>
+                <Button 
+                  variant="primary" 
+                  onClick={clearAllFilters}
+                  className="me-2"
+                >
+                  Сбросить фильтры
+                </Button>
                 <Link to="/catalog" className="back-to-categories-btn">
                   Посмотреть другие категории
                 </Link>
