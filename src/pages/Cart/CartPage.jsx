@@ -40,8 +40,6 @@ const CartPage = () => {
   
   // Медиа-запросы для адаптивности
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
-  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
 
   const fetchCartItems = useCallback(async () => {
     try {
