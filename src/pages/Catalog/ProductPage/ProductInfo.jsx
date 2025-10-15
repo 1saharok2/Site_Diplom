@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Badge, Spinner } from 'react-bootstrap';
 import { FaHeart, FaShoppingCart, FaShare, FaStar, FaRegHeart, FaCheck, FaTimes } from 'react-icons/fa';
-import { supabase } from '../../../services/supabaseClient'
+import { categoryService } from '../../../services/categoryService';
 import './ProductPage_css/ProductInfo.css';
 
 const ProductInfo = ({ product, onVariantChange }) => {
@@ -29,7 +29,7 @@ const ProductInfo = ({ product, onVariantChange }) => {
     }
   };
 
-  // Функция для нормализации значения памяти (приводим к единому формату)
+  // Функция для нормализации значения памяти
   const normalizeStorage = (storage) => {
     if (!storage) return '';
     
@@ -59,20 +59,16 @@ const ProductInfo = ({ product, onVariantChange }) => {
 
   // Улучшенная функция для извлечения базового названия продукта
   const getBaseProductName = (productName) => {
-    // Более мягкое удаление информации о памяти и цвете
-    // Удаляем только конкретные паттерны памяти в конце строки
     let baseName = productName
       .replace(/\s*(128GB|256GB|512GB|\d+GB|128 ГБ|256 ГБ|512 ГБ|\d+ ГБ)\s*$/gi, '')
       .replace(/\s*(Черный|Белый|Розовый|Синий|Blue|White|Pink|Black|Phantom Black|Snow|Silver|Rococo Pearl|Aurora Gray)\s*$/gi, '')
       .replace(/\s+/g, ' ')
       .trim();
     
-    // Для iPhone оставляем только "Apple iPhone 16"
     if (baseName.includes('Apple iPhone 16')) {
       baseName = 'Apple iPhone 16';
     }
     
-    // Для Samsung оставляем только основное название
     if (baseName.includes('Samsung Galaxy')) {
       baseName = baseName.replace(/\s*Ultra\s*$/, '').trim();
     }
@@ -80,27 +76,19 @@ const ProductInfo = ({ product, onVariantChange }) => {
     return baseName;
   };
 
-  // Загрузка вариантов товара
+  // Загрузка вариантов товара через API
   useEffect(() => {
     const fetchVariants = async () => {
+      if (!product?.name) return;
+      
       setLoading(true);
       try {
         // Получаем базовое название для поиска вариантов
         const baseName = getBaseProductName(product.name);
         
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('is_active', true)
-          .order('price');
-
-        if (error) throw error;
-
-        // Фильтруем варианты по базовому названию
-        const productVariants = data.filter(v => {
-          const variantBaseName = getBaseProductName(v.name);
-          return variantBaseName === baseName;
-        });
+        // TODO: Реализовать API для получения вариантов товара
+        // Пока используем только текущий товар
+        const productVariants = [product];
         
         setVariants(productVariants);
         
@@ -118,14 +106,13 @@ const ProductInfo = ({ product, onVariantChange }) => {
         
       } catch (error) {
         console.error('Error fetching variants:', error);
+        setVariants([product]);
       } finally {
         setLoading(false);
       }
     };
 
-    if (product?.name) {
-      fetchVariants();
-    }
+    fetchVariants();
   }, [product]);
 
   // Находим точное совпадение при изменении выбранных параметров
@@ -290,13 +277,15 @@ const ProductInfo = ({ product, onVariantChange }) => {
   const canAddToCart = exactMatch && exactMatch.stock > 0;
 
   const handleAddToCart = () => {
-    if (!canAddToCart) return;
+    const targetProduct = hasVariants ? exactMatch : product;
+    
+    if (!targetProduct || targetProduct.stock <= 0) return;
     
     setIsInCart(true);
     setTimeout(() => setIsInCart(false), 2000);
     
     const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-    const itemId = exactMatch.id;
+    const itemId = targetProduct.id;
     
     const existingItemIndex = cartItems.findIndex(item => item.id === itemId);
     
@@ -304,15 +293,15 @@ const ProductInfo = ({ product, onVariantChange }) => {
       cartItems[existingItemIndex].quantity += 1;
     } else {
       cartItems.push({
-        id: exactMatch.id,
-        name: exactMatch.name,
-        price: exactMatch.price,
-        oldPrice: exactMatch.old_price,
-        image: exactMatch.image_url?.[0] || '',
+        id: targetProduct.id,
+        name: targetProduct.name,
+        price: targetProduct.price,
+        oldPrice: targetProduct.old_price,
+        image: targetProduct.image_url?.[0] || targetProduct.images?.[0] || '',
         quantity: 1,
-        color: getSpecValue(exactMatch, 'color'),
-        storage: getSpecValue(exactMatch, 'storage'),
-        slug: exactMatch.slug
+        color: getSpecValue(targetProduct, 'color'),
+        storage: getSpecValue(targetProduct, 'storage'),
+        slug: targetProduct.slug
       });
     }
     
@@ -534,32 +523,7 @@ const ProductInfo = ({ product, onVariantChange }) => {
           size="lg" 
           disabled={hasVariants ? !canAddToCart : product.stock <= 0}
           className={`add-to-cart-btn ${isInCart ? 'added' : ''}`}
-          onClick={hasVariants ? handleAddToCart : () => {
-            // Логика для товаров без вариантов
-            setIsInCart(true);
-            setTimeout(() => setIsInCart(false), 2000);
-            
-            const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-            const itemId = product.id;
-            
-            const existingItemIndex = cartItems.findIndex(item => item.id === itemId);
-            
-            if (existingItemIndex >= 0) {
-              cartItems[existingItemIndex].quantity += 1;
-            } else {
-              cartItems.push({
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                oldPrice: product.old_price,
-                image: product.image_url?.[0] || '',
-                quantity: 1,
-                slug: product.slug
-              });
-            }
-            
-            localStorage.setItem('cart', JSON.stringify(cartItems));
-          }}
+          onClick={handleAddToCart}
         >
           <FaShoppingCart className="btn-icon" />
           {isInCart ? 'Добавлено!' : (hasVariants ? 'В корзину' : (product.stock > 0 ? 'В корзину' : 'Нет в наличии'))}

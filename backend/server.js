@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({ 
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://electronic.tw1.ru', 'https://www.electronic.tw1.ru'],
   credentials: true
  }));
  
@@ -126,8 +126,3 @@ app.get('/api/products/:id', async (req, res) => {
 
 app.listen(PORT, () => {
 });
-
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
-  credentials: true
-}));

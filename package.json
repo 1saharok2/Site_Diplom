@@ -1,6 +1,7 @@
 {
   "name": "site_diplom",
   "version": "0.1.0",
+  "homepage": "https://electronic.tw1.ru",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",

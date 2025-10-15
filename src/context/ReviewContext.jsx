@@ -1,4 +1,3 @@
-// context/ReviewContext.jsx
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { reviewService } from '../services/reviewService';
 import { useAuth } from './AuthContext';
@@ -13,6 +12,7 @@ export const useReviews = () => {
   return context;
 };
 
+// Добавьте этот экспорт
 export const ReviewProvider = ({ children }) => {
   const [reviews, setReviews] = useState([]);
   const [userReviews, setUserReviews] = useState([]);
@@ -162,4 +162,5 @@ export const ReviewProvider = ({ children }) => {
   );
 };
 
+// Убедитесь что этот экспорт есть
 export default ReviewProvider;

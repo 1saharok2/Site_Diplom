@@ -1,9 +1,17 @@
-// context/OrderContext.jsx
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { orderService } from '../services/orderService';
 import { useAuth } from './AuthContext';
 
 const OrderContext = createContext();
+
+// ДОБАВЬТЕ ЭТОТ ХУК - он отсутствовал
+export const useOrders = () => {
+  const context = useContext(OrderContext);
+  if (!context) {
+    throw new Error('useOrders must be used within an OrderProvider');
+  }
+  return context;
+};
 
 // Редьюсер для управления состоянием заказов
 const orderReducer = (state, action) => {
@@ -257,11 +265,5 @@ export const OrderProvider = ({ children }) => {
   );
 };
 
-// Хук для использования контекста
-export const useOrders = () => {
-  const context = useContext(OrderContext);
-  if (!context) {
-    throw new Error('useOrders must be used within an OrderProvider');
-  }
-  return context;
-};
+// Убедитесь что этот экспорт тоже есть
+export default OrderProvider;

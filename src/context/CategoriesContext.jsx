@@ -1,4 +1,3 @@
-// context/CategoriesContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { adminService } from '../services/adminService';
 
@@ -17,27 +16,34 @@ export const CategoriesProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoading(true);
-        const response = await adminService.getCategories();
-        setCategories(response.data);
-        setError(null);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // ПЕРЕМЕСТИТЕ ФУНКЦИЮ ВНУТРЬ КОМПОНЕНТА
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getCategories();
+      setCategories(response || []); // Убрали .data - теперь response это массив категорий
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      setCategories([]); // Устанавливаем пустой массив при ошибке
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchCategories();
   }, []);
+
+  const refreshCategories = () => {
+    fetchCategories();
+  };
 
   const value = {
     categories,
     loading,
-    error
+    error,
+    refreshCategories
   };
 
   return (

@@ -1,49 +1,90 @@
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = '/api';
+
+console.log('🔧 API_BASE:', API_BASE);
+
+const handleResponse = async (response) => {
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`HTTP error ${response.status}: ${errorText}`);
+  }
+  return response.json();
+};
 
 export const apiService = {
-  get: (url) => fetch(`${API_BASE}${url}`).then(res => res.json()),
-  post: (url, data) => 
-    fetch(`${API_BASE}${url}`, {
+  // Базовые методы
+  get: (url) => {
+    const fullUrl = `${API_BASE}${url}`;
+    console.log('🔧 GET request to:', fullUrl);
+    return fetch(fullUrl).then(handleResponse);
+  },
+  
+  post: (url, data) => {
+    const fullUrl = `${API_BASE}${url}`;
+    console.log('🔧 POST request to:', fullUrl);
+    return fetch(fullUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
-    }).then(res => res.json()),
-  put: (url, data) =>
-    fetch(`${API_BASE}${url}`, {
+    }).then(handleResponse);
+  },
+    
+  put: (url, data) => {
+    const fullUrl = `${API_BASE}${url}`;
+    return fetch(fullUrl, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
-    }).then(res => res.json()),
-  delete: (url) =>
-    fetch(`${API_BASE}${url}`, {
+    }).then(handleResponse);
+  },
+    
+  delete: (url) => {
+    const fullUrl = `${API_BASE}${url}`;
+    return fetch(fullUrl, {
       method: 'DELETE'
-    }).then(res => res.json()),
+    }).then(handleResponse);
+  },
   
-  // Products
-  getProducts: () => fetch(`${API_BASE}/products`).then(res => res.json()),
-  getProduct: (id) => fetch(`${API_BASE}/products/${id}`).then(res => res.json()),
+  // Products - используйте только эти методы
+  getProducts: () => {
+    const url = `/products`; // ← ОТНОСИТЕЛЬНЫЙ путь!
+    console.log('🔧 getProducts URL:', url);
+    return fetch(`${API_BASE}${url}`).then(handleResponse);
+  },
+  
+  getProduct: (id) => fetch(`${API_BASE}/products/${id}`).then(handleResponse),
+  
   getProductsByCategory: (categorySlug) => 
-    fetch(`${API_BASE}/products/category/${categorySlug}`).then(res => res.json()),
+    fetch(`${API_BASE}/products/category/${categorySlug}`).then(handleResponse),
+    
   searchProducts: (query) => 
-    fetch(`${API_BASE}/products/search?q=${encodeURIComponent(query)}`).then(res => res.json()),
+    fetch(`${API_BASE}/products/search?q=${encodeURIComponent(query)}`).then(handleResponse),
   
-  // Categories
-  getCategories: () => fetch(`${API_BASE}/categories`).then(res => res.json()),
+  // Categories - используйте только эти методы
+  getCategories: () => {
+    const url = `/categories`; // ← ОТНОСИТЕЛЬНЫЙ путь!
+    console.log('🔧 getCategories URL:', url);
+    return fetch(`${API_BASE}${url}`).then(handleResponse);
+  },
+  
   getCategory: (slug) => 
-    fetch(`${API_BASE}/categories/${slug}`).then(res => res.json()),
+    fetch(`${API_BASE}/categories/${slug}`).then(handleResponse),
 
   // Auth
- login: async (credentials) => {
+  login: async (credentials) => {
     try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const url = `${API_BASE}/auth/login`;
+      console.log('🔧 login URL:', url);
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials)
       });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Ошибка входа');
+      const data = await handleResponse(response);
+      
+      if (data.token) {
+        localStorage.setItem('authToken', data.token);
       }
+      
       return data;
     } catch (error) {
       console.error('Login error:', error);
@@ -59,11 +100,13 @@ export const apiService = {
         body: JSON.stringify(userData)
       });
       
-      if (!response.ok) {
-        throw new Error('Ошибка регистрации');
+      const data = await handleResponse(response);
+      
+      if (data.token) {
+        localStorage.setItem('authToken', data.token);
       }
       
-      return await response.json();
+      return data;
     } catch (error) {
       console.error('Register error:', error);
       throw error;
@@ -71,13 +114,15 @@ export const apiService = {
   },
 
   // Cart & Orders
-  createOrder: (orderData, token) =>
-    fetch(`${API_BASE}/orders`, {
+  createOrder: (orderData) => {
+    const token = localStorage.getItem('authToken');
+    return fetch(`${API_BASE}/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(orderData)
-    }).then(res => res.json())
+    }).then(handleResponse);
+  }
 };

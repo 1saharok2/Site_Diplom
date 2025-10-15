@@ -1,98 +1,63 @@
-// services/cartService.js
-import { supabase } from "./supabaseClient"
+import { apiService } from './api';
 
 export const cartService = {
-
   getCart: async (userId) => {
     try {
-      const { data, error } = await supabase
-        .from('user_cart')
-        .select(`
-          id,
-          user_id,
-          product_id,
-          quantity,
-          added_at,
-          products (*)
-        `)
-        .eq('user_id', userId)
-        .order('added_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase error details:', error);
-        throw error;
-      }
-      
-      return data;
+      const cartItems = await apiService.get(`/cart/${userId}`);
+      return cartItems || [];
     } catch (error) {
       console.error('Error in getCart:', error);
+      return [];
+    }
+  },
+
+  addToCart: async (userId, productId, quantity = 1) => {
+    try {
+      const result = await apiService.post('/cart/add', {
+        user_id: userId,
+        product_id: productId,
+        quantity: quantity
+      });
+      return result;
+    } catch (error) {
+      console.error('Error in addToCart:', error);
       throw error;
     }
   },
 
-   addToCart: async (userId, productId, quantity = 1) => {
-     try {
-       const { data, error } = await supabase
-         .from('user_cart')
-         .upsert({
-           user_id: userId,
-           product_id: productId,
-           quantity: quantity
-         }, {
-           onConflict: 'user_id,product_id',
-           ignoreDuplicates: false
-         })
-         .select(`
-           *,
-           products (*)
-         `)
-         .single();
-       
-       if (error) throw error;
-       return data;
-       
-     } catch (error) {
-       throw error;
-     }
-   },
-
   updateCartItem: async (cartItemId, quantity) => {
-    if (quantity <= 0) {
-      return await cartService.removeFromCart(cartItemId);
-    }
-    const { data, error } = await supabase
-      .from('user_cart')
-      .update({ 
+    try {
+      if (quantity <= 0) {
+        return await cartService.removeFromCart(cartItemId);
+      }
+      const result = await apiService.put(`/cart/${cartItemId}`, {
         quantity: quantity
-      })
-      .eq('id', cartItemId)
-      .select(`
-        *,
-        products (*)
-      `)
-      .single();
-    if (error) throw error;
-    return data;
+      });
+      return result;
+    } catch (error) {
+      console.error('Error in updateCartItem:', error);
+      throw error;
+    }
   },
 
   removeFromCart: async (cartItemId) => {
-    const { error } = await supabase
-      .from('user_cart')
-      .delete()
-      .eq('id', cartItemId);
-
-    if (error) throw error;
-    return true;
+    try {
+      await apiService.delete(`/cart/${cartItemId}`);
+      return true;
+    } catch (error) {
+      console.error('Error in removeFromCart:', error);
+      throw error;
+    }
   },
 
   clearCart: async (userId) => {
-    const { error } = await supabase
-      .from('user_cart')
-      .delete()
-      .eq('user_id', userId);
-
-    if (error) throw error;
-    return true;
+    try {
+      await apiService.delete(`/cart/clear/${userId}`);
+      return true;
+    } catch (error) {
+      console.error('Error in clearCart:', error);
+      throw error;
+    }
   },
 
   getCartTotal: (cartItems) => {
