@@ -1,4 +1,17 @@
-const API_BASE = '/api';
+const getApiBase = () => {
+  // Если есть переменная окружения — используем её
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  // Локальная разработка
+  if (window.location.hostname === 'localhost') {
+    return 'http://localhost:5000/api';
+  }
+  // Продакшн (на сервере)
+  return `${window.location.protocol}//${window.location.host}/api`;
+};
+
+const API_BASE = getApiBase();
 
 console.log('🔧 API_BASE:', API_BASE);
 

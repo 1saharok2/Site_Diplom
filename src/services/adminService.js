@@ -1,4 +1,8 @@
-const API_BASE = '/api';
+const getApiBase = () => {
+  return `${window.location.origin}/api`;
+};
+
+const API_BASE = getApiBase();
 
 console.log('🔧 AdminService API_BASE:', API_BASE);
 

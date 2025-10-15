@@ -59,8 +59,8 @@ const HomePage = () => {
       return "/images/placeholder.jpg";
     }
     if (imageUrl.startsWith("http")) return imageUrl;
-    if (imageUrl.startsWith("/")) return `http://localhost:3001${imageUrl}`;
-    return `http://localhost:3001/images/${imageUrl}`;
+    if (imageUrl.startsWith("/")) return `https://electronic.tw1.ru${imageUrl}`;
+    return `https://electronic.tw1.ru/images/${imageUrl}`;
   };
 
   const getProductImage = (product) => {
