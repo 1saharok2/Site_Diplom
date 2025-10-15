@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const supabase = require('./config/supabase');
 const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
 const categoryRoutes = require('./routes/categories');
