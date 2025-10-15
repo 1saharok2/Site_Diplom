@@ -146,28 +146,100 @@
 }
 
 /* Адаптивность */
+@media (max-width: 768px) {
+  .login-page {
+    padding: 15px;
+  }
+  
+  .login-form {
+    padding: 30px 25px;
+    max-width: 350px;
+  }
+  
+  .login-form h2 {
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+  }
+  
+  .form-group input {
+    padding: 12px 14px;
+    font-size: 1rem;
+    min-height: 48px; /* Touch-friendly */
+  }
+  
+  .login-form button {
+    padding: 14px;
+    font-size: 1rem;
+    min-height: 48px; /* Touch-friendly */
+  }
+}
+
 @media (max-width: 480px) {
   .login-page {
     padding: 10px;
   }
   
   .login-form {
-    padding: 30px 20px;
+    padding: 25px 20px;
+    max-width: 320px;
   }
   
   .login-form h2 {
     font-size: 1.5rem;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 18px;
+  }
+  
+  .form-group input {
+    padding: 12px 14px;
+    font-size: 1rem;
+    min-height: 50px; /* Touch-friendly */
+  }
+  
+  .login-form button {
+    padding: 14px;
+    font-size: 1rem;
+    min-height: 50px; /* Touch-friendly */
+  }
+  
+  .demo-credentials {
+    padding: 12px;
+    margin-top: 15px;
+  }
+  
+  .demo-credentials p {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .login-page {
+    padding: 8px;
+  }
+  
+  .login-form {
+    padding: 20px 15px;
+    max-width: 300px;
+  }
+  
+  .login-form h2 {
+    font-size: 1.3rem;
+    margin-bottom: 18px;
   }
   
   .form-group input {
     padding: 10px 12px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    min-height: 48px;
   }
   
   .login-form button {
     padding: 12px;
-    font-size: 1rem;
+    font-size: 0.95rem;
+    min-height: 48px;
   }
 }
 

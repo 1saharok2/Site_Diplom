@@ -183,3 +183,107 @@
     font-size: 0.9rem;
   }
 }
+
+/* Мобильная оптимизация */
+@media (max-width: 768px) {
+  .header-container {
+    padding: 8px 12px;
+    gap: 10px;
+  }
+  
+  .logo {
+    font-size: 1.5rem;
+  }
+  
+  .nav {
+    gap: 15px;
+  }
+  
+  .nav-link {
+    font-size: 0.9rem;
+  }
+  
+  .header-actions {
+    gap: 12px;
+  }
+  
+  .login-btn,
+  .register-btn {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    min-height: 40px; /* Touch-friendly */
+  }
+  
+  .admin-btn,
+  .logout-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    min-height: 36px;
+  }
+}
+
+@media (max-width: 576px) {
+  .header-container {
+    padding: 6px 8px;
+    gap: 8px;
+  }
+  
+  .logo {
+    font-size: 1.3rem;
+  }
+  
+  .nav {
+    gap: 12px;
+  }
+  
+  .nav-link {
+    font-size: 0.8rem;
+  }
+  
+  .header-actions {
+    gap: 8px;
+  }
+  
+  .login-btn,
+  .register-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    min-height: 44px; /* Touch-friendly */
+  }
+  
+  .admin-btn,
+  .logout-btn {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    min-height: 40px;
+  }
+  
+  .user-greeting {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .header-container {
+    padding: 4px 6px;
+  }
+  
+  .logo {
+    font-size: 1.1rem;
+  }
+  
+  .nav {
+    gap: 8px;
+  }
+  
+  .nav-link {
+    font-size: 0.75rem;
+  }
+  
+  .login-btn,
+  .register-btn {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    min-height: 40px;
+  }
+}

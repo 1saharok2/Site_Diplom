@@ -125,24 +125,25 @@ const CartPage = () => {
     <Box sx={{ 
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-      py: { xs: 1, sm: 2, md: 3, lg: 4 }
+      py: { xs: 0.5, sm: 1, md: 2, lg: 3 }
     }}>
       <Container maxWidth="xl" sx={{ 
-        px: { xs: 1, sm: 2, md: 3 },
+        px: { xs: 0.5, sm: 1, md: 2 },
         position: 'relative'
       }}>
         {/* Header */}
-        <Box sx={{ mb: { xs: 2, sm: 3, md: 4 } }}>
+        <Box sx={{ mb: { xs: 1, sm: 2, md: 3 } }}>
           <Button
             startIcon={<ArrowBack />}
             onClick={() => navigate(-1)}
             sx={{ 
               color: 'text.secondary',
-              mb: 2,
+              mb: 1,
               borderRadius: 3,
               px: { xs: 1, sm: 2 },
               py: { xs: 0.5, sm: 1 },
               fontSize: { xs: '0.8rem', sm: '0.9rem' },
+              minHeight: { xs: 40, sm: 44 }, // Touch-friendly
               '&:hover': {
                 bgcolor: 'action.hover',
                 transform: 'translateX(-4px)'
@@ -156,9 +157,9 @@ const CartPage = () => {
           <Box sx={{ 
             display: 'flex', 
             alignItems: 'center', 
-            gap: { xs: 2, sm: 3 },
+            gap: { xs: 1, sm: 2 },
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            p: { xs: 2, sm: 3, md: 4 },
+            p: { xs: 1.5, sm: 2, md: 3 },
             borderRadius: { xs: 2, sm: 3, md: 4 },
             color: 'white',
             boxShadow: '0 20px 40px rgba(102, 126, 234, 0.3)',
@@ -166,8 +167,8 @@ const CartPage = () => {
             textAlign: { xs: 'center', sm: 'left' }
           }}>
             <Box sx={{
-              width: { xs: 50, sm: 60 },
-              height: { xs: 50, sm: 60 },
+              width: { xs: 40, sm: 50 },
+              height: { xs: 40, sm: 50 },
               background: 'rgba(255, 255, 255, 0.2)',
               borderRadius: '50%',
               display: 'flex',
@@ -176,13 +177,13 @@ const CartPage = () => {
               backdropFilter: 'blur(10px)',
               flexShrink: 0
             }}>
-              <ShoppingCart sx={{ fontSize: { xs: 24, sm: 28, md: 32 } }} />
+              <ShoppingCart sx={{ fontSize: { xs: 20, sm: 24, md: 28 } }} />
             </Box>
             <Box sx={{ flex: 1 }}>
               <Typography variant="h2" sx={{ 
                 fontWeight: 'bold',
-                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem', lg: '2.8rem' },
-                mb: 1,
+                fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem', lg: '2.2rem' },
+                mb: 0.5,
                 lineHeight: 1.2
               }}>
                 Корзина
@@ -190,7 +191,7 @@ const CartPage = () => {
               <Typography variant="h6" sx={{ 
                 opacity: 0.9, 
                 fontWeight: 400,
-                fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' }
+                fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' }
               }}>
                 {cartItems.length > 0 ? `Ваши товары (${getTotalItems()})` : 'Ваши покупки'}
               </Typography>
@@ -202,9 +203,9 @@ const CartPage = () => {
           <Alert 
             severity="info"
             sx={{ 
-              mb: { xs: 3, md: 4 }, 
+              mb: { xs: 2, md: 3 }, 
               borderRadius: { xs: 2, sm: 3 },
-              p: { xs: 2, sm: 3 },
+              p: { xs: 1.5, sm: 2 },
               background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
               border: '2px solid #3b82f6',
               color: '#1e40af',
@@ -240,12 +241,13 @@ const CartPage = () => {
                 startIcon={<Login />}
                 sx={{ 
                   borderRadius: 3,
-                  px: { xs: 3, sm: 4 },
+                  px: { xs: 2, sm: 3 },
                   py: { xs: 1, sm: 1.5 },
                   background: 'linear-gradient(45deg, #3b82f6 0%, #1d4ed8 100%)',
                   fontWeight: 600,
                   fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                  minWidth: { xs: '140px', sm: 'auto' },
+                  minWidth: { xs: '120px', sm: 'auto' },
+                  minHeight: { xs: 44, sm: 48 }, // Touch-friendly
                   '&:hover': {
                     background: 'linear-gradient(45deg, #2563eb 0%, #1e40af 100%)',
                     transform: 'translateY(-2px)'

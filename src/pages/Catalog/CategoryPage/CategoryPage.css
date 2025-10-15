@@ -391,7 +391,7 @@ input:checked + .slider:before {
   border-top: 1px solid #e9ecef;
 }
 
-/* Адаптивность */
+/* Мобильная оптимизация фильтров */
 @media (max-width: 992px) {
   .filters-column {
     padding-right: 0;
@@ -409,6 +409,21 @@ input:checked + .slider:before {
   /* На мобильных кнопка ближе к фильтрам */
   .back-button-container {
     margin-top: 2rem;
+  }
+  
+  /* Мобильная версия фильтров */
+  .filters-card .card-body {
+    padding: 1rem;
+  }
+  
+  .filter-group {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+  }
+  
+  .filter-group h6 {
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
   }
 }
 
@@ -429,11 +444,48 @@ input:checked + .slider:before {
   .specification-item-simple {
     padding: 0.375rem 0;
   }
+  
+  /* Улучшенная мобильная версия фильтров */
+  .filters-card .card-body {
+    padding: 0.75rem;
+  }
+  
+  .filter-group {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .filter-group h6 {
+    font-size: 0.8rem;
+    margin-bottom: 0.375rem;
+  }
+  
+  .specification-item-simple {
+    padding: 0.25rem 0;
+    min-height: 44px; /* Touch-friendly размер */
+    display: flex;
+    align-items: center;
+  }
+  
+  .spec-checkbox-simple {
+    min-width: 20px;
+    min-height: 20px;
+  }
+  
+  .brand-item .form-check {
+    min-height: 44px;
+    padding: 0.5rem 0;
+  }
+  
+  .brand-item .form-check-input {
+    min-width: 20px;
+    min-height: 20px;
+  }
 }
 
 @media (max-width: 576px) {
   .category-page {
-    padding: 10px;
+    padding: 8px;
   }
   
   .products-grid {
@@ -480,6 +532,56 @@ input:checked + .slider:before {
   /* На маленьких экранах меньше отступ */
   .back-button-container {
     margin-top: 2rem;
+  }
+  
+  /* Максимальная мобильная оптимизация */
+  .filters-card .card-body {
+    padding: 0.5rem;
+  }
+  
+  .filter-group {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.375rem;
+  }
+  
+  .filter-group h6 {
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .specification-item-simple {
+    padding: 0.375rem 0;
+    min-height: 48px; /* Еще больше для удобства */
+  }
+  
+  .spec-label-simple {
+    font-size: 0.75rem;
+  }
+  
+  .brand-item .form-check {
+    min-height: 48px;
+    padding: 0.75rem 0;
+  }
+  
+  .brand-item .form-check-label {
+    font-size: 0.75rem;
+  }
+  
+  /* Улучшенные кнопки для мобильных */
+  .price-presets button {
+    min-height: 44px;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+  }
+  
+  /* Мобильная оптимизация сортировки */
+  .sorting-card .card-body {
+    padding: 0.75rem;
+  }
+  
+  .sort-select-custom {
+    min-height: 44px;
+    font-size: 0.85rem;
   }
 }
 

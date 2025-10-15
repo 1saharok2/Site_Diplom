@@ -449,59 +449,101 @@
 
 @media (max-width: 576px) {
   .product-card-container {
-    padding: 0 6px 14px 6px;
+    padding: 0 4px 12px 4px;
   }
   .product-card {
-    margin: 6px;
-    padding: 12px;
+    margin: 4px;
+    padding: 10px;
+    border-radius: 12px;
   }
   .product-image-container {
-    height: 180px;
-    padding: 10px;
-    margin-bottom: 14px;
+    height: 160px;
+    padding: 8px;
+    margin-bottom: 12px;
+    border-radius: 10px;
   }
   .product-name {
-    font-size: 1rem;
-    min-height: 45px;
+    font-size: 0.95rem;
+    min-height: 40px;
+    line-height: 1.2;
   }
   .current-price {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+  }
+  .old-price {
+    font-size: 1rem;
   }
   .product-actions {
-    padding-top: 18px;
+    padding-top: 16px;
   }
   .action-buttons {
-    gap: 8px;
+    gap: 6px;
   }
   .btn-cart, .btn-out-of-stock {
-    padding: 9px 14px;
-    min-height: 42px;
-    font-size: 0.85rem;
+    padding: 8px 12px;
+    min-height: 44px; /* Touch-friendly размер */
+    font-size: 0.8rem;
+    border-radius: 22px;
   }
   .btn-wishlist {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
   }
   .btn-icon {
+    font-size: 0.9rem;
+  }
+  .product-brand {
+    font-size: 0.8rem;
+  }
+  .rating-stars {
     font-size: 1rem;
+  }
+  .rating-count {
+    font-size: 0.8rem;
+  }
+  .new-badge, .discount-badge {
+    font-size: 0.7rem;
+    padding: 4px 8px;
   }
 }
 
 @media (max-width: 375px) {
   .product-card-container {
-    padding: 0 5px 12px 5px;
+    padding: 0 2px 10px 2px;
   }
   .product-card {
-    margin: 5px;
-    padding: 10px;
+    margin: 2px;
+    padding: 8px;
+    border-radius: 10px;
   }
   .product-info {
-    gap: 10px;
+    gap: 8px;
   }
   .product-name {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    min-height: 35px;
   }
   .product-actions {
-    padding-top: 16px;
+    padding-top: 14px;
+  }
+  .product-image-container {
+    height: 140px;
+    padding: 6px;
+    margin-bottom: 10px;
+  }
+  .current-price {
+    font-size: 1.1rem;
+  }
+  .old-price {
+    font-size: 0.9rem;
+  }
+  .btn-cart, .btn-out-of-stock {
+    padding: 6px 10px;
+    min-height: 40px;
+    font-size: 0.75rem;
+  }
+  .btn-wishlist {
+    width: 40px;
+    height: 40px;
   }
 }
