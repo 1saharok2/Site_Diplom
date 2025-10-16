@@ -1,24 +1,15 @@
 const express = require('express');
-const supabase = require('../config/supabase');
+const pool = require('../config/database');
 const router = express.Router();
 
 // GET /api/products - все продукты
 router.get('/', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Ошибка Supabase:', error);
-      return res.status(500).json({ error: 'Ошибка базы данных' });
-    }
-    res.json(data || []);
-    
+    const [rows] = await pool.query('SELECT * FROM products ORDER BY id DESC');
+    res.json(rows || []);
   } catch (error) {
-    console.error('Ошибка сервера:', error);
-    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    console.error('Ошибка базы данных:', error);
+    res.status(500).json({ error: 'Ошибка базы данных' });
   }
 });
 
@@ -26,27 +17,13 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      console.error('Ошибка Supabase:', error);
-      return res.status(404).json({ error: 'Продукт не найден' });
-    }
-
-    if (!data) {
-      return res.status(404).json({ error: 'Продукт не найден' });
-    }
-
-    res.json(data);
-    
+    const [rows] = await pool.query('SELECT * FROM products WHERE id = ? LIMIT 1', [id]);
+    const product = Array.isArray(rows) && rows[0];
+    if (!product) return res.status(404).json({ error: 'Продукт не найден' });
+    res.json(product);
   } catch (error) {
-    console.error('Ошибка сервера:', error);
-    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    console.error('Ошибка базы данных:', error);
+    res.status(500).json({ error: 'Ошибка базы данных' });
   }
 });
 
@@ -54,22 +31,11 @@ router.get('/:id', async (req, res) => {
 router.get('/category/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
-    
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('category_slug', slug)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Ошибка Supabase:', error);
-      return res.status(500).json({ error: 'Ошибка базы данных' });
-    }
-    res.json(data || []);
-    
+    const [rows] = await pool.query('SELECT * FROM products WHERE category_slug = ? ORDER BY id DESC', [slug]);
+    res.json(rows || []);
   } catch (error) {
-    console.error('Ошибка сервера:', error);
-    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    console.error('Ошибка базы данных:', error);
+    res.status(500).json({ error: 'Ошибка базы данных' });
   }
 });
 

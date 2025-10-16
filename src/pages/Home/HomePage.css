@@ -29,7 +29,7 @@
   justify-content: space-between;
   max-width: 1400px;
   width: 100%;
-  padding: 0 100px;
+  padding: 0 24px;
   gap: 60px;
 }
 
@@ -137,7 +137,7 @@
 @media (max-width: 1200px) {
   .hero-content {
     gap: 40px;
-    padding: 0 60px;
+    padding: 0 24px;
   }
 
   .hero-text h1 {
@@ -172,7 +172,7 @@
   .hero-image img,
   .hero-image .swiper,
   .hero-image .carousel {
-    max-width: 360px;
+    max-width: 100%;
   }
 }
 
@@ -184,5 +184,13 @@
   .hero-buttons .btn {
     padding: 10px 20px;
     font-size: 0.9rem;
+  }
+
+  .hero-section {
+    padding: 36px 0;
+  }
+
+  .hero-content {
+    gap: 24px;
   }
 }

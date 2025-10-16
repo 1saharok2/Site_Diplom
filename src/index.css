@@ -29,3 +29,26 @@ body {
   margin: 0;
   padding: 0;
 }
+
+/* Global responsive media */
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+iframe {
+  max-width: 100%;
+}
+
+/* Containers padding on small screens */
+.MuiContainer-root, .container {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (max-width: 576px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+}
