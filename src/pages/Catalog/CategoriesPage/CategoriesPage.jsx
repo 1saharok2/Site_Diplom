@@ -80,7 +80,7 @@ const CategoriesPage = () => {
           >
             <div className="category-image-container">
               <img 
-                src={category.image || '/api/placeholder/300/200'}
+                src={category.image || '/images/placeholder.jpg'}
                 alt={category.name}
                 className="category-image"
                 onError={(e) => {

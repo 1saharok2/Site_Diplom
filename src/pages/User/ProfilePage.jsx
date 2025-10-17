@@ -1,4 +1,3 @@
-// pages/User/ProfilePage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -55,7 +54,7 @@ import { useNavigate } from 'react-router-dom';
 import { orderService } from '../../services/orderService';
 import { favoritesService } from '../../services/favoritesService';
 import { reviewService } from '../../services/reviewService';
-import { supabase } from '../../services/supabaseClient';
+import { adminService } from '../../services/adminService';
 
 const ProfilePage = () => {
   const { currentUser, updateProfile } = useAuth();
@@ -157,8 +156,7 @@ const ProfilePage = () => {
     ]);
   }, [theme]);
 
-  // Загрузка данных профиля из базы данных
-  // Загрузка статистики и активности
+  // Загрузка данных профиля
   const loadUserData = useCallback(async () => {
     if (!currentUser) return;
 
@@ -176,7 +174,6 @@ const ProfilePage = () => {
       // Загрузка избранного
       let favorites = [];
       try {
-        // Проверяем, существует ли сервис избранного
         if (favoritesService && typeof favoritesService.getUserFavorites === 'function') {
           favorites = await favoritesService.getUserFavorites(currentUser.id);
         }
@@ -189,7 +186,6 @@ const ProfilePage = () => {
       // Загрузка отзывов
       let reviews = [];
       try {
-        // Проверяем, существует ли сервис отзывов
         if (reviewService && typeof reviewService.getUserReviews === 'function') {
           reviews = await reviewService.getUserReviews(currentUser.id);
         }
@@ -290,7 +286,7 @@ const ProfilePage = () => {
     setFallbackData
   ]);
 
-  // В useEffect:
+  // Загрузка профиля пользователя
   useEffect(() => {
     const loadUserProfile = async () => {
       if (!currentUser) return;
@@ -298,34 +294,15 @@ const ProfilePage = () => {
       try {
         setProfileLoading(true);
         
-        // Загружаем полный профиль пользователя из базы
-        const { data: profile, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single();
-          
-        if (error) {
-          console.error('Ошибка загрузки профиля:', error);
-          setUserProfile(currentUser);
-          
-          setFormData({
-            name: currentUser.name || '',
-            email: currentUser.email || '',
-            phone: currentUser.phone || '',
-            address: currentUser.address || ''
-          });
-        } else {
-          setUserProfile(profile);
-          
-          // ИСПРАВЛЕНО: используем name вместо комбинации first_name + last_name
-          setFormData({
-            name: profile.name || '',
-            email: profile.email || '',
-            phone: profile.phone || '',
-            address: profile.address || ''
-          });
-        }
+        // Используем текущие данные пользователя
+        setUserProfile(currentUser);
+        
+        setFormData({
+          name: currentUser.name || '',
+          email: currentUser.email || '',
+          phone: currentUser.phone || '',
+          address: currentUser.address || ''
+        });
         
         await loadUserData();
         
@@ -349,12 +326,8 @@ const ProfilePage = () => {
     setEditDialogOpen(false);
     // Восстанавливаем оригинальные данные
     if (userProfile) {
-      const fullName = userProfile.first_name && userProfile.last_name 
-        ? `${userProfile.first_name} ${userProfile.last_name}`
-        : userProfile.name || userProfile.email;
-      
       setFormData({
-        name: fullName,
+        name: userProfile.name || '',
         email: userProfile.email || '',
         phone: userProfile.phone || '',
         address: userProfile.address || ''
@@ -385,56 +358,41 @@ const ProfilePage = () => {
     setActiveTab(newValue);
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setMessage('');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
 
-  try {
-    // ИСПРАВЛЕНО: сохраняем только имя, не разделяем на first_name/last_name
-    const { error } = await supabase
-      .from('users')
-      .update({
-        name: formData.name, // ← Сохраняем полное имя в поле name
+    try {
+      // Обновляем профиль через adminService
+      const result = await updateProfile({
+        name: formData.name,
         phone: formData.phone,
-        address: formData.address,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', currentUser.id);
-
-    if (error) {
-      throw error;
-    }
-    
-    // Обновляем контекст аутентификации
-    const result = await updateProfile({
-      name: formData.name, // ← Сохраняем полное имя
-      phone: formData.phone,
-      address: formData.address
-    });
-    
-    if (result.success) {
-      setMessage('Профиль успешно обновлен');
-      setMessageType('success');
-      setEditDialogOpen(false);
+        address: formData.address
+      });
       
-      await loadUserData();
-      
-      setTimeout(() => {
-        setMessage('');
-      }, 3000);
-    } else {
-      setMessage(result.error || 'Ошибка при обновлении профиля');
+      if (result.success) {
+        setMessage('Профиль успешно обновлен');
+        setMessageType('success');
+        setEditDialogOpen(false);
+        
+        await loadUserData();
+        
+        setTimeout(() => {
+          setMessage('');
+        }, 3000);
+      } else {
+        setMessage(result.error || 'Ошибка при обновлении профиля');
+        setMessageType('error');
+      }
+    } catch (error) {
+      setMessage('Произошла ошибка при обновлении профиля');
       setMessageType('error');
+      console.error('Update profile error:', error);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    setMessage('Произошла ошибка при обновлении профиля');
-    setMessageType('error');
-    console.error('Update profile error:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
@@ -456,15 +414,9 @@ const handleSubmit = async (e) => {
     }
 
     try {
-      // Обновление пароля в Supabase
-      const { error } = await supabase.auth.updateUser({
-        password: passwordData.newPassword
-      });
-
-      if (error) throw error;
-      
-      setMessage('Пароль успешно изменен');
-      setMessageType('success');
+      // TODO: Реализовать смену пароля через API
+      setMessage('Смена пароля временно недоступна');
+      setMessageType('warning');
       
       setTimeout(() => {
         setMessage('');

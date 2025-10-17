@@ -1,7 +1,6 @@
-// context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiService } from '../services/api';
-import { supabase } from '../services/supabaseClient'; // Добавляем Supabase
+import { adminService } from '../services/adminService';
 
 const AuthContext = createContext();
 
@@ -103,66 +102,34 @@ export const AuthProvider = ({ children }) => {
     setCurrentUser(null);
   };
 
-const updateProfile = async (userData) => {
-  try {
-    console.log('🟢 Обновление профиля с данными:', userData);
-    
-    // Подготавливаем данные для обновления
-    const updateData = {
-      updated_at: new Date().toISOString()
-    };
+  const updateProfile = async (userData) => {
+    try {
+      console.log('🟢 Обновление профиля с данными:', userData);
+      
+      // Обновляем профиль через API
+      const updatedUser = await adminService.updateUser(currentUser.id, userData);
 
-    // Добавляем только те поля, которые есть в базе
-    if (userData.first_name !== undefined) {
-      updateData.first_name = userData.first_name;
+      console.log('✅ Профиль обновлен через API:', updatedUser);
+
+      // Обновляем локальные данные пользователя
+      const updatedUserData = {
+        ...currentUser,
+        ...userData
+      };
+
+      localStorage.setItem('userData', JSON.stringify(updatedUserData));
+      setCurrentUser(updatedUserData);
+      
+      return { success: true, user: updatedUserData };
+      
+    } catch (error) {
+      console.error('❌ Update profile error:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Ошибка обновления профиля' 
+      };
     }
-    if (userData.last_name !== undefined) {
-      updateData.last_name = userData.last_name;
-    }
-    if (userData.phone !== undefined) {
-      updateData.phone = userData.phone;
-    }
-    if (userData.address !== undefined) {
-      updateData.address = userData.address;
-    }
-
-    console.log('🟢 Данные для обновления:', updateData);
-
-    // Обновляем данные в Supabase
-    const { data: updatedUser, error } = await supabase
-      .from('users')
-      .update(updateData)
-      .eq('id', currentUser.id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('❌ Supabase update error:', error);
-      throw new Error(`Ошибка обновления данных: ${error.message}`);
-    }
-
-    console.log('✅ Профиль обновлен в Supabase:', updatedUser);
-
-    // Обновляем локальные данные пользователя
-    const updatedUserData = {
-      ...currentUser,
-      ...updateData,
-      name: userData.name || currentUser.name
-    };
-
-    localStorage.setItem('userData', JSON.stringify(updatedUserData));
-    setCurrentUser(updatedUserData);
-    
-    return { success: true, user: updatedUserData };
-    
-  } catch (error) {
-    console.error('❌ Update profile error:', error);
-    return { 
-      success: false, 
-      error: error.message || 'Ошибка обновления профиля' 
-    };
-  }
-};
+  };
 
   const value = {
     user: currentUser,

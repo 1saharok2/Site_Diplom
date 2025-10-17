@@ -161,25 +161,26 @@
   .header-container {
     flex-wrap: wrap;
     justify-content: center;
-    gap: 15px;
+    gap: 12px;
     height: auto;
-    padding: 12px 16px;
+    padding: 10px 14px;
   }
 
   .nav {
     flex-wrap: wrap;
     justify-content: center;
-    gap: 20px;
+    gap: 16px;
   }
 
   .header-actions {
     flex-wrap: wrap;
     justify-content: center;
+    gap: 12px;
   }
 
   .login-btn,
   .register-btn {
-    padding: 6px 16px;
+    padding: 6px 14px;
     font-size: 0.9rem;
   }
 }

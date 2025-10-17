@@ -1,6 +1,10 @@
-import {supabase} from '../services/supabaseClient'
+const getApiBase = () => {
+  return `${window.location.origin}/api`;
+};
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = getApiBase();
+
+console.log('🔧 AdminService API_BASE:', API_BASE);
 
 const handleApiResponse = async (response) => {
   if (response.status === 401 || response.status === 403) {
@@ -24,7 +28,8 @@ const fetchWithAuth = async (url, options = {}) => {
       throw new Error('Токен авторизации не найден');
     }
 
-    const fullUrl = `${API_BASE}${url}`;    
+    const fullUrl = `${API_BASE}${url}`;
+    console.log('🔧 Auth request to:', fullUrl);
 
     const response = await fetch(fullUrl, {
       ...options,
@@ -43,183 +48,159 @@ const fetchWithAuth = async (url, options = {}) => {
   }
 };
 
+// Функция для обычных запросов без авторизации
+const fetchApi = async (url, options = {}) => {
+  const fullUrl = `${API_BASE}${url}`;
+  console.log('🔧 API request to:', fullUrl);
+  
+  const response = await fetch(fullUrl, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+  return handleApiResponse(response);
+};
+
 export const adminService = {
   // Auth
   login: (credentials) => 
-    fetch(`${API_BASE}/api/auth/login`, {
+    fetchApi('/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials)
-    }).then(handleApiResponse),
+    }),
 
   register: (userData) =>
-    fetch(`${API_BASE}/api/auth/register`, {
+    fetchApi('/auth/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData)
-    }).then(handleApiResponse),
+    }),
 
   // Products
   getProducts: async () => {
-  try {
-    const { data: products, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return products.map(product => ({
-      ...product,
-      images: product.image_url ? [product.image_url] : [],
-      mainImage: product.image_url || ''
-    }));
-  } catch (error) {
-    console.error('Error in getProducts:', error);
-    throw error;
+    try {
+      const products = await fetchApi('/products');
+      return products.map(product => ({
+        ...product,
+        images: product.image ? [product.image] : [],
+        mainImage: product.image || ''
+      }));
+    } catch (error) {
+      console.error('Error in getProducts:', error);
+      throw error;
     }
   },
 
   createProduct: async (productData) => {
-  try {
-    const image_url = productData.images && productData.images.length > 0 
-      ? productData.images[0] 
-      : null;
-
-    const { data: product, error } = await supabase
-      .from('products')
-      .insert({
-        name: productData.name,
-        price: productData.price,
-        description: productData.description,
-        category_slug: productData.category_slug,
-        brand: productData.brand,
-        stock: productData.stock,
-        image_url: image_url
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return product;
-  } catch (error) {
-    console.error('Error in createProduct:', error);
-    throw error;
-  }
-},
+    try {
+      const product = await fetchWithAuth('/admin/products', {
+        method: 'POST',
+        body: JSON.stringify(productData)
+      });
+      return product;
+    } catch (error) {
+      console.error('Error in createProduct:', error);
+      throw error;
+    }
+  },
 
   updateProduct: async (id, productData) => {
-  try {
-    const image_url = productData.images && productData.images.length > 0 
-      ? productData.images[0] 
-      : null;
+    try {
+      const product = await fetchWithAuth(`/admin/products/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(productData)
+      });
+      return product;
+    } catch (error) {
+      console.error('Error in updateProduct:', error);
+      throw error;
+    }
+  },
 
-    const { data: product, error } = await supabase
-      .from('products')
-      .update({
-        name: productData.name,
-        price: productData.price,
-        description: productData.description,
-        category_slug: productData.category_slug,
-        brand: productData.brand,
-        stock: productData.stock,
-        image_url: image_url
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return product;
-  } catch (error) {
-    console.error('Error in updateProduct:', error);
-    throw error;
-  }
-},
-
-deleteProduct: async (id) => {
-  try {
-    const { error } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.error('Error in deleteProduct:', error);
-    throw error;
-  }
-},
+  deleteProduct: async (id) => {
+    try {
+      await fetchWithAuth(`/admin/products/${id}`, {
+        method: 'DELETE'
+      });
+      return true;
+    } catch (error) {
+      console.error('Error in deleteProduct:', error);
+      throw error;
+    }
+  },
 
   // Categories
   getCategories: async () => {
     try {
-      const data = await fetchWithAuth('/api/categories');
-      return data;
+      const categories = await fetchApi('/categories');
+      return categories;
     } catch (error) {
       console.error('❌ Error fetching categories:', error);
       // Fallback to demo data
-      return;
+      return [];
     }
   },
 
   createCategory: async (categoryData) => {
-    const { data, error } = await supabase
-      .from('categories')
-      .insert([categoryData])
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+    try {
+      const category = await fetchWithAuth('/admin/categories', {
+        method: 'POST',
+        body: JSON.stringify(categoryData)
+      });
+      return category;
+    } catch (error) {
+      console.error('Error in createCategory:', error);
+      throw error;
+    }
   },
 
   updateCategory: async (id, categoryData) => {
-    const { data, error } = await supabase
-      .from('categories')
-      .update(categoryData)
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+    try {
+      const category = await fetchWithAuth(`/admin/categories/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(categoryData)
+      });
+      return category;
+    } catch (error) {
+      console.error('Error in updateCategory:', error);
+      throw error;
+    }
   },
 
   deleteCategory: async (id) => {
-    return fetchWithAuth(`/api/admin/categories/${id}`, {
-      method: 'DELETE'
-    });
+    try {
+      await fetchWithAuth(`/admin/categories/${id}`, {
+        method: 'DELETE'
+      });
+      return true;
+    } catch (error) {
+      console.error('Error in deleteCategory:', error);
+      throw error;
+    }
   },
 
   // Users
   getUsers: async () => {
-    return fetchWithAuth('/api/admin/users');
+    return fetchWithAuth('/admin/users');
   },
 
   updateUser: async (id, userData) => {
-    const { data, error } = await supabase
-      .from('users')
-      .update(userData)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    return fetchWithAuth(`/admin/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData)
+    });
   },
 
   deleteUser: async (id) => {
-    const { error } = await supabase
-      .from('users')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-    return true;
+    return fetchWithAuth(`/admin/users/${id}`, {
+      method: 'DELETE'
+    });
   },
 
   getDashboardStats: async () => {
     try {
-      const data = await fetchWithAuth('/api/admin/stats');
+      const data = await fetchWithAuth('/admin/stats');
       console.log('📊 Stats data:', data);
       return {
         totalOrders: data.totalOrders || data.orders_count || data.orders || 0,
@@ -241,52 +222,20 @@ deleteProduct: async (id) => {
     }
   },
 
+  // Orders (пока оставляем заглушки - реализуете позже)
   getOrders: async () => {
     try {
-      const { data: orders, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (*,
-            products (*)
-          ),
-          users (email, first_name, last_name, phone)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      // Форматируем данные для удобства использования
-      return orders.map(order => ({
-        ...order,
-        user_email: order.users?.email,
-        user_name: `${order.users?.first_name || ''} ${order.users?.last_name || ''}`.trim(),
-        user_phone: order.users?.phone,
-        items_count: order.order_items?.length || 0
-      }));
+      const orders = await fetchWithAuth('/admin/orders');
+      return orders;
     } catch (error) {
       console.error('Error in getOrders:', error);
-      throw error;
+      return [];
     }
   },
   
   getOrderById: async (orderId) => {
     try {
-      const { data: order, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (*,
-            products (*)
-          ),
-          users (email, first_name, last_name, phone, avatar_url),
-          stores (name, address, phone),
-          employees (first_name, last_name, position)
-        `)
-        .eq('id', orderId)
-        .single();
-
-      if (error) throw error;
+      const order = await fetchWithAuth(`/admin/orders/${orderId}`);
       return order;
     } catch (error) {
       console.error('Error in getOrderById:', error);
@@ -296,17 +245,10 @@ deleteProduct: async (id) => {
 
   updateOrderStatus: async (orderId, status) => {
     try {
-      const { data: order, error } = await supabase
-        .from('orders')
-        .update({ 
-          status: status,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId)
-        .select()
-        .single();
-
-      if (error) throw error;
+      const order = await fetchWithAuth(`/admin/orders/${orderId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status })
+      });
       return order;
     } catch (error) {
       console.error('Error in updateOrderStatus:', error);
@@ -316,23 +258,10 @@ deleteProduct: async (id) => {
 
   updateOrder: async (orderId, orderData) => {
     try {
-      const { data: order, error } = await supabase
-        .from('orders')
-        .update({
-          customer_name: orderData.customer_name,
-          customer_phone: orderData.customer_phone,
-          customer_email: orderData.customer_email,
-          total_amount: orderData.total_amount,
-          status: orderData.status,
-          store_id: orderData.store_id,
-          employee_id: orderData.employee_id,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId)
-        .select()
-        .single();
-
-      if (error) throw error;
+      const order = await fetchWithAuth(`/admin/orders/${orderId}`, {
+        method: 'PUT',
+        body: JSON.stringify(orderData)
+      });
       return order;
     } catch (error) {
       console.error('Error in updateOrder:', error);
@@ -342,12 +271,9 @@ deleteProduct: async (id) => {
 
   deleteOrder: async (orderId) => {
     try {
-      const { error } = await supabase
-        .from('orders')
-        .delete()
-        .eq('id', orderId);
-
-      if (error) throw error;
+      await fetchWithAuth(`/admin/orders/${orderId}`, {
+        method: 'DELETE'
+      });
       return true;
     } catch (error) {
       console.error('Error deleting order:', error);
@@ -355,109 +281,13 @@ deleteProduct: async (id) => {
     }
   },
 
-  assignEmployeeToOrder: async (orderId, employeeId) => {
-    try {
-      const { data: order, error } = await supabase
-        .from('orders')
-        .update({ 
-          employee_id: employeeId,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return order;
-    } catch (error) {
-      console.error('Error in assignEmployeeToOrder:', error);
-      throw error;
-    }
-  },
-
-  getOrdersByStatus: async (status) => {
-    try {
-      const { data: orders, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (*),
-          users (email, first_name, last_name)
-        `)
-        .eq('status', status)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return orders;
-    } catch (error) {
-      console.error('Error in getOrdersByStatus:', error);
-      throw error;
-    }
-  },
-
   getRecentOrders: async (limit = 10) => {
     try {
-      const { data: orders, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (*),
-          users (email, first_name, last_name)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
+      const orders = await fetchWithAuth(`/admin/orders/recent?limit=${limit}`);
       return orders;
     } catch (error) {
       console.error('Error in getRecentOrders:', error);
-      throw error;
+      return [];
     }
-  },
-
-  // Статистика по заказам
-  getOrdersStats: async () => {
-    try {
-      // Получаем общее количество заказов
-      const { count: totalOrders, error: countError } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact' });
-
-      if (countError) throw countError;
-
-      // Получаем заказы по статусам
-      const { data: ordersByStatus, error: statusError } = await supabase
-        .from('orders')
-        .select('status')
-        .then(result => {
-          const statusCounts = {};
-          result.data?.forEach(order => {
-            statusCounts[order.status] = (statusCounts[order.status] || 0) + 1;
-          });
-          return { data: statusCounts, error: null };
-        });
-
-      if (statusError) throw statusError;
-
-      // Получаем общую сумму продаж
-      const { data: totalSalesData, error: salesError } = await supabase
-        .from('orders')
-        .select('total_amount')
-        .eq('status', 'completed');
-
-      if (salesError) throw salesError;
-
-      const totalSales = totalSalesData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
-
-      return {
-        total_orders: totalOrders || 0,
-        status_counts: ordersByStatus || {},
-        total_sales: totalSales,
-        average_order_value: totalOrders > 0 ? totalSales / totalOrders : 0
-      };
-    } catch (error) {
-      console.error('Error in getOrdersStats:', error);
-      throw error;
-    }
-  }  
+  }
 };

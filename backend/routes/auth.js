@@ -1,5 +1,5 @@
 const express = require('express');
-const supabase = require('../config/supabase');
+const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
@@ -13,7 +13,7 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ error: 'Токен доступа отсутствует' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET || 'change_me_secret', (err, user) => {
     if (err) {
       return res.status(403).json({ error: 'Недействительный токен' });
     }
@@ -39,14 +39,9 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email и пароль обязательны' });
     }
 
-    // Ищем пользователя в Supabase
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
-
-    if (error || !user) {
+    const [rows] = await pool.query('SELECT id, email, password_hash, first_name, last_name, role FROM users WHERE email = ? LIMIT 1', [email]);
+    const user = Array.isArray(rows) && rows[0];
+    if (!user) {
       return res.status(401).json({ error: 'Неверные учетные данные' });
     }
 
@@ -63,7 +58,7 @@ router.post('/login', async (req, res) => {
         email: user.email, 
         role: user.role 
       },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'change_me_secret',
       { expiresIn: '24h' }
     );
 
@@ -98,36 +93,25 @@ router.post('/register', async (req, res) => {
       return res.status(403).json({ error: 'Нельзя создать администратора через регистрацию' });
     }
 
-    // Проверяем существует ли пользователь
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .single();
-
-    if (existingUser) {
+    const [exists] = await pool.query('SELECT id FROM users WHERE email = ? LIMIT 1', [email]);
+    if (Array.isArray(exists) && exists.length > 0) {
       return res.status(400).json({ error: 'Пользователь уже существует' });
     }
 
     // Хешируем пароль
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Создаем пользователя
-    const { data: user, error } = await supabase
-      .from('users')
-      .insert([
-        {
-          email,
-          password_hash: hashedPassword,
-          first_name: firstName,
-          last_name: lastName,
-          role: 'customer'
-        }
-      ])
-      .select()
-      .single();
-
-    if (error) throw error;
+    const [result] = await pool.query(
+      'INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES (?, ?, ?, ?, ?)',
+      [email, hashedPassword, firstName || null, lastName || null, 'customer']
+    );
+    const user = {
+      id: result.insertId,
+      email,
+      first_name: firstName || null,
+      last_name: lastName || null,
+      role: 'customer'
+    };
 
     // Создаем JWT токен
     const token = jwt.sign(
@@ -136,7 +120,7 @@ router.post('/register', async (req, res) => {
         email: user.email, 
         role: user.role 
       },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'change_me_secret',
       { expiresIn: '24h' }
     );
 
@@ -192,19 +176,10 @@ router.get('/profile', authenticateToken, async (req, res) => {
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
     const { firstName, lastName } = req.body;
-
-    const { data: user, error } = await supabase
-      .from('users')
-      .update({
-        first_name: firstName,
-        last_name: lastName,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', req.user.userId)
-      .select()
-      .single();
-
-    if (error) throw error;
+    await pool.query('UPDATE users SET first_name = ?, last_name = ?, updated_at = NOW() WHERE id = ?', [firstName || null, lastName || null, req.user.userId]);
+    const [rows] = await pool.query('SELECT id, email, first_name, last_name, role FROM users WHERE id = ? LIMIT 1', [req.user.userId]);
+    const user = Array.isArray(rows) && rows[0];
+    if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
 
     res.json({
       message: 'Профиль обновлен',
@@ -226,15 +201,8 @@ router.put('/profile', authenticateToken, async (req, res) => {
 // Получение всех пользователей (только для администраторов)
 router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { data: users, error } = await supabase
-      .from('users')
-      .select('id, email, first_name, last_name, role, created_at')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    res.json({ users });
-
+    const [rows] = await pool.query('SELECT id, email, first_name, last_name, role, created_at FROM users ORDER BY created_at DESC');
+    res.json({ users: rows || [] });
   } catch (error) {
     console.error('Get users error:', error);
     res.status(500).json({ error: 'Ошибка получения пользователей' });

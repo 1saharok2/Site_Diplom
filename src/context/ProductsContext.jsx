@@ -1,4 +1,3 @@
-// context/ProductsContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 
@@ -32,9 +31,13 @@ export const ProductsProvider = ({ children }) => {
       
       setProducts(productsData || []);
       setCategories(categoriesData || []);
+      setError('');
     } catch (error) {
       setError('Ошибка загрузки данных');
       console.error('Fetch error:', error);
+      // Устанавливаем пустые массивы при ошибке
+      setProducts([]);
+      setCategories([]);
     } finally {
       setLoading(false);
     }

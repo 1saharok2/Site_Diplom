@@ -1,10 +1,10 @@
-// context/WishlistContext.jsx
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { wishlistService } from '../services/wishlistService';
 
 const WishlistContext = createContext();
 
+// Добавьте этот хук
 export const useWishlist = () => {
   const context = useContext(WishlistContext);
   if (!context) {
@@ -39,7 +39,7 @@ export const WishlistProvider = ({ children }) => {
     };
 
     fetchWishlist();
-  }, [currentUser]); // Только currentUser как зависимость
+  }, [currentUser]);
 
   const addToWishlist = useCallback(async (productId) => {
     if (!currentUser) {
@@ -124,3 +124,6 @@ export const WishlistProvider = ({ children }) => {
     </WishlistContext.Provider>
   );
 };
+
+// Добавьте этот экспорт если нужно
+export default WishlistProvider;
