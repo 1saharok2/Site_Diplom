@@ -40,8 +40,10 @@ const HomePage = () => {
     if (products.length > 0) {
       const carouselItems = products
         .filter((product) => {
-          const hasImages =
-            Array.isArray(product.image_url) && product.image_url.length > 0;
+          const hasImages = 
+            (Array.isArray(product.images) && product.images.length > 0) ||
+            (Array.isArray(product.image_url) && product.image_url.length > 0) ||
+            (typeof product.image_url === 'string' && product.image_url.trim() !== '');
           return product.rating >= 4.0 && hasImages;
         })
         .slice(0, 6);
@@ -65,12 +67,28 @@ const HomePage = () => {
 
   const getProductImage = (product) => {
     if (!product) return "/images/placeholder.jpg";
+    
+    // Проверяем массив images (новый формат)
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      const firstImage = product.images[0];
+      if (typeof firstImage === "string") {
+        return getImageUrl(firstImage);
+      }
+    }
+    
+    // Проверяем массив image_url (старый формат)
     if (Array.isArray(product.image_url) && product.image_url.length > 0) {
       const firstImage = product.image_url[0];
       if (typeof firstImage === "string") {
         return getImageUrl(firstImage);
       }
     }
+    
+    // Проверяем строку image_url
+    if (typeof product.image_url === "string" && product.image_url.trim() !== "") {
+      return getImageUrl(product.image_url);
+    }
+    
     return "/images/placeholder.jpg";
   };
 
