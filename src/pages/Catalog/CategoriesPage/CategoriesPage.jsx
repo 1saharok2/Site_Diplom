@@ -80,18 +80,18 @@ const CategoriesPage = () => {
           >
             <div className="category-image-container">
               <img 
-                src={category.image || '/images/placeholder.jpg'}
+                src={category.image_url || '/images/placeholder.jpg'}
                 alt={category.name}
                 className="category-image"
                 onError={(e) => {
-                  if (!e.target.src.includes('placeholder') && !e.target.src.includes('via.placeholder.com')) {
-                    e.target.src = `https://via.placeholder.com/400x300/6c757d/ffffff?text=${encodeURIComponent(category.name.slice(0, 15))}`;
+                  if (!e.target.src.includes('placeholder')) {
+                    e.target.src = '/images/placeholder.jpg';
                   }
                 }}
               />
               <div className="product-count-badge">
                 <span className="badge bg-primary">
-                  {category.productCount} {getProductCountText(category.productCount)}
+                  {category.product_count} {getProductCountText(category.product_count)}
                 </span>
               </div>
             </div>
