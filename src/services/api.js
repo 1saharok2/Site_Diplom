@@ -85,13 +85,23 @@ export const apiService = {
   // Auth
   login: async (credentials) => {
     try {
+      // Используем правильный путь согласно .htaccess
       const url = `${API_BASE}/auth/login`;
       console.log('🔧 login URL:', url);
+      console.log('🔧 login credentials:', credentials);
+      
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify(credentials)
       });
+      
+      console.log('🔧 login response status:', response.status);
+      console.log('🔧 login response headers:', response.headers);
+      
       const data = await handleResponse(response);
       
       if (data.token) {
@@ -107,11 +117,21 @@ export const apiService = {
 
   register: async (userData) => {
     try {
-      const response = await fetch(`${API_BASE}/auth/register`, {
+      // Используем правильный путь согласно .htaccess
+      const url = `${API_BASE}/auth/register`;
+      console.log('🔧 register URL:', url);
+      console.log('🔧 register data:', userData);
+      
+      const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify(userData)
       });
+      
+      console.log('🔧 register response status:', response.status);
       
       const data = await handleResponse(response);
       

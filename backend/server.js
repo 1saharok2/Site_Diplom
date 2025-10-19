@@ -3,16 +3,23 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('./config/database');
+require('dotenv').config();
 
 const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
+// Log server startup
+console.log('🚀 Starting server...');
+console.log('📡 Port:', PORT);
+console.log('🌍 Environment:', process.env.NODE_ENV || 'development');
+
 app.use(cors({
   origin: ['https://electronic.tw1.ru', 'https://www.electronic.tw1.ru'],
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 
 // Health check (API + DB)
 app.get('/api/health', async (req, res) => {
@@ -22,6 +29,26 @@ app.get('/api/health', async (req, res) => {
   } catch (e) {
     return res.status(500).json({ status: 'ERROR', error: e.message });
   }
+});
+
+// Test endpoint to verify server is running
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Server is running', timestamp: new Date().toISOString() });
+});
+
+// List all available routes
+app.get('/api/routes', (req, res) => {
+  const routes = [
+    'GET /api/health',
+    'GET /api/test', 
+    'GET /api/routes',
+    'GET /api/categories',
+    'GET /api/products',
+    'GET /api/products/:id',
+    'POST /api/auth/register',
+    'POST /api/auth/login'
+  ];
+  res.json({ routes });
 });
 
 // Получить все категории
@@ -61,8 +88,15 @@ app.get('/api/products/:id', async (req, res) => {
 // Auth: Register
 app.post('/api/auth/register', async (req, res) => {
   try {
+    console.log('Register request received');
+    console.log('Register request headers:', req.headers);
+    console.log('Register request body:', req.body);
+    
     const { email, password, firstName, lastName } = req.body || {};
+    console.log('Extracted registration data:', { email, firstName, lastName });
+    
     if (!email || !password) {
+      console.log('Missing email or password in registration');
       return res.status(400).json({ error: 'Email и пароль обязательны' });
     }
 
@@ -105,9 +139,20 @@ app.post('/api/auth/register', async (req, res) => {
 // Auth: Login
 app.post('/api/auth/login', async (req, res) => {
   try {
+    console.log('Login request headers:', req.headers);
+    console.log('Login request body:', req.body);
+    console.log('Login request body type:', typeof req.body);
+    
     const { email, password } = req.body || {};
+    console.log('Extracted email:', email);
+    console.log('Extracted password:', password);
+    
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email и пароль обязательны' });
+      console.log('Missing email or password');
+      return res.status(400).json({ 
+        message: 'Не указаны имя пользователя или пароль.',
+        received_data: req.body 
+      });
     }
 
     const [rows] = await pool.query('SELECT id, email, password_hash, first_name, last_name, role FROM users WHERE email = ? LIMIT 1', [email]);
@@ -144,4 +189,28 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`✅ Сервер запущен на порту ${PORT}`));
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('❌ Server error:', err);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  });
+});
+
+// 404 handler for API routes
+app.use('/api/*', (req, res) => {
+  console.log('❌ 404 - API route not found:', req.originalUrl);
+  res.status(404).json({ 
+    error: 'API endpoint not found',
+    path: req.originalUrl,
+    method: req.method
+  });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`✅ Сервер запущен на порту ${PORT}`);
+  console.log(`🌐 API доступен по адресу: http://localhost:${PORT}/api`);
+  console.log(`🔍 Тестовый endpoint: http://localhost:${PORT}/api/test`);
+});
