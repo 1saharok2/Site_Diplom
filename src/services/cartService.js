@@ -3,7 +3,7 @@ import { apiService } from './api';
 export const cartService = {
   getCart: async (userId) => {
     try {
-      const cartItems = await apiService.get(`/cart/${userId}`);
+      const cartItems = await apiService.get(`/cart.php?userId=${userId}`);
       return cartItems || [];
     } catch (error) {
       console.error('Error in getCart:', error);
@@ -13,7 +13,8 @@ export const cartService = {
 
   addToCart: async (userId, productId, quantity = 1) => {
     try {
-      const result = await apiService.post('/cart/add', {
+      const result = await apiService.post('/cart.php', {
+        action: 'add',
         user_id: userId,
         product_id: productId,
         quantity: quantity
@@ -27,10 +28,9 @@ export const cartService = {
 
   updateCartItem: async (cartItemId, quantity) => {
     try {
-      if (quantity <= 0) {
-        return await cartService.removeFromCart(cartItemId);
-      }
-      const result = await apiService.put(`/cart/${cartItemId}`, {
+      const result = await apiService.post('/cart.php', {
+        action: 'update',
+        id: cartItemId,
         quantity: quantity
       });
       return result;
@@ -42,9 +42,9 @@ export const cartService = {
 
   removeFromCart: async (cartItemId) => {
     try {
-      // Используем POST с _method: DELETE
-      const result = await apiService.post(`/cart/${cartItemId}`, {
-        _method: 'DELETE'
+      const result = await apiService.post('/cart.php', {
+        action: 'remove',
+        id: cartItemId
       });
       return result;
     } catch (error) {
@@ -55,8 +55,10 @@ export const cartService = {
 
   clearCart: async (userId) => {
     try {
-      // Используем POST с _method: DELETE (вместо прямого DELETE)
-      const result = await apiService.post('/cart', { action: 'clear', user_id: userId });
+      const result = await apiService.post('/cart.php', {
+        action: 'clear',
+        user_id: userId
+      });
       return result;
     } catch (error) {
       console.error('Error in clearCart:', error);
@@ -66,7 +68,7 @@ export const cartService = {
 
   getCartTotal: (cartItems) => {
     return cartItems.reduce((total, item) => {
-      return total + (item.products?.price || 0) * item.quantity;
+      return total + (item.price || 0) * item.quantity;
     }, 0);
   },
 
