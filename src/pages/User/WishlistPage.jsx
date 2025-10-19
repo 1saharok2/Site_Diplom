@@ -542,15 +542,20 @@ const WishlistPage = () => {
           </Zoom>
         ) : (
           <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-            {wishlist.map((item, index) => {
-              const product = item.products;
-              const isAdding = addingToCart[product?.id];
-              const inStock = isProductInStock(product);
-              const stockText = getStockText(product);
-              const stockColor = getStockColor(product);
-              
-              return (
-                <Grid item xs={12} sm={6} lg={4} key={item.id}>
+            {Array.isArray(wishlist) && wishlist
+              .filter(item => item && item.products) // ✅ убираем пустые или битые элементы
+              .map((item, index) => {
+                const product = item.products;
+
+                if (!product || !product.id) return null; // ✅ пропускаем, если данных нет
+
+                const isAdding = addingToCart[product.id];
+                const inStock = isProductInStock(product);
+                const stockText = getStockText(product);
+                const stockColor = getStockColor(product);
+
+                return (
+                  <Grid item xs={12} sm={6} lg={4} key={item.id || index}>
                   <Slide direction="up" in={mounted} timeout={400 + index * 100}>
                     <Card 
                       onMouseEnter={() => !isMobile && setHoveredCard(product.id)}
