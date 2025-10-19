@@ -17,13 +17,22 @@ const ProductGallery = ({ product }) => {
     if (product) {
       let imageArray = [];
       
-      // Проверяем разные варианты получения картинок
-      if (product.image_url && Array.isArray(product.image_url)) {
-        imageArray = product.image_url;
-        console.log('🖼️ Using image_url:', imageArray);
-      } else if (product.images && Array.isArray(product.images)) {
+      // Приоритет получения изображений:
+      // 1. product.images (массив всех изображений)
+      // 2. product.image_url (основное изображение или массив)
+      // 3. product.image (резервное поле)
+      
+      if (product.images && Array.isArray(product.images)) {
         imageArray = product.images;
-        console.log('🖼️ Using images:', imageArray);
+        console.log('🖼️ Using images array:', imageArray);
+      } else if (product.image_url) {
+        if (Array.isArray(product.image_url)) {
+          imageArray = product.image_url;
+          console.log('🖼️ Using image_url as array:', imageArray);
+        } else if (typeof product.image_url === 'string') {
+          imageArray = [product.image_url];
+          console.log('🖼️ Using image_url as string:', imageArray);
+        }
       } else if (product.image) {
         imageArray = [product.image];
         console.log('🖼️ Using single image:', imageArray);
@@ -32,12 +41,13 @@ const ProductGallery = ({ product }) => {
       // Фильтруем валидные URL
       const validImages = imageArray.filter(url => {
         const isValid = url && typeof url === 'string' && url.trim() !== '';
-        console.log(`🖼️ Image ${url}: ${isValid ? 'VALID' : 'INVALID'}`);
+        console.log(`🖼️ Image "${url}": ${isValid ? 'VALID' : 'INVALID'}`);
         return isValid;
       });
       
       console.log('🖼️ Final valid images:', validImages);
       setImages(validImages);
+      setCurrentIndex(0); // Сбрасываем индекс при смене товара
       
       // Сбрасываем состояние загрузки
       setImageLoading(true);
@@ -97,7 +107,7 @@ const ProductGallery = ({ product }) => {
     console.log('❌ Image failed to load:', mainImage);
     setImageLoading(false);
     setImageError(true);
-    e.target.src = '/images/placeholder.jpg';
+    // Не заменяем src, показываем placeholder поверх
     setTimeout(() => setAnimationDirection('none'), 300);
   };
 
