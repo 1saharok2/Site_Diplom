@@ -2,12 +2,23 @@ import { apiService } from './api';
 
 const isValidUrl = (url) => {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
-  try {
-    const parsedUrl = new URL(url);
-    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
-  } catch {
-    return false;
+  
+  // Проверяем абсолютные URL (http/https)
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    try {
+      const parsedUrl = new URL(url);
+      return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+    } catch {
+      return false;
+    }
   }
+  
+  // Проверяем относительные пути (начинающиеся с /)
+  if (url.startsWith('/')) {
+    return true;
+  }
+  
+  return false;
 };
 
 const processImageUrls = (imageData) => {
@@ -26,6 +37,7 @@ const processImageUrls = (imageData) => {
         return [parsed];
       }
     } catch (e) {
+      // Если не JSON, проверяем как обычную строку
       if (imageData.startsWith('http') || imageData.startsWith('/')) {
         return [imageData];
       }
@@ -39,16 +51,28 @@ export const categoryService = {
   getAllCategories: async () => {
     try {
       const categories = await apiService.get('/categories');
-      return categories.map(category => ({
-        id: category.id,
-        name: category.name,
-        slug: category.slug,
-        description: category.description,
-        image: isValidUrl(category.image) ? category.image : null,
-        productCount: category.product_count || 0
-      }));
+      console.log('📁 Raw categories from API:', categories);
+      
+      const processedCategories = categories.map(category => {
+        console.log(`🖼️ Category ${category.name} raw image_url:`, category.image_url);
+        console.log(`🖼️ Category ${category.name} isValidUrl:`, isValidUrl(category.image_url));
+        
+        const imageUrl = isValidUrl(category.image_url) ? category.image_url : '/images/placeholder.jpg';
+        
+        return {
+          id: category.id,
+          name: category.name,
+          slug: category.slug,
+          description: category.description,
+          image_url: imageUrl,
+          productCount: category.product_count || 0
+        };
+      });
+      
+      console.log('✅ Processed categories with images:', processedCategories);
+      return processedCategories;
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('❌ Error fetching categories:', error);
       return [];
     }
   },
@@ -56,16 +80,20 @@ export const categoryService = {
   getCategoryBySlug: async (slug) => {
     try {
       const category = await apiService.get(`/categories/${slug}`);
+      console.log(`📁 Category ${slug} from API:`, category);
+      
+      const imageUrl = isValidUrl(category.image_url) ? category.image_url : '/images/placeholder.jpg';
+      
       return {
         id: category.id,
         name: category.name,
         slug: category.slug,
         description: category.description,
-        image: isValidUrl(category.image) ? category.image : null,
+        image_url: imageUrl,
         productCount: category.product_count || 0
       };
     } catch (error) {
-      console.error('Error fetching category:', error);
+      console.error(`❌ Error fetching category ${slug}:`, error);
       return null;
     }
   },
@@ -73,8 +101,12 @@ export const categoryService = {
   getProductsByCategory: async (categorySlug) => {
     try {
       const products = await apiService.get(`/products/category/${categorySlug}`);
+      console.log(`📦 Products for category ${categorySlug}:`, products);
+      
       return products.map(product => {
         const processedImages = processImageUrls(product.image_url || product.images);
+        
+        console.log(`🖼️ Product ${product.name} images:`, processedImages);
         
         return {
           id: product.id,
@@ -89,7 +121,7 @@ export const categoryService = {
           isNew: product.is_new || false,
           category: product.category_slug || product.category,
           images: processedImages.length > 0 ? processedImages : 
-                 ['https://via.placeholder.com/600x600/8767c2/ffffff?text=Нет+изображения'],
+                 ['/images/placeholder.jpg'],
           description: product.description || '',
           brand: product.brand || '',
           specifications: product.specifications || {},
@@ -97,7 +129,7 @@ export const categoryService = {
         };
       });
     } catch (error) {
-      console.error('Error fetching products by category:', error);
+      console.error(`❌ Error fetching products for category ${categorySlug}:`, error);
       return [];
     }
   },
@@ -105,8 +137,10 @@ export const categoryService = {
   getProductById: async (id) => {
     try {
       const product = await apiService.get(`/products/${id}`);
+      console.log(`📦 Product ${id} from API:`, product);
       
       const processedImages = processImageUrls(product.image_url || product.images);
+      console.log(`🖼️ Processed images for product ${id}:`, processedImages);
 
       return {
         id: product.id,
@@ -129,7 +163,7 @@ export const categoryService = {
         slug: product.slug
       };
     } catch (error) {
-      console.error('Error fetching product:', error);
+      console.error(`❌ Error fetching product ${id}:`, error);
       throw new Error(error.message || 'Ошибка загрузки товара');
     }
   },
