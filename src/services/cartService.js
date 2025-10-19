@@ -56,9 +56,7 @@ export const cartService = {
   clearCart: async (userId) => {
     try {
       // Используем POST с _method: DELETE (вместо прямого DELETE)
-      const result = await apiService.post(`/cart/clear/${userId}`, {
-        _method: 'DELETE'
-      });
+      const result = await apiService.post('/cart', { action: 'clear', user_id: userId });
       return result;
     } catch (error) {
       console.error('Error in clearCart:', error);
