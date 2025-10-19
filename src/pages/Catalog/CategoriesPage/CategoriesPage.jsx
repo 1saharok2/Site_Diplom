@@ -15,7 +15,8 @@ const CategoriesPage = () => {
       try {
         setLoading(true);
         const data = await categoryService.getAllCategories();
-        setCategories(data);
+        console.log('Processed categories:', data); // Для отладки
+        setCategories(Array.isArray(data) ? data : []);
       } catch (err) {
         setError('Ошибка загрузки категорий');
         console.error('Error fetching categories:', err);
@@ -77,12 +78,21 @@ const CategoriesPage = () => {
             className="category-card"
             onClick={() => handleCardClick(category.slug)}
             style={{ cursor: 'pointer' }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleCardClick(category.slug);
+              }
+            }}
+            aria-label={`Перейти к категории ${category.name}`}
           >
             <div className="category-image-container">
               <img 
                 src={category.image_url || '/images/placeholder.jpg'}
                 alt={category.name}
                 className="category-image"
+                loading="lazy"
                 onError={(e) => {
                   if (!e.target.src.includes('placeholder')) {
                     e.target.src = '/images/placeholder.jpg';
@@ -91,7 +101,7 @@ const CategoriesPage = () => {
               />
               <div className="product-count-badge">
                 <span className="badge bg-primary">
-                  {category.product_count} {getProductCountText(category.product_count)}
+                  {category.productCount} {getProductCountText(category.productCount)}
                 </span>
               </div>
             </div>
