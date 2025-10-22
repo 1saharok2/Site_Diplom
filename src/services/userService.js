@@ -15,12 +15,14 @@ export const userService = {
   // Обновление профиля пользователя
   updateUserProfile: async (userId, userData) => {
     try {
-      const user = await apiService.put(`/users/${userId}`, {
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        phone: userData.phone,
-        address: userData.address
-      });
+      const payload = {
+        first_name: userData.first_name || userData.name, // поддержка старого поля
+        last_name: userData.last_name || '',
+        phone: userData.phone || '',
+        address: userData.address || ''
+      };
+
+      const user = await apiService.put(`/admin/users/${userId}`, payload);
       return user;
     } catch (error) {
       console.error('Error updating user profile:', error);
