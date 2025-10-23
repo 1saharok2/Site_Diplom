@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Row, Col, Image, Spinner } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight, FaExpand, FaImage } from 'react-icons/fa';
 import './ProductPage_css/ProductGallery.css';
@@ -10,6 +10,9 @@ const ProductGallery = ({ product }) => {
   const [imageError, setImageError] = useState(false);
   const [images, setImages] = useState([]);
   const [animationDirection, setAnimationDirection] = useState('none');
+  
+  // 🔥 ФИКС: Добавляем ref для управления таймерами
+  const animationTimeoutRef = useRef(null);
 
   useEffect(() => {
     console.log('🎨 ProductGallery - product:', product);
@@ -18,10 +21,6 @@ const ProductGallery = ({ product }) => {
       let imageArray = [];
       
       // Приоритет получения изображений:
-      // 1. product.images (массив всех изображений)
-      // 2. product.image_url (основное изображение или массив)
-      // 3. product.image (резервное поле)
-      
       if (product.images && Array.isArray(product.images)) {
         imageArray = product.images;
         console.log('🖼️ Using images array:', imageArray);
@@ -47,13 +46,25 @@ const ProductGallery = ({ product }) => {
       
       console.log('🖼️ Final valid images:', validImages);
       setImages(validImages);
-      setCurrentIndex(0); // Сбрасываем индекс при смене товара
-      
-      // Сбрасываем состояние загрузки
+      setCurrentIndex(0);
       setImageLoading(true);
       setImageError(false);
+      
+      // 🔥 ФИКС: Очищаем предыдущий таймаут при смене товара
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
     }
   }, [product]);
+
+  // 🔥 ФИКС: Очищаем таймаут при размонтировании
+  useEffect(() => {
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const hasImages = images.length > 0;
   const mainImage = hasImages ? images[currentIndex] : null;
@@ -69,6 +80,12 @@ const ProductGallery = ({ product }) => {
 
   const nextImage = () => {
     if (images.length <= 1) return;
+    
+    // 🔥 ФИКС: Очищаем предыдущий таймаут перед новым действием
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+    }
+    
     setAnimationDirection('next');
     const nextIndex = (currentIndex + 1) % images.length;
     setCurrentIndex(nextIndex);
@@ -78,6 +95,12 @@ const ProductGallery = ({ product }) => {
 
   const prevImage = () => {
     if (images.length <= 1) return;
+    
+    // 🔥 ФИКС: Очищаем предыдущий таймаут перед новым действием
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+    }
+    
     setAnimationDirection('prev');
     const prevIndex = (currentIndex - 1 + images.length) % images.length;
     setCurrentIndex(prevIndex);
@@ -87,6 +110,11 @@ const ProductGallery = ({ product }) => {
 
   const selectImage = (index) => {
     if (index === currentIndex) return;
+    
+    // 🔥 ФИКС: Очищаем предыдущий таймаут перед новым действием
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+    }
     
     setAnimationDirection(index > currentIndex ? 'next' : 'prev');
     setCurrentIndex(index);
@@ -100,15 +128,24 @@ const ProductGallery = ({ product }) => {
   const handleImageLoad = () => {
     console.log('✅ Image loaded successfully:', mainImage);
     setImageLoading(false);
-    setTimeout(() => setAnimationDirection('none'), 300);
+    
+    // 🔥 ФИКС: Сохраняем таймаут в ref для последующей очистки
+    animationTimeoutRef.current = setTimeout(() => {
+      setAnimationDirection('none');
+      animationTimeoutRef.current = null;
+    }, 300);
   };
 
   const handleImageError = (e) => {
     console.log('❌ Image failed to load:', mainImage);
     setImageLoading(false);
     setImageError(true);
-    // Не заменяем src, показываем placeholder поверх
-    setTimeout(() => setAnimationDirection('none'), 300);
+    
+    // 🔥 ФИКС: Сохраняем таймаут в ref для последующей очистки
+    animationTimeoutRef.current = setTimeout(() => {
+      setAnimationDirection('none');
+      animationTimeoutRef.current = null;
+    }, 300);
   };
 
   // Если нет картинок
