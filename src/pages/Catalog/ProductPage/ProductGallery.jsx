@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Row, Col, Image, Spinner } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight, FaExpand, FaImage } from 'react-icons/fa';
 import './ProductPage_css/ProductGallery.css';
@@ -9,13 +9,12 @@ const ProductGallery = ({ product }) => {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [images, setImages] = useState([]);
-  const [animationDirection, setAnimationDirection] = useState('none');
-  
-  // 🔥 ФИКС: Добавляем ref для управления таймерами
-  const animationTimeoutRef = useRef(null);
 
   useEffect(() => {
     console.log('🎨 ProductGallery - product:', product);
+    console.log('🎨 ProductGallery - product.images:', product?.images);
+    console.log('🎨 ProductGallery - product.image_url:', product?.image_url);
+    console.log('🎨 ProductGallery - product.image:', product?.image);
     
     if (product) {
       let imageArray = [];
@@ -29,19 +28,42 @@ const ProductGallery = ({ product }) => {
           imageArray = product.image_url;
           console.log('🖼️ Using image_url as array:', imageArray);
         } else if (typeof product.image_url === 'string') {
-          imageArray = [product.image_url];
-          console.log('🖼️ Using image_url as string:', imageArray);
+          // Попробуем парсить как JSON
+          try {
+            const parsed = JSON.parse(product.image_url);
+            if (Array.isArray(parsed)) {
+              imageArray = parsed;
+              console.log('🖼️ Parsed image_url as JSON array:', imageArray);
+            } else {
+              imageArray = [product.image_url];
+              console.log('🖼️ Using image_url as string:', imageArray);
+            }
+          } catch (e) {
+            imageArray = [product.image_url];
+            console.log('🖼️ Using image_url as string (not JSON):', imageArray);
+          }
         }
       } else if (product.image) {
         imageArray = [product.image];
         console.log('🖼️ Using single image:', imageArray);
       }
       
-      // Фильтруем валидные URL
+      // Фильтруем валидные URL и нормализуем их
       const validImages = imageArray.filter(url => {
         const isValid = url && typeof url === 'string' && url.trim() !== '';
         console.log(`🖼️ Image "${url}": ${isValid ? 'VALID' : 'INVALID'}`);
         return isValid;
+      }).map(url => {
+        // Нормализуем URL для продакшн сервера
+        if (url.startsWith('http')) {
+          return url;
+        } else if (url.startsWith('/')) {
+          // Для относительных путей добавляем домен
+          return `https://electronic.tw1.ru${url}`;
+        } else {
+          // Для путей без слеша добавляем /images/
+          return `https://electronic.tw1.ru/images/${url}`;
+        }
       });
       
       console.log('🖼️ Final valid images:', validImages);
@@ -49,22 +71,8 @@ const ProductGallery = ({ product }) => {
       setCurrentIndex(0);
       setImageLoading(true);
       setImageError(false);
-      
-      // 🔥 ФИКС: Очищаем предыдущий таймаут при смене товара
-      if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-      }
     }
   }, [product]);
-
-  // 🔥 ФИКС: Очищаем таймаут при размонтировании
-  useEffect(() => {
-    return () => {
-      if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const hasImages = images.length > 0;
   const mainImage = hasImages ? images[currentIndex] : null;
@@ -75,58 +83,37 @@ const ProductGallery = ({ product }) => {
     currentIndex,
     imageLoading,
     imageError,
-    imagesCount: images.length
+    imagesCount: images.length,
+    images: images
   });
 
   // 🔧 Сбрасываем состояния загрузки/ошибки при смене изображения
   useEffect(() => {
-    if (!hasImages) return;
+    if (images.length === 0) return;
     setImageLoading(true);
     setImageError(false);
-  }, [currentIndex, hasImages]);
+  }, [currentIndex, images.length]);
 
   const nextImage = () => {
     if (images.length <= 1) return;
-    
-    // 🔥 ФИКС: Очищаем предыдущий таймаут перед новым действием
-    if (animationTimeoutRef.current) {
-      clearTimeout(animationTimeoutRef.current);
-    }
-    
-    setAnimationDirection('next');
+    console.log('➡️ Next image clicked, current:', currentIndex);
     const nextIndex = (currentIndex + 1) % images.length;
+    console.log('➡️ Next index:', nextIndex);
     setCurrentIndex(nextIndex);
-    setImageLoading(true);
-    setImageError(false);
   };
 
   const prevImage = () => {
     if (images.length <= 1) return;
-    
-    // 🔥 ФИКС: Очищаем предыдущий таймаут перед новым действием
-    if (animationTimeoutRef.current) {
-      clearTimeout(animationTimeoutRef.current);
-    }
-    
-    setAnimationDirection('prev');
+    console.log('⬅️ Prev image clicked, current:', currentIndex);
     const prevIndex = (currentIndex - 1 + images.length) % images.length;
+    console.log('⬅️ Prev index:', prevIndex);
     setCurrentIndex(prevIndex);
-    setImageLoading(true);
-    setImageError(false);
   };
 
   const selectImage = (index) => {
     if (index === currentIndex) return;
-    
-    // 🔥 ФИКС: Очищаем предыдущий таймаут перед новым действием
-    if (animationTimeoutRef.current) {
-      clearTimeout(animationTimeoutRef.current);
-    }
-    
-    setAnimationDirection(index > currentIndex ? 'next' : 'prev');
+    console.log('🖱️ Thumbnail clicked, index:', index);
     setCurrentIndex(index);
-    setImageLoading(true);
-    setImageError(false);
   };
 
   const openModal = () => setShowModal(true);
@@ -135,29 +122,22 @@ const ProductGallery = ({ product }) => {
   const handleImageLoad = () => {
     console.log('✅ Image loaded successfully:', mainImage);
     setImageLoading(false);
-    
-    // 🔥 ФИКС: Сохраняем таймаут в ref для последующей очистки
-    animationTimeoutRef.current = setTimeout(() => {
-      setAnimationDirection('none');
-      animationTimeoutRef.current = null;
-    }, 300);
   };
 
   const handleImageError = (e) => {
     console.log('❌ Image failed to load:', mainImage);
     setImageLoading(false);
     setImageError(true);
-    
-    // 🔥 ФИКС: Сохраняем таймаут в ref для последующей очистки
-    animationTimeoutRef.current = setTimeout(() => {
-      setAnimationDirection('none');
-      animationTimeoutRef.current = null;
-    }, 300);
   };
 
   // Если нет картинок
   if (!hasImages) {
-    console.log('🚫 No images available');
+    console.log('🚫 No images available, product:', product);
+    console.log('🚫 Images array:', images);
+    console.log('🚫 Product images field:', product?.images);
+    console.log('🚫 Product image_url field:', product?.image_url);
+    console.log('🚫 Product image field:', product?.image);
+    
     return (
       <div className="product-gallery">
         <div className="main-image-container">
@@ -168,6 +148,17 @@ const ProductGallery = ({ product }) => {
               <small className="text-muted">
                 {product?.name || 'Неизвестный товар'}
               </small>
+              <div style={{ fontSize: '10px', marginTop: '10px' }}>
+                Debug: images.length = {images.length}
+              </div>
+              {/* Отладочная информация */}
+              {process.env.NODE_ENV === 'development' && (
+                <div style={{ fontSize: '8px', marginTop: '10px', textAlign: 'left' }}>
+                  <div>Product.images: {JSON.stringify(product?.images)}</div>
+                  <div>Product.image_url: {JSON.stringify(product?.image_url)}</div>
+                  <div>Product.image: {JSON.stringify(product?.image)}</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -193,10 +184,8 @@ const ProductGallery = ({ product }) => {
           <Image
             src={mainImage}
             alt={product?.name || 'Изображение товара'}
-            className={`main-product-image ${imageLoading ? 'hidden' : ''} ${animationDirection}`}
+            className={`main-product-image ${imageLoading ? 'hidden' : ''}`}
             fluid
-            // 🔧 Форсируем перемонтирование для корректного onLoad/onError
-            key={mainImage}
             onLoad={handleImageLoad}
             onError={handleImageError}
           />
@@ -274,10 +263,8 @@ const ProductGallery = ({ product }) => {
             <Image
               src={mainImage}
               alt={product?.name || 'Изображение товара'}
-              className={`modal-image ${animationDirection}`}
+              className="modal-image"
               fluid
-              // 🔧 Форсируем перемонтирование при смене изображения в модалке
-              key={`modal-${mainImage}`}
               onError={(e) => {
                 e.target.src = '/images/placeholder.jpg';
               }}

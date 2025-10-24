@@ -86,11 +86,25 @@ const ProductInfo = ({ product, onVariantChange }) => {
         // Получаем базовое название для поиска вариантов
         const baseName = getBaseProductName(product.name);
         
-        // TODO: Реализовать API для получения вариантов товара
-        // Пока используем только текущий товар
-        const productVariants = [product];
-        
-        setVariants(productVariants);
+        // Пока API endpoint не работает, используем альтернативный подход
+        // Загружаем все товары и фильтруем варианты на фронтенде
+        try {
+          const allProducts = await categoryService.getAllProducts();
+          const productVariants = allProducts.filter(p => {
+            const productBaseName = getBaseProductName(p.name);
+            return productBaseName === baseName && p.id !== product.id;
+          });
+          
+          // Добавляем текущий товар в список вариантов
+          const variants = [product, ...productVariants];
+          
+          console.log('🔍 Loaded variants for', baseName, ':', variants);
+          
+          setVariants(variants);
+        } catch (apiError) {
+          console.log('API недоступен, используем только текущий товар:', apiError);
+          setVariants([product]);
+        }
         
         // Устанавливаем начальные значения из продукта
         if (product.specifications) {

@@ -26,15 +26,18 @@ export const StyledLogo = styled(Box, {
 })(({ theme, scrolled }) => ({
   textDecoration: 'none',
   fontWeight: 700,
-  fontSize: '1.6rem',
+  fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' },
   color: scrolled ? theme.palette.primary.main : '#fff',
   display: 'flex',
   alignItems: 'center',
-  gap: '8px',
+  gap: { xs: '4px', sm: '8px' },
   transition: 'all 0.3s ease',
   cursor: 'pointer',
   '&:hover': {
     transform: 'scale(1.05)',
+  },
+  '&:active': {
+    transform: 'scale(0.95)',
   },
 }));
 
@@ -94,8 +97,10 @@ export const StyledActionButton = styled(Link, {
   alignItems: 'center',
   justifyContent: 'center',
   borderRadius: '50%',
-  width: 42,
-  height: 42,
+  width: { xs: 36, sm: 42 },
+  height: { xs: 36, sm: 42 },
+  minWidth: { xs: 36, sm: 42 },
+  minHeight: { xs: 36, sm: 42 },
   transition: 'all 0.3s ease',
   '&:hover': {
     backgroundColor: scrolled
@@ -103,21 +108,27 @@ export const StyledActionButton = styled(Link, {
       : alpha('#fff', 0.2),
     transform: 'scale(1.05)',
   },
+  '&:active': {
+    transform: 'scale(0.95)',
+  },
 }));
 
 /* === Drawer для мобильного меню === */
 export const DrawerContainer = styled(Box)(({ theme }) => ({
-  width: 250,
+  width: { xs: '100%', sm: 320 },
   display: 'flex',
   flexDirection: 'column',
   height: '100%',
   backgroundColor: theme.palette.background.paper,
-  padding: theme.spacing(2),
+  padding: { xs: theme.spacing(1.5), sm: theme.spacing(2) },
+  overflow: 'auto',
 }));
 
 export const DrawerHeader = styled(Box)(({ theme }) => ({
-  fontSize: '1.5rem',
+  fontSize: { xs: '1.2rem', sm: '1.5rem' },
   fontWeight: 700,
   color: theme.palette.primary.main,
-  marginBottom: theme.spacing(2),
+  marginBottom: { xs: theme.spacing(1.5), sm: theme.spacing(2) },
+  paddingBottom: theme.spacing(1),
+  borderBottom: `1px solid ${theme.palette.divider}`,
 }));

@@ -193,6 +193,76 @@ export const categoryService = {
     } catch (error) {
       throw new Error(error.message || 'Ошибка удаления категории');
     }
+  },
+
+  getProductVariants: async (baseName) => {
+    try {
+      const variants = await apiService.getProductVariants(baseName);
+      console.log(`🔍 Product variants for ${baseName}:`, variants);
+      
+      return variants.map(product => {
+        const processedImages = processImageUrls(product.image_url || product.images);
+        
+        return {
+          id: product.id,
+          name: product.name || 'Без названия',
+          description: product.description || 'Описание отсутствует',
+          price: product.price || 0,
+          oldPrice: product.old_price || product.price || 0,
+          discount: product.discount || 0,
+          rating: product.rating || 0,
+          reviewsCount: product.reviews_count || 0,
+          inStock: product.stock > 0,
+          stock: product.stock || 0,
+          isNew: product.is_new || false,
+          category: product.category_slug || product.category,
+          categoryName: product.category_slug || product.category,
+          image_url: processedImages,
+          images: processedImages,
+          specifications: product.specifications || {},
+          brand: product.brand || '',
+          slug: product.slug
+        };
+      });
+    } catch (error) {
+      console.error(`❌ Error fetching variants for ${baseName}:`, error);
+      return [];
+    }
+  },
+
+  getAllProducts: async () => {
+    try {
+      const products = await apiService.getProducts();
+      console.log(`📦 All products:`, products);
+      
+      return products.map(product => {
+        const processedImages = processImageUrls(product.image_url || product.images);
+        
+        return {
+          id: product.id,
+          name: product.name || 'Без названия',
+          description: product.description || 'Описание отсутствует',
+          price: product.price || 0,
+          oldPrice: product.old_price || product.price || 0,
+          discount: product.discount || 0,
+          rating: product.rating || 0,
+          reviewsCount: product.reviews_count || 0,
+          inStock: product.stock > 0,
+          stock: product.stock || 0,
+          isNew: product.is_new || false,
+          category: product.category_slug || product.category,
+          categoryName: product.category_slug || product.category,
+          image_url: processedImages,
+          images: processedImages,
+          specifications: product.specifications || {},
+          brand: product.brand || '',
+          slug: product.slug
+        };
+      });
+    } catch (error) {
+      console.error(`❌ Error fetching all products:`, error);
+      return [];
+    }
   }
 };
 

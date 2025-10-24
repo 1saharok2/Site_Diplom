@@ -3,6 +3,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('./config/database');
+const productsRouter = require('./routes/products');
 require('dotenv').config();
 
 const app = express();
@@ -62,28 +63,8 @@ app.get('/api/categories', async (req, res) => {
   }
 });
 
-// Получить все продукты
-app.get('/api/products', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT * FROM products');
-    res.json(rows);
-  } catch (error) {
-    console.error('Ошибка получения продуктов:', error);
-    res.status(500).json({ error: 'Ошибка сервера' });
-  }
-});
-
-// Получить продукт по ID
-app.get('/api/products/:id', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT * FROM products WHERE id = ?', [req.params.id]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Товар не найден' });
-    res.json(rows[0]);
-  } catch (error) {
-    console.error('Ошибка получения продукта:', error);
-    res.status(500).json({ error: 'Ошибка сервера' });
-  }
-});
+// Подключаем роуты для товаров
+app.use('/api/products', productsRouter);
 
 // Auth: Register
 app.post('/api/auth/register', async (req, res) => {

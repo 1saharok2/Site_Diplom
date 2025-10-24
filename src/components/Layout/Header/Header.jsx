@@ -229,22 +229,30 @@ const Header = () => {
             )}
 
             {/* ЭКШН-КНОПКИ */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
               <StyledActionButton to="/wishlist" scrolled={scrolled}>
                 <Badge badgeContent={wishlistCount} color="error">
-                  <Favorite />
+                  <Favorite sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />
                 </Badge>
               </StyledActionButton>
 
               <StyledActionButton to="/cart" scrolled={scrolled}>
                 <Badge badgeContent={cartItemsCount} color="error">
-                  <ShoppingCart />
+                  <ShoppingCart sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />
                 </Badge>
               </StyledActionButton>
 
               {currentUser ? (
                 <>
-                  <IconButton onClick={handleProfileMenuOpen}>
+                  <IconButton 
+                    onClick={handleProfileMenuOpen}
+                    sx={{ 
+                      padding: { xs: '6px', sm: '8px' },
+                      '& .MuiSvgIcon-root': {
+                        fontSize: { xs: '1.2rem', sm: '1.5rem' }
+                      }
+                    }}
+                  >
                     <AccountCircle />
                   </IconButton>
                   <Menu
@@ -298,18 +306,47 @@ const Header = () => {
                   </Menu>
                 </>
               ) : (
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button component={Link} to="/login" variant="outlined">
+                <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1 } }}>
+                  <Button 
+                    component={Link} 
+                    to="/login" 
+                    variant="outlined"
+                    size="small"
+                    sx={{ 
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      padding: { xs: '4px 8px', sm: '6px 16px' },
+                      minWidth: { xs: '60px', sm: 'auto' }
+                    }}
+                  >
                     Войти
                   </Button>
-                  <Button component={Link} to="/register" variant="contained" color="error">
+                  <Button 
+                    component={Link} 
+                    to="/register" 
+                    variant="contained" 
+                    color="error"
+                    size="small"
+                    sx={{ 
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      padding: { xs: '4px 8px', sm: '6px 16px' },
+                      minWidth: { xs: '80px', sm: 'auto' }
+                    }}
+                  >
                     Регистрация
                   </Button>
                 </Box>
               )}
 
               {isMobile && (
-                <IconButton onClick={handleDrawerToggle}>
+                <IconButton 
+                  onClick={handleDrawerToggle}
+                  sx={{ 
+                    padding: { xs: '6px', sm: '8px' },
+                    '& .MuiSvgIcon-root': {
+                      fontSize: { xs: '1.2rem', sm: '1.5rem' }
+                    }
+                  }}
+                >
                   <MenuIcon />
                 </IconButton>
               )}
@@ -321,22 +358,287 @@ const Header = () => {
       <Toolbar sx={{ minHeight: { xs: '70px', md: '80px' } }} />
 
       {/* Drawer */}
-      <Drawer open={mobileOpen} onClose={handleDrawerToggle}>
+      <Drawer 
+        open={mobileOpen} 
+        onClose={handleDrawerToggle}
+        anchor="right"
+        PaperProps={{
+          sx: {
+            width: { xs: '100%', sm: 320 },
+            backgroundColor: 'background.paper',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          }
+        }}
+      >
         <DrawerContainer>
-          <DrawerHeader>🛍️ Электроник</DrawerHeader>
-          <List>
+          <DrawerHeader>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                🛍️ Электроник
+              </Typography>
+              <IconButton onClick={handleDrawerToggle} size="small">
+                <Clear />
+              </IconButton>
+            </Box>
+          </DrawerHeader>
+
+          {/* Мобильный поиск */}
+          <Box sx={{ mb: 3 }}>
+            <form onSubmit={handleSearchSubmit}>
+              <StyledSearchField
+                fullWidth
+                placeholder="Поиск товаров..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                scrolled={true}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchQuery && (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setSearchQuery('')} size="small">
+                        <Clear />
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
+              />
+            </form>
+            
+            {showSearchResults && (
+              <Box sx={{ mt: 2 }}>
+                {loading ? (
+                  <Box sx={{ p: 2, textAlign: 'center' }}>
+                    <CircularProgress size={20} />
+                  </Box>
+                ) : filteredProducts.length > 0 ? (
+                  <List sx={{ maxHeight: 200, overflow: 'auto' }}>
+                    {filteredProducts.map((product) => (
+                      <ListItem
+                        key={product.id}
+                        button
+                        onClick={() => {
+                          navigate(`/product/${product.id}`);
+                          setSearchQuery('');
+                          setShowSearchResults(false);
+                          handleDrawerToggle();
+                        }}
+                        sx={{ py: 1 }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                          <Box
+                            component="img"
+                            src={product.image || '/images/placeholder.jpg'}
+                            alt={product.name}
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              objectFit: 'cover',
+                              borderRadius: 1,
+                              mr: 2
+                            }}
+                          />
+                          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                            <Typography variant="body2" noWrap>
+                              {product.name}
+                            </Typography>
+                            <Typography variant="caption" color="primary">
+                              {product.price?.toLocaleString()} ₽
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  searchQuery && (
+                    <Box sx={{ p: 2, textAlign: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Ничего не найдено
+                      </Typography>
+                    </Box>
+                  )
+                )}
+              </Box>
+            )}
+          </Box>
+
+          {/* Навигация */}
+          <List sx={{ mb: 2 }}>
             {navItems.map((item) => (
               <ListItem
-                button
                 key={item.path}
                 component={Link}
                 to={item.path}
                 onClick={handleDrawerToggle}
+                sx={{
+                  borderRadius: 2,
+                  mb: 1,
+                  '&:hover': {
+                    backgroundColor: 'primary.main',
+                    color: 'white',
+                    '& .MuiListItemIcon-root': {
+                      color: 'white',
+                    },
+                  },
+                  transition: 'all 0.2s ease',
+                }}
               >
-                <ListItemText primary={item.label} />
+                {item.icon && (
+                  <Box sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
+                    {item.icon}
+                  </Box>
+                )}
+                <ListItemText 
+                  primary={item.label}
+                  primaryTypographyProps={{
+                    fontWeight: 500,
+                  }}
+                />
               </ListItem>
             ))}
           </List>
+
+          {/* Действия пользователя */}
+          <Box sx={{ mt: 'auto', pt: 2 }}>
+            {currentUser ? (
+              <List>
+                <ListItem
+                  component={Link}
+                  to="/profile"
+                  onClick={handleDrawerToggle}
+                  sx={{
+                    borderRadius: 2,
+                    mb: 1,
+                    '&:hover': {
+                      backgroundColor: 'primary.main',
+                      color: 'white',
+                    },
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <Box sx={{ mr: 2 }}>
+                    <AccountCircle />
+                  </Box>
+                  <ListItemText primary="Профиль" />
+                </ListItem>
+
+                <ListItem
+                  component={Link}
+                  to="/wishlist"
+                  onClick={handleDrawerToggle}
+                  sx={{
+                    borderRadius: 2,
+                    mb: 1,
+                    '&:hover': {
+                      backgroundColor: 'primary.main',
+                      color: 'white',
+                    },
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <Box sx={{ mr: 2 }}>
+                    <Badge badgeContent={wishlistCount} color="error">
+                      <Favorite />
+                    </Badge>
+                  </Box>
+                  <ListItemText primary="Избранное" />
+                </ListItem>
+
+                <ListItem
+                  component={Link}
+                  to="/cart"
+                  onClick={handleDrawerToggle}
+                  sx={{
+                    borderRadius: 2,
+                    mb: 1,
+                    '&:hover': {
+                      backgroundColor: 'primary.main',
+                      color: 'white',
+                    },
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <Box sx={{ mr: 2 }}>
+                    <Badge badgeContent={cartItemsCount} color="error">
+                      <ShoppingCart />
+                    </Badge>
+                  </Box>
+                  <ListItemText primary="Корзина" />
+                </ListItem>
+
+                {currentUser.role === 'admin' && (
+                  <ListItem
+                    component={Link}
+                    to="/admin"
+                    onClick={handleDrawerToggle}
+                    sx={{
+                      borderRadius: 2,
+                      mb: 1,
+                      '&:hover': {
+                        backgroundColor: 'primary.main',
+                        color: 'white',
+                      },
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <Box sx={{ mr: 2 }}>
+                      <Dashboard />
+                    </Box>
+                    <ListItemText primary="Админка" />
+                  </ListItem>
+                )}
+
+                <ListItem
+                  onClick={() => {
+                    handleLogout();
+                    handleDrawerToggle();
+                  }}
+                  sx={{
+                    borderRadius: 2,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'error.main',
+                      color: 'white',
+                    },
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <Box sx={{ mr: 2 }}>
+                    <ExitToApp />
+                  </Box>
+                  <ListItemText primary="Выйти" />
+                </ListItem>
+              </List>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Button 
+                  component={Link} 
+                  to="/login" 
+                  variant="outlined" 
+                  fullWidth
+                  onClick={handleDrawerToggle}
+                  sx={{ borderRadius: 2 }}
+                >
+                  Войти
+                </Button>
+                <Button 
+                  component={Link} 
+                  to="/register" 
+                  variant="contained" 
+                  color="primary"
+                  fullWidth
+                  onClick={handleDrawerToggle}
+                  sx={{ borderRadius: 2 }}
+                >
+                  Регистрация
+                </Button>
+              </Box>
+            )}
+          </Box>
         </DrawerContainer>
       </Drawer>
     </>

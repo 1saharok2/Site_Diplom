@@ -157,5 +157,11 @@ export const apiService = {
       },
       body: JSON.stringify(orderData)
     }).then(handleResponse);
+  },
+
+  // Product Variants
+  getProductVariants: (baseName) => {
+    const encodedBaseName = encodeURIComponent(baseName);
+    return fetch(`${API_BASE}/products/variants/${encodedBaseName}`).then(handleResponse);
   }
 };

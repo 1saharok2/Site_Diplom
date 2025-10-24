@@ -55,10 +55,10 @@ const HomePage = () => {
 
   // === Формирование ссылок на изображения ===
   const getImageUrl = (imageUrl) => {
-    if (typeof imageUrl !== "string") return "/images/placeholder.jpg";
+    if (typeof imageUrl !== "string") return "https://electronic.tw1.ru/images/placeholder.jpg";
     imageUrl = imageUrl.trim();
     if (!imageUrl || imageUrl === "null" || imageUrl === "undefined") {
-      return "/images/placeholder.jpg";
+      return "https://electronic.tw1.ru/images/placeholder.jpg";
     }
     if (imageUrl.startsWith("http")) return imageUrl;
     if (imageUrl.startsWith("/")) return `https://electronic.tw1.ru${imageUrl}`;
@@ -66,7 +66,7 @@ const HomePage = () => {
   };
 
   const getProductImage = (product) => {
-    if (!product) return "/images/placeholder.jpg";
+    if (!product) return "https://electronic.tw1.ru/images/placeholder.jpg";
     
     // Проверяем массив images (новый формат)
     if (Array.isArray(product.images) && product.images.length > 0) {
@@ -89,15 +89,15 @@ const HomePage = () => {
       return getImageUrl(product.image_url);
     }
     
-    return "/images/placeholder.jpg";
+    return "https://electronic.tw1.ru/images/placeholder.jpg";
   };
 
   const getCategoryImage = (category) => {
-    if (!category) return "/images/placeholder.jpg";
+    if (!category) return "https://electronic.tw1.ru/images/placeholder.jpg";
     if (category.image_url && typeof category.image_url === "string") {
       return getImageUrl(category.image_url);
     }
-    return "/images/placeholder.jpg";
+    return "https://electronic.tw1.ru/images/placeholder.jpg";
   };
 
   if (loading)
