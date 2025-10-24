@@ -78,6 +78,13 @@ const ProductGallery = ({ product }) => {
     imagesCount: images.length
   });
 
+  // 🔧 Сбрасываем состояния загрузки/ошибки при смене изображения
+  useEffect(() => {
+    if (!hasImages) return;
+    setImageLoading(true);
+    setImageError(false);
+  }, [currentIndex, hasImages]);
+
   const nextImage = () => {
     if (images.length <= 1) return;
     
@@ -188,6 +195,8 @@ const ProductGallery = ({ product }) => {
             alt={product?.name || 'Изображение товара'}
             className={`main-product-image ${imageLoading ? 'hidden' : ''} ${animationDirection}`}
             fluid
+            // 🔧 Форсируем перемонтирование для корректного onLoad/onError
+            key={mainImage}
             onLoad={handleImageLoad}
             onError={handleImageError}
           />
@@ -267,6 +276,8 @@ const ProductGallery = ({ product }) => {
               alt={product?.name || 'Изображение товара'}
               className={`modal-image ${animationDirection}`}
               fluid
+              // 🔧 Форсируем перемонтирование при смене изображения в модалке
+              key={`modal-${mainImage}`}
               onError={(e) => {
                 e.target.src = '/images/placeholder.jpg';
               }}
