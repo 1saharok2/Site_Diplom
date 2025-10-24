@@ -15,6 +15,8 @@ const ProductGallery = ({ product }) => {
     console.log('🎨 ProductGallery - product.images:', product?.images);
     console.log('🎨 ProductGallery - product.image_url:', product?.image_url);
     console.log('🎨 ProductGallery - product.image:', product?.image);
+    console.log('🎨 ProductGallery - product.id:', product?.id);
+    console.log('🎨 ProductGallery - product.name:', product?.name);
     
     if (product) {
       let imageArray = [];
@@ -55,15 +57,19 @@ const ProductGallery = ({ product }) => {
         return isValid;
       }).map(url => {
         // Нормализуем URL для продакшн сервера
+        let normalizedUrl;
         if (url.startsWith('http')) {
-          return url;
+          normalizedUrl = url;
         } else if (url.startsWith('/')) {
           // Для относительных путей добавляем домен
-          return `https://electronic.tw1.ru${url}`;
+          normalizedUrl = `https://electronic.tw1.ru${url}`;
         } else {
           // Для путей без слеша добавляем /images/
-          return `https://electronic.tw1.ru/images/${url}`;
+          normalizedUrl = `https://electronic.tw1.ru/images/${url}`;
         }
+        
+        console.log(`🖼️ Normalized URL: "${url}" -> "${normalizedUrl}"`);
+        return normalizedUrl;
       });
       
       console.log('🖼️ Final valid images:', validImages);
@@ -126,6 +132,16 @@ const ProductGallery = ({ product }) => {
 
   const handleImageError = (e) => {
     console.log('❌ Image failed to load:', mainImage);
+    console.log('❌ Error details:', e);
+    
+    // Попробуем загрузить следующее изображение, если есть
+    if (images.length > 1 && currentIndex < images.length - 1) {
+      console.log('🔄 Trying next image...');
+      setCurrentIndex(currentIndex + 1);
+      return;
+    }
+    
+    // Если это последнее изображение, показываем ошибку
     setImageLoading(false);
     setImageError(true);
   };
@@ -188,6 +204,11 @@ const ProductGallery = ({ product }) => {
             fluid
             onLoad={handleImageLoad}
             onError={handleImageError}
+            style={{
+              maxWidth: '100%',
+              height: 'auto',
+              objectFit: 'contain'
+            }}
           />
           
           {imageError && (
