@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button, Badge, Spinner } from 'react-bootstrap';
 import { FaHeart, FaShoppingCart, FaShare, FaStar, FaRegHeart, FaCheck, FaTimes } from 'react-icons/fa';
 import { categoryService } from '../../../services/categoryService';
+import { cartService } from '../../../services/cartService';
+import { wishlistService } from '../../../services/wishlistService';
 import './ProductPage_css/ProductInfo.css';
 
 // Вспомогательные функции вынесены наружу для предотвращения пересоздания
@@ -72,6 +74,7 @@ const getBaseProductName = (productName) => {
 };
 
 const ProductInfo = ({ product, onVariantChange }) => {
+  const userId = localStorage.getItem('user_id');
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const [variants, setVariants] = useState([]);
@@ -287,37 +290,25 @@ const ProductInfo = ({ product, onVariantChange }) => {
     return storage.replace(/ГБ/g, ' ГБ');
   }, []);
 
-  const handleAddToCart = useCallback(() => {
+  const handleAddToCart = useCallback(async () => {
     const targetProduct = hasVariants ? exactMatch : product;
-    
+
     if (!targetProduct || targetProduct.stock <= 0) return;
-    
-    setIsInCart(true);
-    setTimeout(() => setIsInCart(false), 2000);
-    
-    const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-    const itemId = targetProduct.id;
-    
-    const existingItemIndex = cartItems.findIndex(item => item.id === itemId);
-    
-    if (existingItemIndex >= 0) {
-      cartItems[existingItemIndex].quantity += 1;
-    } else {
-      cartItems.push({
-        id: targetProduct.id,
-        name: targetProduct.name,
-        price: targetProduct.price,
-        oldPrice: targetProduct.old_price,
-        image: targetProduct.image_url?.[0] || targetProduct.images?.[0] || '',
-        quantity: 1,
-        color: getSpecValue(targetProduct, 'color'),
-        storage: getSpecValue(targetProduct, 'storage'),
-        slug: targetProduct.slug
-      });
+    if (!userId) {
+      alert('Пожалуйста, войдите в аккаунт, чтобы добавить товар в корзину.');
+      return;
     }
-    
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [hasVariants, exactMatch, product, getSpecValue]);
+
+    try {
+      setIsInCart(true);
+      await cartService.addToCart(userId, targetProduct.id, 1);
+      setTimeout(() => setIsInCart(false), 2000);
+    } catch (error) {
+      console.error('Ошибка при добавлении в корзину:', error);
+      alert('Не удалось добавить товар в корзину');
+      setIsInCart(false);
+    }
+  }, [hasVariants, exactMatch, product, userId]);
 
   const canAddToCart = hasVariants ? exactMatch && exactMatch.stock > 0 : product.stock > 0;
   const displayVariant = exactMatch || selectedVariant;
@@ -539,7 +530,7 @@ const ProductInfo = ({ product, onVariantChange }) => {
           <Button 
             variant={isInWishlist ? "danger" : "outline-primary"} 
             className={`wishlist-btn circle-btn ${isInWishlist ? 'added' : ''}`}
-            onClick={() => setIsInWishlist(!isInWishlist)}
+            onClick={handleWishlistToggle}
           >
             {isInWishlist ? <FaHeart /> : <FaRegHeart />}
           </Button>

@@ -3,8 +3,9 @@ import { apiService } from "./api";
 export const wishlistService = {
   // Получить все избранные товары пользователя
   getUserWishlist: async (userId) => {
+    if (!userId) return [];
     try {
-      const wishlist = await apiService.get(`/wishlist/${userId}`);
+      const wishlist = await apiService.get(`/wishlist.php?userId=${userId}`);
       return wishlist || [];
     } catch (error) {
       console.error('Error fetching wishlist:', error);
