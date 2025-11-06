@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Container, Row, Col, Alert, Spinner, Breadcrumb } from 'react-bootstrap';
 import { FaHome, FaChevronRight } from 'react-icons/fa';
@@ -19,41 +19,61 @@ const ProductPage = () => {
     loadProductReviews 
   } = useReviews();
 
-  console.log('🔴 ProductPage - ID товара:', id);
-  console.log('📊 ProductPage - Отзывы:', reviews);
-  console.log('👤 ProductPage - Пользователь:', currentUser);
-  console.log('⏳ ProductPage - Загрузка:', reviewsLoading);
-  
   const [product, setProduct] = useState(null);
   const [currentProduct, setCurrentProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
+  // Мемоизированные вычисления
+  const hasUserReviewed = useMemo(() => 
+    currentUser && reviews.some(review => review.user_id === currentUser.id),
+    [currentUser, reviews]
+  );
+
+  const averageRating = useMemo(() => 
+    reviews.length > 0 
+      ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
+      : 0,
+    [reviews]
+  );
+
+  // Мемоизированные обработчики
+  const handleVariantChange = useCallback((variant) => {
+    setCurrentProduct(variant);
+  }, []);
+
+  const handleWriteReview = useCallback(() => {
+    if (!currentUser) {
+      setMessage('⚠️ Войдите в систему, чтобы оставить отзыв');
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+    setMessage('Функция оставления отзыва будет доступна в следующем обновлении');
+    setTimeout(() => setMessage(''), 3000);
+  }, [currentUser]);
+
+  // Оптимизированная загрузка данных
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        console.log('🔄 Загрузка данных товара и отзывов...');
+        console.log('🔄 Загрузка данных товара...');
         setLoading(true);
-        console.log('🔄 Загрузка товара с ID:', id);
-        
-        const productData = await categoryService.getProductById(id);
+        setError('');
+
+        // Параллельная загрузка товара и отзывов
+        const [productData] = await Promise.all([
+          categoryService.getProductById(id),
+          loadProductReviews(id)
+        ]);
         
         if (!productData) {
           throw new Error('Товар не найден');
         }
         
         console.log('📦 Продукт получен:', productData);
-        console.log('🖼️ Изображения продукта:', productData.image_url);
-        console.log('📊 Количество изображений:', productData.image_url?.length || 0);
-        
         setProduct(productData);
         setCurrentProduct(productData);
-        
-        // Загружаем отзывы для этого товара
-        await loadProductReviews(id);
-        console.log('🔴 Статус первого отзыва:', reviews[0]?.status);
-        console.log('🔴 Данные первого отзыва:', reviews[0]);
         
       } catch (err) {
         console.error('❌ Ошибка загрузки товара:', err);
@@ -69,30 +89,27 @@ const ProductPage = () => {
       setError('ID товара не указан');
       setLoading(false);
     }
-  }, [id, loadProductReviews]); // Убрана зависимость reviews
+  }, [id, loadProductReviews]);
 
-  // Проверяем, оставлял ли пользователь уже отзыв
-  const hasUserReviewed = currentUser && 
-    reviews.some(review => review.user_id === currentUser.id);
+  // Мемоизированные значения для пропсов
+  const productInfoProps = useMemo(() => ({
+    product: currentProduct || product,
+    onVariantChange: handleVariantChange,
+    reviewsCount: reviews.length,
+    averageRating,
+    onWriteReview: handleWriteReview,
+    hasUserReviewed,
+    isAuthenticated: !!currentUser
+  }), [currentProduct, product, handleVariantChange, reviews.length, averageRating, handleWriteReview, hasUserReviewed, currentUser]);
 
-  // Вычисляем средний рейтинг
-  const averageRating = reviews.length > 0 
-    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
-    : 0;
-
-  const handleVariantChange = (variant) => {
-    setCurrentProduct(variant);
-  };
-
-  const handleWriteReview = () => {
-    if (!currentUser) {
-      setMessage('⚠️ Войдите в систему, чтобы оставить отзыв');
-      setTimeout(() => setMessage(''), 3000);
-      return;
-    }
-    setMessage('Функция оставления отзыва будет доступна в следующем обновлении');
-    setTimeout(() => setMessage(''), 3000);
-  };
+  const productTabsProps = useMemo(() => ({
+    product: currentProduct || product,
+    reviews,
+    reviewsLoading,
+    onWriteReview: handleWriteReview,
+    hasUserReviewed,
+    isAuthenticated: !!currentUser
+  }), [currentProduct, product, reviews, reviewsLoading, handleWriteReview, hasUserReviewed, currentUser]);
 
   if (loading) {
     return (
@@ -157,32 +174,17 @@ const ProductPage = () => {
         </Col>
 
         <Col lg={6} className="ps-lg-4">
-          <ProductInfo 
-            product={currentProduct || product} 
-            onVariantChange={handleVariantChange}
-            reviewsCount={reviews.length}
-            averageRating={averageRating}
-            onWriteReview={handleWriteReview}
-            hasUserReviewed={hasUserReviewed}
-            isAuthenticated={!!currentUser}
-          />
+          <ProductInfo {...productInfoProps} />
         </Col>
       </Row>
 
       <Row className="mt-5">
         <Col>
-          <ProductTabs 
-            product={currentProduct || product} 
-            reviews={reviews}
-            reviewsLoading={reviewsLoading}
-            onWriteReview={handleWriteReview}
-            hasUserReviewed={hasUserReviewed}
-            isAuthenticated={!!currentUser}
-          />
+          <ProductTabs {...productTabsProps} />
         </Col>
       </Row>
     </Container>
   );
 };
 
-export default ProductPage;
+export default React.memo(ProductPage);

@@ -1,12 +1,85 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Row, Col, Alert, Container } from 'react-bootstrap';
 import ReviewForm from '../../../components/Reviews/ReviewForm';
 import ReviewList from '../../../components/Reviews/ReviewList';
 import './ProductPage_css/ProductTabs.css';
 
+// Вспомогательные функции вынесены наружу
+const determineProductType = (product) => {
+  if (!product) return 'unknown';
+  
+  const name = product.name?.toLowerCase() || '';
+  const category = product.category?.toLowerCase() || '';
+  const description = product.description?.toLowerCase() || '';
+  
+  if (category.includes('phone') || category.includes('смартфон') || 
+      name.includes('iphone') || name.includes('samsung') || name.includes('xiaomi') ||
+      name.includes('pixel') || name.includes('huawei') || name.includes('oppo') ||
+      description.includes('смартфон') || description.includes('телефон')) {
+    return 'phone';
+  }
+  
+  if (category.includes('tv') || category.includes('телевизор') || 
+      name.includes('tv') || name.includes('телевизор') || name.includes('smart tv') ||
+      description.includes('телевизор') || description.includes('телевизор')) {
+    return 'tv';
+  }
+  
+  if (category.includes('laptop') || category.includes('ноутбук') || 
+      name.includes('macbook') || name.includes('asus') || name.includes('lenovo') ||
+      name.includes('ноутбук') || description.includes('ноутбук')) {
+    return 'laptop';
+  }
+  
+  if (category.includes('tablet') || category.includes('планшет') || 
+      name.includes('ipad') || name.includes('планшет') || description.includes('планшет')) {
+    return 'tablet';
+  }
+  
+  if (category.includes('headphone') || category.includes('наушник') || 
+      name.includes('airpods') || name.includes('наушники') || description.includes('наушники')) {
+    return 'headphones';
+  }
+  
+  return 'unknown';
+};
+
+const parseSpecifications = (product) => {
+  if (!product?.specifications) return {};
+  
+  try {
+    if (typeof product.specifications === 'string') {
+      return JSON.parse(product.specifications);
+    }
+    return product.specifications;
+  } catch (e) {
+    console.error('Ошибка парсинга характеристик:', e);
+    return {};
+  }
+};
+
+const filterRelevantSpecs = (specs, productType) => {
+  const irrelevantSpecs = {
+    phone: ['smart_tv', 'screen_type', 'hdmi', 'smart_features'],
+    tv: ['sim', 'camera', 'frontCamera', 'ram', 'processor', 'battery', 'waterproof'],
+    laptop: ['sim', 'camera', 'frontCamera', 'waterproof'],
+    tablet: ['smart_tv', 'hdmi'],
+    headphones: ['sim', 'camera', 'display', 'processor', 'ram', 'storage', 'os']
+  };
+
+  const filteredSpecs = { ...specs };
+  const specsToRemove = irrelevantSpecs[productType] || [];
+
+  specsToRemove.forEach(key => {
+    delete filteredSpecs[key];
+  });
+
+  return filteredSpecs;
+};
+
 const ProductTabs = ({ 
   product, 
-  reviews = [],           // reviews получаем из props
+  reviews = [],
   reviewsLoading = false, 
   onWriteReview,          
   hasUserReviewed,        
@@ -14,107 +87,30 @@ const ProductTabs = ({
 }) => {
   const [activeTab, setActiveTab] = useState('description');
   const [reviewFormOpen, setReviewFormOpen] = useState(false);
-  const [message, setMessage] = useState(''); // Добавил состояние для сообщений
+  const [message, setMessage] = useState('');
 
-  const tabs = [
+  // Мемоизированные константы
+  const tabs = useMemo(() => [
     { id: 'description', title: 'Описание' },
     { id: 'specifications', title: 'Характеристики' },
     { id: 'reviews', title: 'Отзывы' },
     { id: 'delivery', title: 'Доставка и оплата' }
-  ];
+  ], []);
 
-  // УДАЛИЛ дублирующее объявление useReviews() - reviews уже получаем из props
+  // Мемоизированные спецификации
+  const specifications = useMemo(() => {
+    const rawSpecs = parseSpecifications(product);
+    const productType = determineProductType(product);
+    return filterRelevantSpecs(rawSpecs, productType);
+  }, [product]);
 
-  // Функция для определения типа товара
-  const determineProductType = (product) => {
-    if (!product) return 'unknown';
-    
-    const name = product.name?.toLowerCase() || '';
-    const category = product.category?.toLowerCase() || '';
-    const description = product.description?.toLowerCase() || '';
-    
-    if (category.includes('phone') || category.includes('смартфон') || 
-        name.includes('iphone') || name.includes('samsung') || name.includes('xiaomi') ||
-        name.includes('pixel') || name.includes('huawei') || name.includes('oppo') ||
-        description.includes('смартфон') || description.includes('телефон')) {
-      return 'phone';
-    }
-    
-    if (category.includes('tv') || category.includes('телевизор') || 
-        name.includes('tv') || name.includes('телевизор') || name.includes('smart tv') ||
-        description.includes('телевизор') || description.includes('телевизор')) {
-      return 'tv';
-    }
-    
-    if (category.includes('laptop') || category.includes('ноутбук') || 
-        name.includes('macbook') || name.includes('asus') || name.includes('lenovo') ||
-        name.includes('ноутбук') || description.includes('ноутбук')) {
-      return 'laptop';
-    }
-    
-    if (category.includes('tablet') || category.includes('планшет') || 
-        name.includes('ipad') || name.includes('планшет') || description.includes('планшет')) {
-      return 'tablet';
-    }
-    
-    if (category.includes('headphone') || category.includes('наушник') || 
-        name.includes('airpods') || name.includes('наушники') || description.includes('наушники')) {
-      return 'headphones';
-    }
-    
-    return 'unknown';
-  };
-
-  // Функция для парсинга характеристик
-  const parseSpecifications = () => {
-    if (!product?.specifications) return {};
-    
-    try {
-      if (typeof product.specifications === 'string') {
-        return JSON.parse(product.specifications);
-      }
-      return product.specifications;
-    } catch (e) {
-      console.error('Ошибка парсинга характеристик:', e);
-      return {};
-    }
-  };
-
-  // Функция для фильтрации нерелевантных характеристик
-  const filterRelevantSpecs = (specs, productType) => {
-    const irrelevantSpecs = {
-      phone: ['smart_tv', 'screen_type', 'hdmi', 'smart_features'],
-      tv: ['sim', 'camera', 'frontCamera', 'ram', 'processor', 'battery', 'waterproof'],
-      laptop: ['sim', 'camera', 'frontCamera', 'waterproof'],
-      tablet: ['smart_tv', 'hdmi'],
-      headphones: ['sim', 'camera', 'display', 'processor', 'ram', 'storage', 'os']
-    };
-
-    const filteredSpecs = { ...specs };
-    const specsToRemove = irrelevantSpecs[productType] || [];
-
-    specsToRemove.forEach(key => {
-      delete filteredSpecs[key];
-    });
-
-    return filteredSpecs;
-  };
-
-  // Функция для обработки отправки отзыва
-  const handleReviewSubmit = async (reviewData) => {
+  // Мемоизированные обработчики
+  const handleReviewSubmit = useCallback(async (reviewData) => {
     try {
       console.log('📝 Отправка отзыва:', reviewData);
-      
-      // Здесь должна быть логика отправки отзыва
-      // await createReview({
-      //   ...reviewData,
-      //   product_id: product?.id
-      // });
-      
       setMessage('✅ Отзыв успешно отправлен на модерацию!');
       setReviewFormOpen(false);
       
-      // Закрываем форму через 3 секунды
       setTimeout(() => {
         setMessage('');
       }, 3000);
@@ -123,13 +119,23 @@ const ProductTabs = ({
       console.error('❌ Ошибка отправки отзыва:', error);
       setMessage('❌ Ошибка: ' + error.message);
     }
-  };
+  }, []);
+
+  const handleTabChange = useCallback((tabId) => {
+    setActiveTab(tabId);
+  }, []);
+
+  const handleOpenReviewForm = useCallback(() => {
+    setReviewFormOpen(true);
+  }, []);
+
+  const handleCloseReviewForm = useCallback(() => {
+    setReviewFormOpen(false);
+  }, []);
 
   // Функция для отображения характеристик
-  const renderSpecifications = () => {
-    const rawSpecs = parseSpecifications();
-    const productType = determineProductType(product);
-    const specs = filterRelevantSpecs(rawSpecs, productType);
+  const renderSpecifications = useCallback(() => {
+    const specs = specifications;
     
     if (Object.keys(specs).length === 0) {
       return (
@@ -140,7 +146,7 @@ const ProductTabs = ({
       );
     }
 
-    // Базовые группы характеристик для всех товаров
+    // Базовые группы характеристик
     const baseGroups = {
       'Основные': [
         { label: 'Процессор', value: specs.processor },
@@ -213,6 +219,7 @@ const ProductTabs = ({
       default: baseGroups
     };
 
+    const productType = determineProductType(product);
     const specGroups = specificGroups[productType] || specificGroups.default;
 
     return (
@@ -247,9 +254,10 @@ const ProductTabs = ({
         })}
       </div>
     );
-  };
+  }, [specifications, product]);
 
-  const renderTabContent = () => {
+  // Мемоизированный рендер контента табов
+  const renderTabContent = useMemo(() => {
     switch (activeTab) {
       case 'description':
         return (
@@ -302,7 +310,7 @@ const ProductTabs = ({
               {isAuthenticated && !hasUserReviewed && (
                 <button 
                   className="btn btn-primary"
-                  onClick={() => setReviewFormOpen(true)}
+                  onClick={handleOpenReviewForm}
                 >
                   Написать отзыв
                 </button>
@@ -318,7 +326,7 @@ const ProductTabs = ({
             {/* Форма отзыва */}
             <ReviewForm
               open={reviewFormOpen}
-              onClose={() => setReviewFormOpen(false)}
+              onClose={handleCloseReviewForm}
               product={product}
               onSubmit={handleReviewSubmit}
               loading={reviewsLoading}
@@ -356,7 +364,11 @@ const ProductTabs = ({
       default:
         return null;
     }
-  };
+  }, [
+    activeTab, product, reviews, reviewsLoading, message, 
+    reviewFormOpen, isAuthenticated, hasUserReviewed,
+    renderSpecifications, handleOpenReviewForm, handleCloseReviewForm, handleReviewSubmit
+  ]);
 
   return (
     <Container className="product-tabs-container">
@@ -365,16 +377,16 @@ const ProductTabs = ({
           <button
             key={tab.id}
             className={`tab-button flex-fill ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
           >
             {tab.title}
           </button>
         ))}
       </div>
       
-      {renderTabContent()}
+      {renderTabContent}
     </Container>
   );
 };
 
-export default ProductTabs;
+export default React.memo(ProductTabs);

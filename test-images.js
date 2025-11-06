@@ -24,3 +24,4 @@ function testImageUrls() {
 
 // Запустить тест
 testImageUrls();
+

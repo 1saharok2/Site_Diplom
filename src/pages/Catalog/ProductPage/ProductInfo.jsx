@@ -1,8 +1,75 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button, Badge, Spinner } from 'react-bootstrap';
 import { FaHeart, FaShoppingCart, FaShare, FaStar, FaRegHeart, FaCheck, FaTimes } from 'react-icons/fa';
 import { categoryService } from '../../../services/categoryService';
 import './ProductPage_css/ProductInfo.css';
+
+// Вспомогательные функции вынесены наружу для предотвращения пересоздания
+const getColorHex = (colorName) => {
+  const colorMap = {
+    'черный': '#000000', 'белый': '#ffffff', 'синий': '#007bff', 'розовый': '#e83e8c',
+    'зеленый': '#28a745', 'красный': '#dc3545', 'фиолетовый': '#6f42c1', 'золотой': '#ffd700',
+    'серый': '#6c757d', 'серебристый': '#c0c0c0', 'phantom black': '#000000', 'blue': '#007bff',
+    'snow': '#ffffff', 'silver': '#c0c0c0', 'white': '#ffffff', 'rococo pearl': '#f0e6ff',
+    'black': '#000000', 'aurora gray': '#a8a8a8'
+  };
+  return colorMap[colorName.toLowerCase()] || '#6c757d';
+};
+
+const getColorDisplayName = (colorName) => {
+  const nameMap = {
+    'phantom black': 'Черный', 'snow': 'Белый', 'white': 'Белый', 'black': 'Черный',
+    'blue': 'Синий', 'silver': 'Серебристый', 'rococo pearl': 'Розовый', 'aurora gray': 'Серый'
+  };
+  return nameMap[colorName.toLowerCase()] || colorName;
+};
+
+const getColorBorder = (colorName) => {
+  const lightColors = ['белый', 'серебристый', 'золотой', 'snow', 'white', 'silver'];
+  return lightColors.includes(colorName.toLowerCase()) ? '1px solid #ddd' : 'none';
+};
+
+const normalizeSpecifications = (specs) => {
+  if (!specs) return {};
+  try {
+    if (typeof specs === 'string') {
+      return JSON.parse(specs);
+    }
+    return specs;
+  } catch (e) {
+    console.error('Ошибка парсинга спецификаций:', e);
+    return {};
+  }
+};
+
+const normalizeStorage = (storage) => {
+  if (!storage) return '';
+  return storage.toString()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/гб/g, 'gb')
+    .replace(/gb/g, ' гб')
+    .trim()
+    .toUpperCase();
+};
+
+const normalizeColor = (color) => {
+  if (!color) return '';
+  return color.toString().toLowerCase().trim();
+};
+
+const getBaseProductName = (productName) => {
+  let baseName = productName
+    .replace(/\s*(128GB|256GB|512GB|\d+GB|128 ГБ|256 ГБ|512 ГБ|\d+ ГБ)\s*$/gi, '')
+    .replace(/\s*(Черный|Белый|Розовый|Синий|Blue|White|Pink|Black|Phantom Black|Snow|Silver|Rococo Pearl|Aurora Gray)\s*$/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  if (baseName.includes('Apple iPhone 16')) baseName = 'Apple iPhone 16';
+  if (baseName.includes('Samsung Galaxy')) baseName = baseName.replace(/\s*Ultra\s*$/, '').trim();
+  
+  return baseName;
+};
 
 const ProductInfo = ({ product, onVariantChange }) => {
   const [isInWishlist, setIsInWishlist] = useState(false);
@@ -14,99 +81,44 @@ const ProductInfo = ({ product, onVariantChange }) => {
   const [selectedStorage, setSelectedStorage] = useState('');
   const [exactMatch, setExactMatch] = useState(null);
 
-  // Функция для нормализации спецификаций
-  const normalizeSpecifications = (specs) => {
-    if (!specs) return {};
-    
-    try {
-      if (typeof specs === 'string') {
-        return JSON.parse(specs);
-      }
-      return specs;
-    } catch (e) {
-      console.error('Ошибка парсинга спецификаций:', e);
-      return {};
-    }
-  };
-
-  // Функция для нормализации значения памяти
-  const normalizeStorage = (storage) => {
-    if (!storage) return '';
-    
-    return storage.toString()
-      .toLowerCase()
-      .replace(/\s+/g, ' ')
-      .replace(/гб/g, 'gb')
-      .replace(/gb/g, ' гб')
-      .trim()
-      .toUpperCase();
-  };
-
-  // Функция для нормализации значения цвета
-  const normalizeColor = (color) => {
-    if (!color) return '';
-    
-    return color.toString()
-      .toLowerCase()
-      .trim();
-  };
-
-  // Функция для получения значения с нормализацией
-  const getSpecValue = (variant, key) => {
+  // Мемоизированные функции
+  const getSpecValue = useCallback((variant, key) => {
     const specs = normalizeSpecifications(variant.specifications);
     return specs[key] || '';
-  };
+  }, []);
 
-  // Улучшенная функция для извлечения базового названия продукта
-  const getBaseProductName = (productName) => {
-    let baseName = productName
-      .replace(/\s*(128GB|256GB|512GB|\d+GB|128 ГБ|256 ГБ|512 ГБ|\d+ ГБ)\s*$/gi, '')
-      .replace(/\s*(Черный|Белый|Розовый|Синий|Blue|White|Pink|Black|Phantom Black|Snow|Silver|Rococo Pearl|Aurora Gray)\s*$/gi, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    if (baseName.includes('Apple iPhone 16')) {
-      baseName = 'Apple iPhone 16';
-    }
-    
-    if (baseName.includes('Samsung Galaxy')) {
-      baseName = baseName.replace(/\s*Ultra\s*$/, '').trim();
-    }
-    
-    return baseName;
-  };
-
-  // Загрузка вариантов товара через API
+  // Загрузка вариантов товара
   useEffect(() => {
     const fetchVariants = async () => {
       if (!product?.name) return;
       
       setLoading(true);
       try {
-        // Получаем базовое название для поиска вариантов
         const baseName = getBaseProductName(product.name);
+        const cacheKey = `variants_${baseName}`;
+        const cached = sessionStorage.getItem(cacheKey);
         
-        // Пока API endpoint не работает, используем альтернативный подход
-        // Загружаем все товары и фильтруем варианты на фронтенде
-        try {
-          const allProducts = await categoryService.getAllProducts();
-          const productVariants = allProducts.filter(p => {
-            const productBaseName = getBaseProductName(p.name);
-            return productBaseName === baseName && p.id !== product.id;
-          });
-          
-          // Добавляем текущий товар в список вариантов
-          const variants = [product, ...productVariants];
-          
-          console.log('🔍 Loaded variants for', baseName, ':', variants);
-          
-          setVariants(variants);
-        } catch (apiError) {
-          console.log('API недоступен, используем только текущий товар:', apiError);
-          setVariants([product]);
+        if (cached) {
+          const cachedVariants = JSON.parse(cached);
+          setVariants(cachedVariants);
+        } else {
+          try {
+            const allProducts = await categoryService.getAllProducts();
+            const productVariants = allProducts.filter(p => {
+              const productBaseName = getBaseProductName(p.name);
+              return productBaseName === baseName && p.id !== product.id;
+            });
+            
+            const variantsData = [product, ...productVariants];
+            setVariants(variantsData);
+            sessionStorage.setItem(cacheKey, JSON.stringify(variantsData));
+          } catch (apiError) {
+            console.log('API недоступен, используем только текущий товар');
+            setVariants([product]);
+          }
         }
         
-        // Устанавливаем начальные значения из продукта
+        // Устанавливаем начальные значения
         if (product.specifications) {
           const initialSpecs = normalizeSpecifications(product.specifications);
           const initialColor = normalizeColor(initialSpecs.color || '');
@@ -129,34 +141,129 @@ const ProductInfo = ({ product, onVariantChange }) => {
     fetchVariants();
   }, [product]);
 
-  // Находим точное совпадение при изменении выбранных параметров
+  // Мемоизированные доступные цвета и объемы
+  const availableColors = useMemo(() => 
+    [...new Set(variants
+      .map(v => {
+        const color = normalizeColor(getSpecValue(v, 'color'));
+        return color && color.trim() !== '' ? color : null;
+      })
+      .filter(color => color !== null)
+    )],
+    [variants, getSpecValue]
+  );
+
+  const availableStorage = useMemo(() => 
+    [...new Set(variants
+      .map(v => {
+        const storage = normalizeStorage(getSpecValue(v, 'storage'));
+        return storage && storage.trim() !== '' ? storage : null;
+      })
+      .filter(storage => storage !== null)
+    )],
+    [variants, getSpecValue]
+  );
+
+  const hasVariants = useMemo(() => 
+    availableColors.length > 0 || availableStorage.length > 0,
+    [availableColors, availableStorage]
+  );
+
+  // Мемоизированные проверки доступности
+  const isColorAvailable = useCallback((color) => {
+    const normalizedColor = normalizeColor(color);
+    return variants.some(v => 
+      normalizeColor(getSpecValue(v, 'color')) === normalizedColor && 
+      v.stock > 0
+    );
+  }, [variants, getSpecValue]);
+
+  const isStorageAvailable = useCallback((storage) => {
+    const normalizedStorage = normalizeStorage(storage);
+    return variants.some(v => 
+      normalizeStorage(getSpecValue(v, 'storage')) === normalizedStorage && 
+      v.stock > 0
+    );
+  }, [variants, getSpecValue]);
+
+  // Обработчики выбора
+  const handleColorSelect = useCallback((color) => {
+    const normalizedColor = normalizeColor(color);
+    setSelectedColor(normalizedColor);
+    
+    let match = null;
+    if (selectedStorage) {
+      match = variants.find(v => 
+        normalizeColor(getSpecValue(v, 'color')) === normalizedColor && 
+        normalizeStorage(getSpecValue(v, 'storage')) === selectedStorage
+      );
+    }
+    
+    if (!match) {
+      match = variants.find(v => 
+        normalizeColor(getSpecValue(v, 'color')) === normalizedColor
+      );
+    }
+    
+    if (match) {
+      setSelectedVariant(match);
+      onVariantChange?.(match);
+      
+      const matchStorage = normalizeStorage(getSpecValue(match, 'storage'));
+      if (matchStorage && matchStorage !== selectedStorage) {
+        setSelectedStorage(matchStorage);
+      }
+    }
+  }, [selectedStorage, variants, getSpecValue, onVariantChange]);
+
+  const handleStorageSelect = useCallback((storage) => {
+    const normalizedStorage = normalizeStorage(storage);
+    setSelectedStorage(normalizedStorage);
+    
+    let match = null;
+    if (selectedColor) {
+      match = variants.find(v => 
+        normalizeStorage(getSpecValue(v, 'storage')) === normalizedStorage && 
+        normalizeColor(getSpecValue(v, 'color')) === selectedColor
+      );
+    }
+    
+    if (!match) {
+      match = variants.find(v => 
+        normalizeStorage(getSpecValue(v, 'storage')) === normalizedStorage
+      );
+    }
+    
+    if (match) {
+      setSelectedVariant(match);
+      onVariantChange?.(match);
+      
+      const matchColor = normalizeColor(getSpecValue(match, 'color'));
+      if (matchColor && matchColor !== selectedColor) {
+        setSelectedColor(matchColor);
+      }
+    }
+  }, [selectedColor, variants, getSpecValue, onVariantChange]);
+
+  // Поиск точного совпадения
   useEffect(() => {
     if (variants.length > 0) {
       let foundExactMatch = null;
       
-      // Если выбраны оба параметра, ищем точное совпадение
       if (selectedColor && selectedStorage) {
         foundExactMatch = variants.find(v => {
           const vSpecs = normalizeSpecifications(v.specifications);
           const vColor = normalizeColor(vSpecs.color);
           const vStorage = normalizeStorage(vSpecs.storage);
-          
-          const colorMatch = vColor === selectedColor;
-          const storageMatch = vStorage === selectedStorage;
-          
-          return colorMatch && storageMatch;
+          return vColor === selectedColor && vStorage === selectedStorage;
         });
-      } 
-      // Если выбран только цвет, находим первый вариант с этим цветом
-      else if (selectedColor && !selectedStorage) {
+      } else if (selectedColor && !selectedStorage) {
         foundExactMatch = variants.find(v => {
           const vSpecs = normalizeSpecifications(v.specifications);
           const vColor = normalizeColor(vSpecs.color);
           return vColor === selectedColor;
         });
-      }
-      // Если выбрана только память, находим первый вариант с этой памятью
-      else if (!selectedColor && selectedStorage) {
+      } else if (!selectedColor && selectedStorage) {
         foundExactMatch = variants.find(v => {
           const vSpecs = normalizeSpecifications(v.specifications);
           const vStorage = normalizeStorage(vSpecs.storage);
@@ -168,129 +275,19 @@ const ProductInfo = ({ product, onVariantChange }) => {
       
       if (foundExactMatch && foundExactMatch.id !== selectedVariant.id) {
         setSelectedVariant(foundExactMatch);
-        if (onVariantChange) {
-          onVariantChange(foundExactMatch);
-        }
+        onVariantChange?.(foundExactMatch);
       }
     } else {
       setExactMatch(null);
     }
   }, [selectedColor, selectedStorage, variants, onVariantChange, selectedVariant.id]);
 
-  // Получаем доступные цвета и объемы памяти (с нормализацией)
-  const availableColors = [...new Set(variants
-    .map(v => {
-      const color = normalizeColor(getSpecValue(v, 'color'));
-      return color && color.trim() !== '' ? color : null;
-    })
-    .filter(color => color !== null)
-  )];
+  // Мемоизированные значения для отображения
+  const displayStorage = useCallback((storage) => {
+    return storage.replace(/ГБ/g, ' ГБ');
+  }, []);
 
-  const availableStorage = [...new Set(variants
-    .map(v => {
-      const storage = normalizeStorage(getSpecValue(v, 'storage'));
-      return storage && storage.trim() !== '' ? storage : null;
-    })
-    .filter(storage => storage !== null)
-  )];
-
-  // Проверяем, есть ли у товара варианты для выбора
-  const hasVariants = availableColors.length > 0 || availableStorage.length > 0;
-
-  // Проверяем доступность конкретного цвета
-  const isColorAvailable = (color) => {
-    const normalizedColor = normalizeColor(color);
-    return variants.some(v => 
-      normalizeColor(getSpecValue(v, 'color')) === normalizedColor && 
-      v.stock > 0
-    );
-  };
-
-  // Проверяем доступность конкретного объема памяти
-  const isStorageAvailable = (storage) => {
-    const normalizedStorage = normalizeStorage(storage);
-    return variants.some(v => 
-      normalizeStorage(getSpecValue(v, 'storage')) === normalizedStorage && 
-      v.stock > 0
-    );
-  };
-
-  const handleColorSelect = (color) => {
-    const normalizedColor = normalizeColor(color);
-    setSelectedColor(normalizedColor);
-    
-    // Автоматически выбираем подходящий вариант
-    let match = null;
-    
-    // Если уже выбрана память, ищем вариант с обоими параметрами
-    if (selectedStorage) {
-      match = variants.find(v => 
-        normalizeColor(getSpecValue(v, 'color')) === normalizedColor && 
-        normalizeStorage(getSpecValue(v, 'storage')) === selectedStorage
-      );
-    }
-    
-    // Если не нашли или память не выбрана, берем первый доступный вариант с этим цветом
-    if (!match) {
-      match = variants.find(v => 
-        normalizeColor(getSpecValue(v, 'color')) === normalizedColor
-      );
-    }
-    
-    if (match) {
-      setSelectedVariant(match);
-      if (onVariantChange) {
-        onVariantChange(match);
-      }
-      
-      // Обновляем память, если нашли вариант
-      const matchStorage = normalizeStorage(getSpecValue(match, 'storage'));
-      if (matchStorage && matchStorage !== selectedStorage) {
-        setSelectedStorage(matchStorage);
-      }
-    }
-  };
-
-  const handleStorageSelect = (storage) => {
-    const normalizedStorage = normalizeStorage(storage);
-    setSelectedStorage(normalizedStorage);
-    
-    // Автоматически выбираем подходящий вариант
-    let match = null;
-    
-    // Если уже выбран цвет, ищем вариант с обоими параметрами
-    if (selectedColor) {
-      match = variants.find(v => 
-        normalizeStorage(getSpecValue(v, 'storage')) === normalizedStorage && 
-        normalizeColor(getSpecValue(v, 'color')) === selectedColor
-      );
-    }
-    
-    // Если не нашли или цвет не выбран, берем первый доступный вариант с этой памятью
-    if (!match) {
-      match = variants.find(v => 
-        normalizeStorage(getSpecValue(v, 'storage')) === normalizedStorage
-      );
-    }
-    
-    if (match) {
-      setSelectedVariant(match);
-      if (onVariantChange) {
-        onVariantChange(match);
-      }
-      
-      // Обновляем цвет, если нашли вариант
-      const matchColor = normalizeColor(getSpecValue(match, 'color'));
-      if (matchColor && matchColor !== selectedColor) {
-        setSelectedColor(matchColor);
-      }
-    }
-  };
-
-  // Можно добавить в корзину, если вариант существует И есть в наличии
-  const canAddToCart = exactMatch && exactMatch.stock > 0;
-
-  const handleAddToCart = () => {
+  const handleAddToCart = useCallback(() => {
     const targetProduct = hasVariants ? exactMatch : product;
     
     if (!targetProduct || targetProduct.stock <= 0) return;
@@ -320,17 +317,12 @@ const ProductInfo = ({ product, onVariantChange }) => {
     }
     
     localStorage.setItem('cart', JSON.stringify(cartItems));
-  };
+  }, [hasVariants, exactMatch, product, getSpecValue]);
 
-  // Для отображения используем либо точное совпадение, либо текущий вариант
+  const canAddToCart = hasVariants ? exactMatch && exactMatch.stock > 0 : product.stock > 0;
   const displayVariant = exactMatch || selectedVariant;
   const hasDiscount = displayVariant?.old_price && displayVariant?.price && 
                    Number(displayVariant.old_price) > Number(displayVariant.price);
-
-  // Функция для отображения памяти в читаемом формате
-  const displayStorage = (storage) => {
-    return storage.replace(/ГБ/g, ' ГБ');
-  };
 
   if (loading) {
     return (
@@ -389,7 +381,7 @@ const ProductInfo = ({ product, onVariantChange }) => {
         </div>
       </div>
 
-      {/* Блок выбора параметров показывается только если есть варианты */}
+      {/* Блок выбора параметров */}
       {hasVariants && (
         <>
           {/* Выбор цвета */}
@@ -510,7 +502,7 @@ const ProductInfo = ({ product, onVariantChange }) => {
         </>
       )}
 
-      {/* Если нет вариантов, показываем простую информацию о наличии */}
+      {/* Простая информация о наличии если нет вариантов */}
       {!hasVariants && (
         <div className="availability">
           {product.stock > 0 ? (
@@ -535,7 +527,7 @@ const ProductInfo = ({ product, onVariantChange }) => {
         <Button 
           variant="primary" 
           size="lg" 
-          disabled={hasVariants ? !canAddToCart : product.stock <= 0}
+          disabled={!canAddToCart}
           className={`add-to-cart-btn ${isInCart ? 'added' : ''}`}
           onClick={handleAddToCart}
         >
@@ -569,48 +561,4 @@ const ProductInfo = ({ product, onVariantChange }) => {
   );
 };
 
-// Вспомогательные функции
-const getColorHex = (colorName) => {
-  const colorMap = {
-    'черный': '#000000',
-    'белый': '#ffffff',
-    'синий': '#007bff',
-    'розовый': '#e83e8c',
-    'зеленый': '#28a745',
-    'красный': '#dc3545',
-    'фиолетовый': '#6f42c1',
-    'золотой': '#ffd700',
-    'серый': '#6c757d',
-    'серебристый': '#c0c0c0',
-    'phantom black': '#000000',
-    'blue': '#007bff',
-    'snow': '#ffffff',
-    'silver': '#c0c0c0',
-    'white': '#ffffff',
-    'rococo pearl': '#f0e6ff',
-    'black': '#000000',
-    'aurora gray': '#a8a8a8'
-  };
-  return colorMap[colorName.toLowerCase()] || '#6c757d';
-};
-
-const getColorDisplayName = (colorName) => {
-  const nameMap = {
-    'phantom black': 'Черный',
-    'snow': 'Белый',
-    'white': 'Белый',
-    'black': 'Черный',
-    'blue': 'Синий',
-    'silver': 'Серебристый',
-    'rococo pearl': 'Розовый',
-    'aurora gray': 'Серый'
-  };
-  return nameMap[colorName.toLowerCase()] || colorName;
-};
-
-const getColorBorder = (colorName) => {
-  const lightColors = ['белый', 'серебристый', 'золотой', 'snow', 'white', 'silver'];
-  return lightColors.includes(colorName.toLowerCase()) ? '1px solid #ddd' : 'none';
-};
-
-export default ProductInfo;
+export default React.memo(ProductInfo);

@@ -1,24 +1,42 @@
-import React from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
+import { CssBaseline, CircularProgress, Box } from '@mui/material';
 import Header from './components/Layout/Header/Header';
 import Footer from './components/Layout/Footer/Footer';
 import AdminLayout from './components/Admin/AdminLayout/AdminLayout';
 import { AdminRoute, ProtectedRoute, ProtectedCheckoutRoute } from './components/Common';
 import { AuthProvider, CartProvider, ProductsProvider, CategoriesProvider, WishlistProvider } from './context';
-import { LoginPage, RegisterPage } from './pages/Auth';
-import { AdminDashboard, AdminProducts, AdminOrders, AdminUsers, AdminCategories } from './pages/Admin';
-import { CategoriesPage, CategoryPage, ProductPage } from './pages/Catalog';
-import { AboutPage, ContactsPage } from './pages/About';
-import { ProfilePage, OrdersPage, WishlistPage } from './pages/User';
-import { SearchPage } from './pages';
-import { HomePage, CartPage, CheckoutPage, OrderSuccessPage, OrderDetailPage } from './pages';
+import { ReviewProvider } from './context/ReviewContext';
 import ScrollToTop from './components/ScrollToTop';
 import './App.css';
-import { ReviewProvider } from './context/ReviewContext';
-import AdminReviewsPage from '../src/components/Admin/AdminReviewsPage';
-import UserReviewsPage from './pages/User/UserReviewPage';
+
+// Ленивая загрузка страниц
+const HomePage = lazy(() => import('./pages/Home/HomePage'));
+const LoginPage = lazy(() => import('./pages/Auth/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/Auth/RegisterPage'));
+const CategoriesPage = lazy(() => import('./pages/Catalog/CategoriesPage/CategoriesPage'));
+const CategoryPage = lazy(() => import('./pages/Catalog/CategoryPage/CategoryPage'));
+const ProductPage = lazy(() => import('./pages/Catalog/ProductPage/ProductPage'));
+const AboutPage = lazy(() => import('./pages/About/AboutPage/AboutPage'));
+const ContactsPage = lazy(() => import('./pages/About/ContactsPage/ContactsPage'));
+const CartPage = lazy(() => import('./pages/Cart/CartPage'));
+const SearchPage = lazy(() => import('./pages/Search/SearchPage'));
+const CheckoutPage = lazy(() => import('./pages/Checkout/CheckoutPage'));
+const OrderSuccessPage = lazy(() => import('./pages/Orders/OrderSuccessPage'));
+const OrderDetailPage = lazy(() => import('./pages/Orders/OrderDetailPage'));
+const ProfilePage = lazy(() => import('./pages/User/ProfilePage'));
+const OrdersPage = lazy(() => import('./pages/User/OrdersPage'));
+const WishlistPage = lazy(() => import('./pages/User/WishlistPage'));
+const UserReviewsPage = lazy(() => import('./pages/User/UserReviewPage'));
+
+// Ленивая загрузка админских страниц - ИСПРАВЛЕННЫЕ ПУТИ
+const AdminDashboard = lazy(() => import('./pages/Admin/Dashboard/AdminDashboard'));
+const AdminProducts = lazy(() => import('./pages/Admin/Products/AdminProducts'));
+const AdminOrders = lazy(() => import('./pages/Admin/Orders/AdminOrders'));
+const AdminUsers = lazy(() => import('./pages/Admin/Users/AdminUsers'));
+const AdminCategories = lazy(() => import('./pages/Admin/Categories/AdminCategories'));
+const AdminReviewsPage = lazy(() => import('./components/Admin/AdminReviewsPage'));
 
 const theme = createTheme({
   palette: {
@@ -29,114 +47,141 @@ const theme = createTheme({
       main: '#764ba2',
     },
   },
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+  },
 });
 
+// Компонент загрузки
+const Loader = () => (
+  <Box 
+    display="flex" 
+    justifyContent="center" 
+    alignItems="center" 
+    minHeight="200px"
+  >
+    <CircularProgress />
+  </Box>
+);
+
+// Компонент для отображения загрузки с минимальной высотой
+const SuspenseWrapper = ({ children }) => (
+  <Suspense fallback={<Loader />}>
+    {children}
+  </Suspense>
+);
+
 function App() {
+  // Предзагрузка ключевых страниц
+  useEffect(() => {
+    const preloadCriticalPages = async () => {
+      try {
+        setTimeout(async () => {
+          await Promise.allSettled([
+            import('./pages/Cart/CartPage'),
+            import('./pages/Catalog/CategoriesPage/CategoriesPage'),
+            import('./pages/Search/SearchPage')
+          ]);
+        }, 3000);
+      } catch (error) {
+        console.log('Предзагрузка страниц не удалась:', error);
+      }
+    };
+
+    preloadCriticalPages();
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
-      <CssBaseline/>
+      <CssBaseline />
       <AuthProvider>
         <WishlistProvider>
           <ReviewProvider>
-        <ProductsProvider>
-          <CategoriesProvider>
-            <CartProvider>
-              <Router>
-                <ScrollToTop/>
-                <div className="app" style={{
-                  display: "flex",
-                  flexDirection: 'column',
-                  minHeight: '100vh',
-                  margin: 0,
-                  padding: 0
-                }}>
-                  <Routes>
-                    <Route path="/admin/*" element={null} />
-                    <Route path="*" element={<Header />} />
-                  </Routes>
-                  
-                  <main className="main-content">
-                    <Routes>
-
-                      {/* Public routes */}
-                      <Route path="/" element={<HomePage />} />
-                      <Route path="/login" element={<LoginPage />} />
-                      <Route path="/register" element={<RegisterPage />} />
-                      <Route path="/catalog" element={<CategoriesPage/>} />
-                      <Route path="/about" element={<AboutPage/>} />
-                      <Route path="/contacts" element={<ContactsPage/>} />
-                      <Route path="/cart" element={<CartPage />} />
-                      <Route path="/search" element={<SearchPage />} />
-                      <Route path="/catalog/:slug" element={<CategoryPage />} />
-                      <Route path="/product/:id" element={<ProductPage />} />
+            <ProductsProvider>
+              <CategoriesProvider>
+                <CartProvider>
+                  <Router>
+                    <ScrollToTop />
+                    <div className="app" style={{
+                      display: "flex",
+                      flexDirection: 'column',
+                      minHeight: '100vh',
+                      margin: 0,
+                      padding: 0
+                    }}>
+                      <Routes>
+                        <Route path="/admin/*" element={null} />
+                        <Route path="*" element={<Header />} />
+                      </Routes>
                       
-                      {/* Checkout */}
-                      <Route path="/checkout" element={
-                        <ProtectedCheckoutRoute>
-                          <CheckoutPage />
-                        </ProtectedCheckoutRoute>
-                      } />
-                      <Route path="/order-success" element={<OrderSuccessPage />} />
+                      <main className="main-content" style={{ flex: 1 }}>
+                        <Routes>
+                          <Route path="/" element={<SuspenseWrapper><HomePage /></SuspenseWrapper>} />
+                          <Route path="/login" element={<SuspenseWrapper><LoginPage /></SuspenseWrapper>} />
+                          <Route path="/register" element={<SuspenseWrapper><RegisterPage /></SuspenseWrapper>} />
+                          <Route path="/catalog" element={<SuspenseWrapper><CategoriesPage /></SuspenseWrapper>} />
+                          <Route path="/about" element={<SuspenseWrapper><AboutPage /></SuspenseWrapper>} />
+                          <Route path="/contacts" element={<SuspenseWrapper><ContactsPage /></SuspenseWrapper>} />
+                          <Route path="/cart" element={<SuspenseWrapper><CartPage /></SuspenseWrapper>} />
+                          <Route path="/search" element={<SuspenseWrapper><SearchPage /></SuspenseWrapper>} />
+                          <Route path="/catalog/:slug" element={<SuspenseWrapper><CategoryPage /></SuspenseWrapper>} />
+                          <Route path="/product/:id" element={<SuspenseWrapper><ProductPage /></SuspenseWrapper>} />
+                          
+                          <Route path="/checkout" element={
+                            <ProtectedCheckoutRoute><SuspenseWrapper><CheckoutPage /></SuspenseWrapper></ProtectedCheckoutRoute>
+                          } />
+                          <Route path="/order-success" element={<SuspenseWrapper><OrderSuccessPage /></SuspenseWrapper>} />
 
-                      {/* Protected user routes */}
-                      <Route path="/profile" element={
-                        <ProtectedRoute>
-                          <ProfilePage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/orders" element={
-                        <ProtectedRoute>
-                          <OrdersPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/orders/:orderId" element={<OrderDetailPage />} />
-                      <Route path="/wishlist" element={
-                        <ProtectedRoute>
-                          <WishlistPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/reviews" element={
-                        <ProtectedRoute>
-                          <UserReviewsPage />
-                        </ProtectedRoute>
-                      } />
+                          <Route path="/profile" element={
+                            <ProtectedRoute><SuspenseWrapper><ProfilePage /></SuspenseWrapper></ProtectedRoute>
+                          } />
+                          <Route path="/orders" element={
+                            <ProtectedRoute><SuspenseWrapper><OrdersPage /></SuspenseWrapper></ProtectedRoute>
+                          } />
+                          <Route path="/orders/:orderId" element={<SuspenseWrapper><OrderDetailPage /></SuspenseWrapper>} />
+                          <Route path="/wishlist" element={
+                            <ProtectedRoute><SuspenseWrapper><WishlistPage /></SuspenseWrapper></ProtectedRoute>
+                          } />
+                          <Route path="/reviews" element={
+                            <ProtectedRoute><SuspenseWrapper><UserReviewsPage /></SuspenseWrapper></ProtectedRoute>
+                          } />
 
-                      {/* Admin routes */}
-                      <Route path="/admin/*" element={
-                        <AdminRoute>
-                          <AdminLayout>
-                            <Routes>
-                              <Route path="dashboard" element={<AdminDashboard />} />
-                              <Route path="products" element={<AdminProducts />} />
-                              <Route path="orders" element={<AdminOrders />} />
-                              <Route path="users" element={<AdminUsers />} />
-                              <Route path="categories" element={<AdminCategories />} />
-                              <Route path="reviews" element={<AdminReviewsPage />} />
-                              <Route path="" element={<Navigate to="dashboard" />} />
-                            </Routes>
-                          </AdminLayout>
-                        </AdminRoute>
-                      } />
+                          <Route path="/admin/*" element={
+                            <AdminRoute>
+                              <AdminLayout>
+                                <Suspense fallback={<Loader />}>
+                                  <Routes>
+                                    <Route path="dashboard" element={<AdminDashboard />} />
+                                    <Route path="products" element={<AdminProducts />} />
+                                    <Route path="orders" element={<AdminOrders />} />
+                                    <Route path="users" element={<AdminUsers />} />
+                                    <Route path="categories" element={<AdminCategories />} />
+                                    <Route path="reviews" element={<AdminReviewsPage />} />
+                                    <Route path="" element={<Navigate to="dashboard" />} />
+                                  </Routes>
+                                </Suspense>
+                              </AdminLayout>
+                            </AdminRoute>
+                          } />
 
-                      {/* Redirect to home for unknown routes */}
-                      <Route path="*" element={<Navigate to="/" />} />
-                    </Routes>
-                  </main>
-                  
-                  <Routes>
-                    <Route path="/admin/*" element={null} />
-                    <Route path="*" element={<Footer />} />
-                  </Routes>
-                </div>
-              </Router>
-            </CartProvider>
-          </CategoriesProvider>
-        </ProductsProvider>
-        </ReviewProvider>
+                          <Route path="*" element={<Navigate to="/" />} />
+                        </Routes>
+                      </main>
+                      
+                      <Routes>
+                        <Route path="/admin/*" element={null} />
+                        <Route path="*" element={<Footer />} />
+                      </Routes>
+                    </div>
+                  </Router>
+                </CartProvider>
+              </CategoriesProvider>
+            </ProductsProvider>
+          </ReviewProvider>
         </WishlistProvider>
       </AuthProvider>
     </ThemeProvider>
   );
 }
 
-export default App;
+export default React.memo(App);
