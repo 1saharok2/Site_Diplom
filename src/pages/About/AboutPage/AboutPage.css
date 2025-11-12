@@ -8,7 +8,6 @@
 
 /* === HERO БЛОК === */
 .about-hero {
-  background: linear-gradient(135deg, #5e35b1 0%, #7e57c2 50%, #9c27b0 100%);
   color: #fff;
   text-align: center;
   padding: 100px 20px 80px;
@@ -45,7 +44,7 @@
   line-height: 1.1;
   text-transform: none;
   text-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  background: linear-gradient(to right, #ffffff, #e3d4ff);
+  background: #5c26db;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
