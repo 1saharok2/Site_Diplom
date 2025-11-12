@@ -14,12 +14,16 @@ import {
 import { Send, Star, RateReview } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 
-const ReviewForm = ({ product, productName, onClose, onSubmit }) => {
+const ReviewForm = ({ open = true, product, productName, onClose, onSubmit }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const { currentUser } = useAuth();
+
+  if (!open) {
+    return null;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

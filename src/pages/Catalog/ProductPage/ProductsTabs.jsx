@@ -81,9 +81,11 @@ const ProductTabs = ({
   product, 
   reviews = [],
   reviewsLoading = false, 
-  onWriteReview,          
-  hasUserReviewed,        
-  isAuthenticated        
+  onWriteReview,
+  onSubmitReview,
+  hasUserReviewed,
+  isAuthenticated,
+  currentUser
 }) => {
   const [activeTab, setActiveTab] = useState('description');
   const [reviewFormOpen, setReviewFormOpen] = useState(false);
@@ -106,28 +108,35 @@ const ProductTabs = ({
 
   // Мемоизированные обработчики
   const handleReviewSubmit = useCallback(async (reviewData) => {
+    if (!onSubmitReview) return;
+
     try {
       console.log('📝 Отправка отзыва:', reviewData);
+      await onSubmitReview(reviewData);
       setMessage('✅ Отзыв успешно отправлен на модерацию!');
       setReviewFormOpen(false);
-      
+
       setTimeout(() => {
         setMessage('');
-      }, 3000);
-      
+      }, 4000);
     } catch (error) {
       console.error('❌ Ошибка отправки отзыва:', error);
-      setMessage('❌ Ошибка: ' + error.message);
+      setMessage(`❌ Ошибка: ${error?.message || 'Не удалось отправить отзыв.'}`);
+      throw error;
     }
-  }, []);
+  }, [onSubmitReview]);
 
   const handleTabChange = useCallback((tabId) => {
     setActiveTab(tabId);
   }, []);
 
   const handleOpenReviewForm = useCallback(() => {
+    if (!isAuthenticated) {
+      onWriteReview?.();
+      return;
+    }
     setReviewFormOpen(true);
-  }, []);
+  }, [isAuthenticated, onWriteReview]);
 
   const handleCloseReviewForm = useCallback(() => {
     setReviewFormOpen(false);
@@ -321,6 +330,7 @@ const ProductTabs = ({
             <ReviewList 
               reviews={reviews} 
               loading={reviewsLoading}
+              currentUser={currentUser}
             />
 
             {/* Форма отзыва */}
@@ -328,6 +338,7 @@ const ProductTabs = ({
               open={reviewFormOpen}
               onClose={handleCloseReviewForm}
               product={product}
+              productName={product?.name}
               onSubmit={handleReviewSubmit}
               loading={reviewsLoading}
             />
@@ -366,7 +377,7 @@ const ProductTabs = ({
     }
   }, [
     activeTab, product, reviews, reviewsLoading, message, 
-    reviewFormOpen, isAuthenticated, hasUserReviewed,
+    reviewFormOpen, isAuthenticated, hasUserReviewed, currentUser,
     renderSpecifications, handleOpenReviewForm, handleCloseReviewForm, handleReviewSubmit
   ]);
 

@@ -16,7 +16,8 @@ const ProductPage = () => {
   const { 
     reviews, 
     loading: reviewsLoading, 
-    loadProductReviews 
+    loadProductReviews,
+    createReview
   } = useReviews();
 
   const [product, setProduct] = useState(null);
@@ -24,12 +25,14 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [hasSubmittedReview, setHasSubmittedReview] = useState(false);
 
   // Мемоизированные вычисления
-  const hasUserReviewed = useMemo(() => 
-    currentUser && reviews.some(review => review.user_id === currentUser.id),
-    [currentUser, reviews]
-  );
+  const hasUserReviewed = useMemo(() => {
+    if (!currentUser) return false;
+    if (hasSubmittedReview) return true;
+    return reviews.some(review => review.user_id === currentUser.id);
+  }, [currentUser, reviews, hasSubmittedReview]);
 
   const averageRating = useMemo(() => 
     reviews.length > 0 
@@ -47,11 +50,32 @@ const ProductPage = () => {
     if (!currentUser) {
       setMessage('⚠️ Войдите в систему, чтобы оставить отзыв');
       setTimeout(() => setMessage(''), 3000);
-      return;
     }
-    setMessage('Функция оставления отзыва будет доступна в следующем обновлении');
-    setTimeout(() => setMessage(''), 3000);
   }, [currentUser]);
+
+  const handleSubmitReview = useCallback(async (reviewData) => {
+    if (!currentUser) {
+      throw new Error('Пожалуйста, войдите в систему, чтобы оставить отзыв');
+    }
+
+    try {
+      await createReview(reviewData);
+      setHasSubmittedReview(true);
+      setMessage('✅ Отзыв успешно отправлен на модерацию');
+      setTimeout(() => setMessage(''), 4000);
+      // Обновляем список отзывов, на случай если API вернёт запись
+      await loadProductReviews(reviewData.product_id);
+    } catch (error) {
+      const errorMessage = error?.message || 'Не удалось отправить отзыв. Попробуйте позже.';
+      setMessage(`❌ ${errorMessage}`);
+      setTimeout(() => setMessage(''), 4000);
+      throw error;
+    }
+  }, [createReview, currentUser, loadProductReviews]);
+
+  useEffect(() => {
+    setHasSubmittedReview(false);
+  }, [id, currentUser?.id]);
 
   // Оптимизированная загрузка данных
   useEffect(() => {
@@ -107,9 +131,20 @@ const ProductPage = () => {
     reviews,
     reviewsLoading,
     onWriteReview: handleWriteReview,
+    onSubmitReview: handleSubmitReview,
     hasUserReviewed,
-    isAuthenticated: !!currentUser
-  }), [currentProduct, product, reviews, reviewsLoading, handleWriteReview, hasUserReviewed, currentUser]);
+    isAuthenticated: !!currentUser,
+    currentUser
+  }), [
+    currentProduct, 
+    product, 
+    reviews, 
+    reviewsLoading, 
+    handleWriteReview, 
+    handleSubmitReview, 
+    hasUserReviewed, 
+    currentUser
+  ]);
 
   if (loading) {
     return (
