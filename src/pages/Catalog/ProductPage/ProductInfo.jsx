@@ -2,8 +2,9 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button, Badge, Spinner } from 'react-bootstrap';
 import { FaHeart, FaShoppingCart, FaShare, FaStar, FaRegHeart, FaCheck, FaTimes } from 'react-icons/fa';
 import { categoryService } from '../../../services/categoryService';
-import { cartService } from '../../../services/cartService';
-import { wishlistService } from '../../../services/wishlistService';
+import { useAuth } from '../../../context/AuthContext';
+import { useCart } from '../../../context/CartContext';
+import { useWishlist } from '../../../context/WishlistContext';
 import './ProductPage_css/ProductInfo.css';
 
 // Вспомогательные функции вынесены наружу для предотвращения пересоздания
@@ -74,15 +75,56 @@ const getBaseProductName = (productName) => {
 };
 
 const ProductInfo = ({ product, onVariantChange }) => {
-  const userId = localStorage.getItem('user_id');
-  const [isInWishlist, setIsInWishlist] = useState(false);
+  const { currentUser } = useAuth();
+  const { addToCart } = useCart();
+  const {
+    addToWishlist,
+    removeFromWishlistByProduct,
+    isInWishlist: checkInWishlist
+  } = useWishlist();
+
+  const [isInWishlistState, setIsInWishlistState] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
   const [variants, setVariants] = useState([]);
   const [selectedVariant, setSelectedVariant] = useState(product);
   const [loading, setLoading] = useState(false);
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedStorage, setSelectedStorage] = useState('');
   const [exactMatch, setExactMatch] = useState(null);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  const userId = useMemo(() => {
+    if (currentUser?.id) return currentUser.id;
+    if (currentUser?.user_id) return currentUser.user_id;
+    if (currentUser?.userId) return currentUser.userId;
+
+    const storedUserData = localStorage.getItem('userData');
+    if (storedUserData) {
+      try {
+        const parsed = JSON.parse(storedUserData);
+        return (
+          parsed?.id ||
+          parsed?.user_id ||
+          parsed?.userId ||
+          null
+        );
+      } catch (error) {
+        console.error('Ошибка чтения userData:', error);
+      }
+    }
+
+    const storedId = localStorage.getItem('user_id');
+    return storedId || null;
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (userId) {
+      localStorage.setItem('user_id', userId);
+    } else {
+      localStorage.removeItem('user_id');
+    }
+  }, [userId]);
 
   // Мемоизированные функции
   const getSpecValue = useCallback((variant, key) => {
@@ -290,9 +332,14 @@ const ProductInfo = ({ product, onVariantChange }) => {
     return storage.replace(/ГБ/g, ' ГБ');
   }, []);
 
-  const handleAddToCart = useCallback(async () => {
-    const targetProduct = hasVariants ? exactMatch : product;
+  const targetProduct = useMemo(() => {
+    if (hasVariants) {
+      return exactMatch || selectedVariant || product;
+    }
+    return product;
+  }, [hasVariants, exactMatch, selectedVariant, product]);
 
+  const handleAddToCart = useCallback(async () => {
     if (!targetProduct || targetProduct.stock <= 0) return;
     if (!userId) {
       alert('Пожалуйста, войдите в аккаунт, чтобы добавить товар в корзину.');
@@ -300,18 +347,56 @@ const ProductInfo = ({ product, onVariantChange }) => {
     }
 
     try {
+      setCartLoading(true);
       setIsInCart(true);
-      await cartService.addToCart(userId, targetProduct.id, 1);
+      await addToCart(targetProduct.id, 1);
       setTimeout(() => setIsInCart(false), 2000);
     } catch (error) {
       console.error('Ошибка при добавлении в корзину:', error);
       alert('Не удалось добавить товар в корзину');
       setIsInCart(false);
+    } finally {
+      setCartLoading(false);
     }
-  }, [hasVariants, exactMatch, product, userId]);
+  }, [targetProduct, userId, addToCart]);
 
-  const canAddToCart = hasVariants ? exactMatch && exactMatch.stock > 0 : product.stock > 0;
-  const displayVariant = exactMatch || selectedVariant;
+  const targetProductId = targetProduct?.id;
+
+  useEffect(() => {
+    if (!targetProductId) {
+      setIsInWishlistState(false);
+      return;
+    }
+    setIsInWishlistState(checkInWishlist(targetProductId));
+  }, [targetProductId, checkInWishlist]);
+
+  const handleWishlistToggle = useCallback(async () => {
+    if (!targetProductId) return;
+
+    if (!userId) {
+      alert('Пожалуйста, войдите в аккаунт, чтобы сохранять товары в избранное.');
+      return;
+    }
+
+    try {
+      setWishlistLoading(true);
+
+      if (isInWishlistState) {
+        await removeFromWishlistByProduct(targetProductId);
+        setIsInWishlistState(false);
+      } else {
+        await addToWishlist(targetProductId);
+        setIsInWishlistState(true);
+      }
+    } catch (error) {
+      console.error('Ошибка при обновлении избранного:', error);
+      alert('Не удалось обновить избранное. Попробуйте позже.');
+    } finally {
+      setWishlistLoading(false);
+    }
+  }, [userId, targetProductId, isInWishlistState, addToWishlist, removeFromWishlistByProduct]);
+  const canAddToCart = targetProduct ? targetProduct.stock > 0 : false;
+  const displayVariant = targetProduct || selectedVariant;
   const hasDiscount = displayVariant?.old_price && displayVariant?.price && 
                    Number(displayVariant.old_price) > Number(displayVariant.price);
 
@@ -518,21 +603,26 @@ const ProductInfo = ({ product, onVariantChange }) => {
         <Button 
           variant="primary" 
           size="lg" 
-          disabled={!canAddToCart}
+          disabled={!canAddToCart || cartLoading}
           className={`add-to-cart-btn ${isInCart ? 'added' : ''}`}
           onClick={handleAddToCart}
         >
           <FaShoppingCart className="btn-icon" />
-          {isInCart ? 'Добавлено!' : (hasVariants ? 'В корзину' : (product.stock > 0 ? 'В корзину' : 'Нет в наличии'))}
+          {cartLoading
+            ? 'Добавление...'
+            : isInCart
+              ? 'Добавлено!'
+              : (hasVariants ? 'В корзину' : (product.stock > 0 ? 'В корзину' : 'Нет в наличии'))}
         </Button>
         
         <div className="secondary-buttons">
           <Button 
-            variant={isInWishlist ? "danger" : "outline-primary"} 
-            className={`wishlist-btn circle-btn ${isInWishlist ? 'added' : ''}`}
+            variant={isInWishlistState ? "danger" : "outline-primary"} 
+            className={`wishlist-btn circle-btn ${isInWishlistState ? 'added' : ''}`}
             onClick={handleWishlistToggle}
+            disabled={wishlistLoading}
           >
-            {isInWishlist ? <FaHeart /> : <FaRegHeart />}
+            {isInWishlistState ? <FaHeart /> : <FaRegHeart />}
           </Button>
 
           <Button 
