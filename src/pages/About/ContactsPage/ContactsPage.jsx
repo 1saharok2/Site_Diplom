@@ -4,13 +4,13 @@ import {
   Container,
   Typography,
   Box,
+  Grid,
   Paper,
   TextField,
   Button,
   Card,
   CardContent,
   Alert,
-  Grid,
   useMediaQuery
 } from '@mui/material';
 import {
@@ -33,7 +33,7 @@ const ContactsPage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // <600px
 
   const handleChange = (e) => {
     setFormData({
@@ -79,9 +79,9 @@ const ContactsPage = () => {
 
   return (
     <Box sx={{ py: { xs: 4, md: 8 }, minHeight: '100vh' }}>
-      <Container maxWidth="md">
+      <Container maxWidth="lg">
         {/* Заголовок */}
-        <Box sx={{ textAlign: 'center', mb: { xs: 4, md: 6 }, px: 2 }}>
+        <Box sx={{ textAlign: 'center', mb: { xs: 4, md: 8 }, px: 2 }}>
           <Typography
             variant={isMobile ? 'h4' : 'h2'}
             component="h1"
@@ -102,184 +102,187 @@ const ContactsPage = () => {
           </Typography>
         </Box>
 
-        {/* Контактная информация */}
-        <Box
-          sx={{
-            mb: 6,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            textAlign: 'center'
-          }}
-        >
-          <Typography
-            variant={isMobile ? 'h5' : 'h4'}
-            gutterBottom
-            sx={{ fontWeight: 'bold', mb: 4 }}
-          >
-            Наши контакты
-          </Typography>
-
-          <Grid
-            container
-            spacing={3}
-            justifyContent="center"
-            sx={{ maxWidth: 700 }}
-          >
-            {contactMethods.map((method, index) => (
-              <Grid
-                item
-                xs={12}
-                sm={6}
-                key={index}
-                sx={{ display: 'flex', justifyContent: 'center' }}
+        <Grid container spacing={isMobile ? 4 : 6}>
+          {/* Контактная информация */}
+          <Grid item xs={12} md={6}>
+            <Box
+              sx={{
+                mb: 4,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center'
+              }}
+            >
+              <Typography
+                variant={isMobile ? 'h5' : 'h4'}
+                gutterBottom
+                sx={{ fontWeight: 'bold', mb: 4 }}
               >
-                <Card
+                Наши контакты
+              </Typography>
+
+              <Grid
+                container
+                spacing={3}
+                justifyContent="center"
+                sx={{ maxWidth: 700 }}
+              >
+                {contactMethods.map((method, index) => (
+                  <Grid
+                    item
+                    xs={12}
+                    sm={6}
+                    md={6}
+                    key={index}
+                    sx={{ display: 'flex', justifyContent: 'center' }}
+                  >
+                    <Card
+                      sx={{
+                        width: '100%',
+                        maxWidth: 300,
+                        p: 3,
+                        textAlign: 'center',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          transform: 'translateY(-4px)',
+                          boxShadow: 4
+                        }
+                      }}
+                    >
+                      <CardContent>
+                        <Box sx={{ color: 'primary.main', mb: 2 }}>{method.icon}</Box>
+                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                          {method.title}
+                        </Typography>
+                        <Typography variant="body1" gutterBottom>
+                          {method.details}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {method.description}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+
+            {/* Карта */}
+            <Paper
+              elevation={3}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                height: { xs: 300, sm: 350, md: 400 },
+                mt: isMobile ? 2 : 0
+              }}
+            >
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ fontWeight: 'bold', mb: 2, textAlign: isMobile ? 'center' : 'left' }}
+              >
+                Мы на карте
+              </Typography>
+              <YandexMap
+                center={[51.670550205174614, 36.147750777233355]}
+                zoom={16}
+              />
+            </Paper>
+          </Grid>
+
+          {/* Форма */}
+          <Grid item xs={12} md={6}>
+            <Paper
+              elevation={3}
+              sx={{
+                p: { xs: 3, sm: 4 },
+                borderRadius: 3,
+                background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)'
+              }}
+            >
+              <Typography
+                variant={isMobile ? 'h5' : 'h4'}
+                gutterBottom
+                sx={{
+                  fontWeight: 'bold',
+                  mb: 3,
+                  textAlign: isMobile ? 'center' : 'left'
+                }}
+              >
+                Напишите нам
+              </Typography>
+
+              {isSubmitted && (
+                <Alert severity="success" sx={{ mb: 3 }}>
+                  Сообщение отправлено! Мы свяжемся с вами в ближайшее время.
+                </Alert>
+              )}
+
+              <Box component="form" onSubmit={handleSubmit}>
+                {['name', 'email', 'phone', 'message'].map((field) => (
+                  <TextField
+                    key={field}
+                    fullWidth
+                    label={
+                      field === 'name'
+                        ? 'Ваше имя'
+                        : field === 'email'
+                        ? 'Email'
+                        : field === 'phone'
+                        ? 'Телефон'
+                        : 'Сообщение'
+                    }
+                    name={field}
+                    value={formData[field]}
+                    onChange={handleChange}
+                    required={field !== 'phone'}
+                    margin="normal"
+                    multiline={field === 'message'}
+                    rows={field === 'message' ? 4 : 1}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        backgroundColor: 'white'
+                      }
+                    }}
+                  />
+                ))}
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  size="large"
+                  startIcon={<Send />}
                   sx={{
-                    width: '100%',
-                    maxWidth: 300,
-                    p: 3,
-                    textAlign: 'center',
-                    transition: 'all 0.3s ease',
+                    mt: 3,
+                    py: 1.5,
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    borderRadius: 2,
+                    fontSize: '1.1rem',
+                    fontWeight: 600,
                     '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 4
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 5px 15px rgba(102, 126, 234, 0.4)',
+                      background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)'
                     }
                   }}
                 >
-                  <CardContent>
-                    <Box sx={{ color: 'primary.main', mb: 2 }}>{method.icon}</Box>
-                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                      {method.title}
-                    </Typography>
-                    <Typography variant="body1" gutterBottom>
-                      {method.details}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {method.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+                  Отправить сообщение
+                </Button>
+              </Box>
+            </Paper>
           </Grid>
-        </Box>
+        </Grid>
 
-        {/* Карта */}
-        <Paper
-          elevation={3}
-          sx={{
-            p: 3,
-            borderRadius: 3,
-            height: { xs: 300, sm: 350, md: 400 },
-            mb: 6
-          }}
-        >
-          <Typography
-            variant="h6"
-            gutterBottom
-            sx={{
-              fontWeight: 'bold',
-              mb: 2,
-              textAlign: isMobile ? 'center' : 'left'
-            }}
-          >
-            Мы на карте
-          </Typography>
-          <YandexMap
-            center={[51.670550205174614, 36.147750777233355]}
-            zoom={16}
-          />
-        </Paper>
-
-        {/* Форма */}
-        <Paper
-          elevation={3}
-          sx={{
-            p: { xs: 3, sm: 4 },
-            borderRadius: 3,
-            background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-            mb: 6
-          }}
-        >
-          <Typography
-            variant={isMobile ? 'h5' : 'h4'}
-            gutterBottom
-            sx={{
-              fontWeight: 'bold',
-              mb: 3,
-              textAlign: 'center'
-            }}
-          >
-            Напишите нам
-          </Typography>
-
-          {isSubmitted && (
-            <Alert severity="success" sx={{ mb: 3 }}>
-              Сообщение отправлено! Мы свяжемся с вами в ближайшее время.
-            </Alert>
-          )}
-
-          <Box component="form" onSubmit={handleSubmit}>
-            {['name', 'email', 'phone', 'message'].map((field) => (
-              <TextField
-                key={field}
-                fullWidth
-                label={
-                  field === 'name'
-                    ? 'Ваше имя'
-                    : field === 'email'
-                    ? 'Email'
-                    : field === 'phone'
-                    ? 'Телефон'
-                    : 'Сообщение'
-                }
-                name={field}
-                value={formData[field]}
-                onChange={handleChange}
-                required={field !== 'phone'}
-                margin="normal"
-                multiline={field === 'message'}
-                rows={field === 'message' ? 4 : 1}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    backgroundColor: 'white'
-                  }
-                }}
-              />
-            ))}
-
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              size="large"
-              startIcon={<Send />}
-              sx={{
-                mt: 3,
-                py: 1.5,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: 2,
-                fontSize: '1.1rem',
-                fontWeight: 600,
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 5px 15px rgba(102, 126, 234, 0.4)',
-                  background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)'
-                }
-              }}
-            >
-              Отправить сообщение
-            </Button>
-          </Box>
-        </Paper>
-
-        {/* Нижний блок */}
+        {/* Дополнительный блок */}
         <Paper
           elevation={2}
           sx={{
             p: { xs: 3, sm: 4 },
+            mt: { xs: 6, md: 8 },
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
             borderRadius: 3,
