@@ -102,104 +102,116 @@ const ContactsPage = () => {
           </Typography>
         </Box>
 
-        <Grid container spacing={isMobile ? 4 : 6}>
-          {/* Контактная информация */}
+        <Grid container spacing={isMobile ? 4 : 6} alignItems="stretch">
+          {/* Контактная информация - ЛЕВАЯ КОЛОНКА */}
           <Grid item xs={12} md={6}>
             <Box
               sx={{
-                mb: 4,
+                height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',
-                textAlign: 'center'
+                gap: 4
               }}
             >
-              <Typography
-                variant={isMobile ? 'h5' : 'h4'}
-                gutterBottom
-                sx={{ fontWeight: 'bold', mb: 4 }}
+              {/* Блок "Наши контакты" */}
+              <Paper
+                elevation={3}
+                sx={{
+                  p: { xs: 3, sm: 4 },
+                  borderRadius: 3,
+                  flex: '0 1 auto'
+                }}
               >
-                Наши контакты
-              </Typography>
+                <Typography
+                  variant={isMobile ? 'h5' : 'h4'}
+                  gutterBottom
+                  sx={{ 
+                    fontWeight: 'bold', 
+                    mb: 4,
+                    textAlign: isMobile ? 'center' : 'left'
+                  }}
+                >
+                  Наши контакты
+                </Typography>
 
-              <Grid
-                container
-                spacing={3}
-                justifyContent="center"
-                sx={{ maxWidth: 700 }}
+                <Grid container spacing={3}>
+                  {contactMethods.map((method, index) => (
+                    <Grid item xs={12} sm={6} key={index}>
+                      <Card
+                        sx={{
+                          height: '100%',
+                          p: 3,
+                          textAlign: 'center',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: 4
+                          }
+                        }}
+                      >
+                        <CardContent>
+                          <Box sx={{ color: 'primary.main', mb: 2 }}>
+                            {method.icon}
+                          </Box>
+                          <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                            {method.title}
+                          </Typography>
+                          <Typography variant="body1" gutterBottom>
+                            {method.details}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {method.description}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Paper>
+
+              {/* Карта */}
+              <Paper
+                elevation={3}
+                sx={{
+                  p: 3,
+                  borderRadius: 3,
+                  flex: '1 1 auto',
+                  minHeight: 400
+                }}
               >
-                {contactMethods.map((method, index) => (
-                  <Grid
-                    item
-                    xs={12}
-                    sm={6}
-                    md={6}
-                    key={index}
-                    sx={{ display: 'flex', justifyContent: 'center' }}
-                  >
-                    <Card
-                      sx={{
-                        width: '100%',
-                        maxWidth: 300,
-                        p: 3,
-                        textAlign: 'center',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          transform: 'translateY(-4px)',
-                          boxShadow: 4
-                        }
-                      }}
-                    >
-                      <CardContent>
-                        <Box sx={{ color: 'primary.main', mb: 2 }}>{method.icon}</Box>
-                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                          {method.title}
-                        </Typography>
-                        <Typography variant="body1" gutterBottom>
-                          {method.details}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {method.description}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ 
+                    fontWeight: 'bold', 
+                    mb: 2,
+                    textAlign: isMobile ? 'center' : 'left'
+                  }}
+                >
+                  Мы на карте
+                </Typography>
+                <Box sx={{ height: 'calc(100% - 60px)' }}>
+                  <YandexMap
+                    center={[51.670550205174614, 36.147750777233355]}
+                    zoom={16}
+                    height="100%"
+                  />
+                </Box>
+              </Paper>
             </Box>
-
-            {/* Карта */}
-            <Paper
-              elevation={3}
-              sx={{
-                p: 3,
-                borderRadius: 3,
-                height: { xs: 300, sm: 350, md: 400 },
-                mt: isMobile ? 2 : 0
-              }}
-            >
-              <Typography
-                variant="h6"
-                gutterBottom
-                sx={{ fontWeight: 'bold', mb: 2, textAlign: isMobile ? 'center' : 'left' }}
-              >
-                Мы на карте
-              </Typography>
-              <YandexMap
-                center={[51.670550205174614, 36.147750777233355]}
-                zoom={16}
-              />
-            </Paper>
           </Grid>
 
-          {/* Форма */}
+          {/* Форма - ПРАВАЯ КОЛОНКА */}
           <Grid item xs={12} md={6}>
             <Paper
               elevation={3}
               sx={{
                 p: { xs: 3, sm: 4 },
                 borderRadius: 3,
-                background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)'
+                background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column'
               }}
             >
               <Typography
@@ -220,7 +232,11 @@ const ContactsPage = () => {
                 </Alert>
               )}
 
-              <Box component="form" onSubmit={handleSubmit}>
+              <Box 
+                component="form" 
+                onSubmit={handleSubmit}
+                sx={{ flex: 1 }}
+              >
                 {['name', 'email', 'phone', 'message'].map((field) => (
                   <TextField
                     key={field}
