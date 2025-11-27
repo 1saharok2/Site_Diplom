@@ -1,3 +1,4 @@
+// pages/Admin/Users/AdminUsers.jsx (АДАПТИРОВАННЫЙ КОД)
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
@@ -27,7 +28,8 @@ import {
   alpha,
   useTheme,
   InputAdornment,
-  Switch
+  Switch,
+  Divider,
 } from '@mui/material';
 import {
   Refresh,
@@ -39,9 +41,23 @@ import {
   Email,
   CalendarToday,
   Security,
-  Phone
+  Phone,
+  Lock
 } from '@mui/icons-material';
 import { adminService } from '../../../services/adminService';
+
+const formatPhoneNumber = (phoneNumber) => {
+  if (!phoneNumber) return 'N/A';
+  // Удаляем все, кроме цифр
+  const cleaned = ('' + phoneNumber).replace(/\D/g, '');
+  const match = cleaned.match(/^(\d{1})(\d{3})(\d{3})(\d{2})(\d{2})$/);
+  // Предполагаем формат: +7 (XXX) XXX-XX-XX
+  if (match) {
+    return `+${match[1]} (${match[2]}) ${match[3]}-${match[4]}-${match[5]}`;
+  }
+  // Если не удалось форматировать, возвращаем как есть
+  return phoneNumber;
+};
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -53,7 +69,15 @@ const AdminUsers = () => {
   const [selectedRole, setSelectedRole] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [deleteDialog, setDeleteDialog] = useState({ open: false, user: null });
-  const [editDialog, setEditDialog] = useState({ open: false, user: null, formData: null });
+  
+  // 🔥 Обновленное состояние для диалога: теперь включает isViewMode
+  const [managementDialog, setManagementDialog] = useState({
+    open: false,
+    user: null,
+    formData: null,
+    isViewMode: false, // 🔥 НОВОЕ СОСТОЯНИЕ
+  });
+
   const theme = useTheme();
 
   useEffect(() => {
@@ -119,10 +143,11 @@ const AdminUsers = () => {
     }
   };
 
+  // 🔥 АДАПТИРОВАНО: Устанавливает режим редактирования (isViewMode: false)
   const handleEditUser = (user) => {
     if (!user) return;
 
-    setEditDialog({
+    setManagementDialog({
       open: true,
       user: user,
       formData: {
@@ -132,45 +157,65 @@ const AdminUsers = () => {
         phone: user.phone || '',
         role: user.role || 'customer',
         is_active: user.is_active || false
-      }
+      },
+      isViewMode: false, // Режим редактирования
     });
   };
 
-const handleUpdateUser = async () => {
-  if (!editDialog.user || !editDialog.formData) {
-    setSnackbar({ 
-      open: true, 
-      message: 'Ошибка: данные пользователя не загружены', 
-      severity: 'error' 
-    });
-    return;
-  }
+  // 🔥 НОВЫЙ ОБРАБОТЧИК: Устанавливает режим просмотра (isViewMode: true)
+  const handleViewUser = (user) => {
+    if (!user) return;
 
-  try {
-    const updatedUser = await adminService.updateUser(
-      editDialog.user.id,
-      editDialog.formData
-    );
-    
-    setUsers(users.map(user => 
-      user.id === editDialog.user.id ? updatedUser : user
-    ));
-    
-    setSnackbar({ 
-      open: true, 
-      message: 'Пользователь успешно обновлен', 
-      severity: 'success' 
+    setManagementDialog({
+      open: true,
+      user: user,
+      formData: {
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        role: user.role || 'customer',
+        is_active: user.is_active || false
+      },
+      isViewMode: true, // Режим просмотра
     });
-    setEditDialog({ open: false, user: null, formData: null });
-  } catch (error) {
-    console.error('Update error:', error);
-    setSnackbar({ 
-      open: true, 
-      message: error.message || 'Ошибка при обновлении пользователя', 
-      severity: 'error' 
-    });
-  }
-};
+  };
+
+  const handleUpdateUser = async () => {
+    if (!managementDialog.user || !managementDialog.formData) {
+      setSnackbar({ 
+        open: true, 
+        message: 'Ошибка: данные пользователя не загружены', 
+        severity: 'error' 
+      });
+      return;
+    }
+
+    try {
+      const updatedUser = await adminService.updateUser(
+        managementDialog.user.id,
+        managementDialog.formData
+      );
+      
+      setUsers(users.map(user => 
+        user.id === managementDialog.user.id ? updatedUser : user
+      ));
+      
+      setSnackbar({ 
+        open: true, 
+        message: 'Пользователь успешно обновлен', 
+        severity: 'success' 
+      });
+      setManagementDialog({ open: false, user: null, formData: null, isViewMode: false });
+    } catch (error) {
+      console.error('Update error:', error);
+      setSnackbar({ 
+        open: true, 
+        message: error.message || 'Ошибка при обновлении пользователя', 
+        severity: 'error' 
+      });
+    }
+  };
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -179,7 +224,7 @@ const handleUpdateUser = async () => {
   const getRoleColor = (role) => {
     switch (role) {
       case 'admin': return 'primary';
-      case 'sales_assistant': return 'secondary';
+      case 'manager': return 'secondary';
       case 'moderator': return 'warning';
       default: return 'default';
     }
@@ -188,7 +233,7 @@ const handleUpdateUser = async () => {
   const getRoleText = (role) => {
     switch (role) {
       case 'admin': return 'Администратор';
-      case 'sales_assistant': return 'Менеджер';
+      case 'manager': return 'Менеджер';
       case 'moderator': return 'Модератор';
       case 'customer': return 'Покупатель';
       default: return role;
@@ -246,7 +291,9 @@ const handleUpdateUser = async () => {
       )}
 
       {/* Статистика */}
+      {/* Оставлена без изменений */}
       <Grid container spacing={2} sx={{ mb: 2 }}>
+        {/* ... (блоки статистики) ... */}
         <Grid item xs={6} md={3}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -306,6 +353,7 @@ const handleUpdateUser = async () => {
       </Grid>
 
       {/* Панель поиска и фильтров */}
+      {/* Оставлена без изменений */}
       <Paper sx={{ p: 2, mb: 2, borderRadius: 2 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
@@ -389,7 +437,7 @@ const handleUpdateUser = async () => {
             <Table>
               <TableHead>
                 <TableRow sx={{ 
-                  backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                  backgroundColor: alpha(theme.palette.primary?.main || '#000000', 0.05),
                 }}>
                   <TableCell sx={{ fontWeight: 'bold' }}>Пользователь</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
@@ -399,102 +447,104 @@ const handleUpdateUser = async () => {
                   <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Действия</TableCell>
                 </TableRow>
               </TableHead>
-<TableBody>
-  {filteredUsers.map((user) => (
-    <TableRow 
-      key={user.id} 
-      sx={{ 
-        '&:hover': {
-          backgroundColor: alpha(theme.palette.primary.main, 0.02)
-        }
-      }}
-    >
-      <TableCell>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Person />
-          <Box>
-            <Typography variant="subtitle2" fontWeight="medium">
-              {user?.first_name || user?.name || 'Не указано'} {user?.last_name || ''}
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              ID: #{user?.id}
-            </Typography>
-          </Box>
-        </Box>
-      </TableCell>
-      <TableCell>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Email fontSize="small" />
-          {user?.email || 'N/A'}
-        </Box>
-      </TableCell>
-      <TableCell>
-        <Chip
-          label={getRoleText(user?.role)}
-          color={getRoleColor(user?.role)}
-          variant="outlined"
-          size="small"
-          icon={<Security fontSize="small" />}
-        />
-      </TableCell>
-      <TableCell>
-        <Chip
-          label={user?.is_active ? 'Активен' : 'Неактивен'}
-          color={user?.is_active ? 'success' : 'error'}
-          size="small"
-        />
-      </TableCell>
-      <TableCell>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <CalendarToday fontSize="small" />
-          {user?.created_at ? new Date(user.created_at).toLocaleDateString('ru-RU') : 'N/A'}
-        </Box>
-      </TableCell>
-      <TableCell sx={{ textAlign: 'center' }}>
-        <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
-          <IconButton
-            size="small"
-            sx={{
-              color: 'info.main',
-              '&:hover': { backgroundColor: alpha(theme.palette.info.main, 0.1) }
-            }}
-            title="Просмотреть профиль"
-          >
-            <Visibility />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => user && handleEditUser(user)} // Добавляем проверку
-            sx={{
-              color: 'warning.main',
-              '&:hover': { backgroundColor: alpha(theme.palette.warning.main, 0.1) }
-            }}
-            title="Редактировать пользователя"
-          >
-            <Edit />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => user && setDeleteDialog({ open: true, user })} // Добавляем проверку
-            sx={{
-              color: 'error.main',
-              '&:hover': { backgroundColor: alpha(theme.palette.error.main, 0.1) }
-            }}
-            title="Удалить пользователя"
-          >
-            <Delete />
-          </IconButton>
-        </Box>
-      </TableCell>
-    </TableRow>
-  ))}
-</TableBody>
+              <TableBody>
+                {filteredUsers.map((user) => (
+                  <TableRow 
+                    key={user.id} 
+                    sx={{ 
+                      '&:hover': {
+                        backgroundColor: alpha(theme.palette.primary.main, 0.02)
+                      }
+                    }}
+                  >
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Person />
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight="medium">
+                            {user?.first_name || user?.name || 'Не указано'} {user?.last_name || ''}
+                          </Typography>
+                          <Typography variant="body2" color="textSecondary">
+                            ID: #{user?.id}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Email fontSize="small" />
+                        {user?.email || 'N/A'}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={getRoleText(user?.role)}
+                        color={getRoleColor(user?.role)}
+                        variant="outlined"
+                        size="small"
+                        icon={<Security fontSize="small" />}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={user?.is_active ? 'Активен' : 'Неактивен'}
+                        color={user?.is_active ? 'success' : 'error'}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CalendarToday fontSize="small" />
+                        {user?.created_at ? new Date(user.created_at).toLocaleDateString('ru-RU') : 'N/A'}
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ textAlign: 'center' }}>
+                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => user && handleViewUser(user)} // 🔥 ИСПОЛЬЗУЕМ НОВЫЙ ОБРАБОТЧИК ДЛЯ ПРОСМОТРА
+                          sx={{
+                            color: 'info.main',
+                            '&:hover': { backgroundColor: alpha(theme.palette.info.main, 0.1) }
+                          }}
+                          title="Просмотреть профиль"
+                        >
+                          <Visibility />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => user && handleEditUser(user)}
+                          sx={{
+                            color: 'warning.main',
+                            '&:hover': { backgroundColor: alpha(theme.palette.warning.main, 0.1) }
+                          }}
+                          title="Редактировать пользователя"
+                        >
+                          <Edit />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => user && setDeleteDialog({ open: true, user })}
+                          sx={{
+                            color: 'error.main',
+                            '&:hover': { backgroundColor: alpha(theme.palette.error.main, 0.1) }
+                          }}
+                          title="Удалить пользователя"
+                        >
+                          <Delete />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
             </Table>
           </TableContainer>
         )}
       </Paper>
 
       {/* Диалог подтверждения удаления */}
+      {/* Оставлен без изменений */}
       <Dialog
         open={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false, user: null })}
@@ -550,262 +600,16 @@ const handleUpdateUser = async () => {
         </DialogActions>
       </Dialog>
 
-      {/* Диалог редактирования пользователя */}
-      <Dialog
-  open={editDialog.open}
-  onClose={() => setEditDialog({ open: false, user: null, formData: null })}
-  maxWidth="sm"
-  fullWidth
-  PaperProps={{
-    sx: {
-      borderRadius: 3,
-      boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
-    }
-  }}
->
-  <DialogTitle sx={{ 
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    py: 2
-  }}>
-    ✏️ Редактирование пользователя
-  </DialogTitle>
-  
-  <DialogContent sx={{ p: 0 }}>
-{editDialog.formData && editDialog.user && (
-  <Box sx={{ p: 3, pb: 2 }}>
-    {/* Основная информация */}
-    <Box sx={{ mb: 3 }}>
-      <Typography variant="subtitle1" fontWeight="600" color="text.primary" gutterBottom>
-        Основная информация
-      </Typography>
-      
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Имя"
-            value={editDialog.formData.first_name || ''}
-            onChange={(e) => setEditDialog({
-              ...editDialog,
-              formData: { ...editDialog.formData, first_name: e.target.value }
-            })}
-            size="small"
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Фамилия"
-            value={editDialog.formData.last_name || ''}
-            onChange={(e) => setEditDialog({
-              ...editDialog,
-              formData: { ...editDialog.formData, last_name: e.target.value }
-            })}
-            size="small"
-          />
-        </Grid>
-      </Grid>
-    </Box>
-
-      {/* Контактная информация */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="subtitle1" fontWeight="600" color="text.primary" gutterBottom>
-          Контактная информация
-        </Typography>
-        
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Email"
-              type="email"
-              value={editDialog.formData.email}
-              onChange={(e) => setEditDialog({
-                ...editDialog,
-                formData: { ...editDialog.formData, email: e.target.value }
-              })}
-              size="small"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Email fontSize="small" color="action" />
-                  </InputAdornment>
-                )
-              }}
-            />
-          </Grid>
-<Grid item xs={12}>
-  <TextField
-    fullWidth
-    label="Телефон"
-    value={editDialog.formData.phone || ''}
-    onChange={(e) => {
-      const input = e.target.value;
-      // Ограничиваем длину до 15 символов (международный формат)
-      if (input.length <= 15) {
-        setEditDialog({
-          ...editDialog,
-          formData: { ...editDialog.formData, phone: input }
-        });
-      }
-    }}
-    placeholder="+7 (999) 999-99-99"
-    size="small"
-    InputProps={{
-      startAdornment: (
-        <InputAdornment position="start">
-          <Phone fontSize="small" color="action" />
-        </InputAdornment>
-      ),
-      endAdornment: (
-        <InputAdornment position="end">
-        </InputAdornment>
-      )
-    }}
-    error={editDialog.formData.phone?.length > 15}
-    helperText={
-      editDialog.formData.phone?.length > 15 
-        ? 'Превышено максимальное количество символов' 
-        : 'Формат: +7 (XXX) XXX-XX-XX'
-    }
-  />
-</Grid>
-        </Grid>
-      </Box>
-
-      {/* Настройки доступа */}
-      <Box sx={{ 
-        p: 2, 
-        backgroundColor: 'grey.50',
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'grey.200'
-      }}>
-        <Typography variant="subtitle1" fontWeight="600" color="text.primary" gutterBottom>
-          Настройки доступа
-        </Typography>
-        
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              select
-              label="Роль пользователя"
-              value={editDialog.formData.role}
-              onChange={(e) => setEditDialog({
-                ...editDialog,
-                formData: { ...editDialog.formData, role: e.target.value }
-              })}
-              size="small"
-              SelectProps={{
-                renderValue: (selected) => {
-                  const roles = {
-                    'customer': '👤 Покупатель',
-                    'moderator': '🛡️ Модератор',
-                    'manager': '📊 Менеджер',
-                    'admin': '⚙️ Администратор'
-                  };
-                  return roles[selected] || selected;
-                }
-              }}
-            >
-              <MenuItem value="customer">👤 Покупатель</MenuItem>
-              <MenuItem value="moderator">🛡️ Модератор</MenuItem>
-              <MenuItem value="manager">📊 Менеджер</MenuItem>
-              <MenuItem value="admin">⚙️ Администратор</MenuItem>
-            </TextField>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              p: 1,
-              borderRadius: 1,
-              backgroundColor: 'white'
-            }}>
-              <Box>
-                <Typography variant="body2" fontWeight="500">
-                  Статус аккаунта
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {editDialog.formData.is_active ? 'Активен • Может войти в систему' : 'Неактивен • Доступ заблокирован'}
-                </Typography>
-              </Box>
-              <Switch
-                checked={editDialog.formData.is_active}
-                onChange={(e) => setEditDialog({
-                  ...editDialog,
-                  formData: { ...editDialog.formData, is_active: e.target.checked }
-                })}
-                color="success"
-              />
-            </Box>
-          </Grid>
-        </Grid>
-      </Box>
-
-      {/* Дата регистрации */}
-      {editDialog.user?.created_at && (
-        <Box sx={{ mt: 2, textAlign: 'center' }}>
-          <Typography variant="caption" color="text.secondary">
-            Дата регистрации: {new Date(editDialog.user.created_at).toLocaleDateString('ru-RU')}
-          </Typography>
-        </Box>
-      )}
-    </Box>
-)}
-  </DialogContent>
-
-  <DialogActions sx={{ 
-    p: 3, 
-    pt: 0,
-    gap: 2,
-    justifyContent: 'center'
-  }}>
-    <Button 
-      onClick={() => setEditDialog({ open: false, user: null, formData: null })}
-      variant="outlined"
-      sx={{ 
-        borderRadius: 2, 
-        px: 4,
-        py: 1,
-        minWidth: 120,
-        borderColor: 'grey.300',
-        '&:hover': {
-          borderColor: 'grey.400',
-          backgroundColor: 'grey.50'
-        }
-      }}
-    >
-      Отмена
-    </Button>
-    <Button 
-      onClick={handleUpdateUser}
-      variant="contained"
-      sx={{ 
-        borderRadius: 2, 
-        px: 4,
-        py: 1,
-        minWidth: 180,
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        '&:hover': {
-          transform: 'translateY(-1px)',
-          boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
-          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)'
-        },
-        transition: 'all 0.2s ease'
-      }}
-    >
-      Сохранить изменения
-    </Button>
-  </DialogActions>
-</Dialog>
+      {/* 🔥 ПЕРЕИМЕНОВАННЫЙ И АДАПТИРОВАННЫЙ ДИАЛОГ УПРАВЛЕНИЯ */}
+      <UserManagementDialog
+        open={managementDialog.open}
+        onClose={() => setManagementDialog({ open: false, user: null, formData: null, isViewMode: false })}
+        formData={managementDialog.formData}
+        setFormData={(newFormData) => setManagementDialog(prev => ({ ...prev, formData: newFormData }))}
+        onSave={handleUpdateUser}
+        isViewMode={managementDialog.isViewMode} // 🔥 Передача режима
+        user={managementDialog.user}
+      />
 
       <Snackbar
         open={snackbar.open}
@@ -822,6 +626,294 @@ const handleUpdateUser = async () => {
         </Alert>
       </Snackbar>
     </Box>
+  );
+};
+
+// 🔥 НОВЫЙ/ПЕРЕИМЕНОВАННЫЙ КОМПОНЕНТ ДИАЛОГА
+const UserManagementDialog = ({ open, onClose, formData, setFormData, onSave, isViewMode, user }) => {
+
+  const handleChange = (field, value) => {
+    if (isViewMode) return; // Запрет изменений в режиме просмотра
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const getTitle = () => {
+    if (isViewMode) return '👁️ Просмотр пользователя';
+    return '✏️ Редактирование пользователя';
+  };
+
+  const getTitleBg = () => {
+    if (isViewMode) return 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
+    return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  };
+
+  // 🚨 ПРЕДУПРЕЖДЕНИЕ: В режиме просмотра мы используем данные из `user` напрямую, 
+  // так как `formData` предназначена для редактирования.
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        background: getTitleBg(),
+        color: 'white',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        py: 2
+      }}>
+        {getTitle()}
+      </DialogTitle>
+      
+      <DialogContent sx={{ p: 0 }}>
+        {user && ( // Используем user для режима просмотра
+          <Box sx={{ p: 3, pb: 2 }}>
+            
+            {/* Основная информация */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle1" fontWeight="600" color="text.primary" gutterBottom>
+                Основная информация
+              </Typography>
+              
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Имя"
+                    value={isViewMode ? user.first_name || user.name || 'N/A' : formData?.first_name || ''}
+                    onChange={(e) => handleChange('first_name', e.target.value)}
+                    size="small"
+                    InputProps={{
+                      readOnly: isViewMode, // 🔥 Только для чтения
+                    }}
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Фамилия"
+                    value={isViewMode ? user.last_name || 'N/A' : formData?.last_name || ''}
+                    onChange={(e) => handleChange('last_name', e.target.value)}
+                    size="small"
+                    InputProps={{
+                      readOnly: isViewMode, // 🔥 Только для чтения
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Divider sx={{ mb: 3 }} />
+
+            {/* Контактная информация */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle1" fontWeight="600" color="text.primary" gutterBottom>
+                Контактная информация
+              </Typography>
+              
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Email"
+                    type="email"
+                    value={isViewMode ? user.email || 'N/A' : formData?.email || ''}
+                    onChange={(e) => handleChange('email', e.target.value)}
+                    size="small"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Email fontSize="small" color="action" />
+                        </InputAdornment>
+                      ),
+                      readOnly: isViewMode, // 🔥 Только для чтения
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Телефон"
+                    // Используем форматированный номер для отображения
+                    value={isViewMode ? formatPhoneNumber(user.phone) : formData?.phone || ''}
+                    onChange={(e) => {
+                      const input = e.target.value;
+                      if (input.length <= 15) { // Ограничиваем длину при редактировании
+                        handleChange('phone', input);
+                      }
+                    }}
+                    placeholder="+7 (999) 999-99-99"
+                    size="small"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Phone fontSize="small" color="action" />
+                        </InputAdornment>
+                      ),
+                      readOnly: isViewMode, // 🔥 Только для чтения
+                    }}
+                    // Валидация отображается только в режиме редактирования
+                    error={!isViewMode && formData?.phone?.length > 15}
+                    helperText={
+                      !isViewMode && formData?.phone?.length > 15 
+                        ? 'Превышено максимальное количество символов' 
+                        : isViewMode ? null : 'Формат: +7 (XXX) XXX-XX-XX'
+                    }
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Divider sx={{ mb: 3 }} />
+
+            {/* Настройки доступа */}
+            <Box sx={{ 
+              p: 2, 
+              backgroundColor: isViewMode ? 'primary.lightest' : 'grey.50',
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: isViewMode ? 'primary.main' : 'grey.200'
+            }}>
+              <Typography variant="subtitle1" fontWeight="600" color="text.primary" gutterBottom>
+                Настройки доступа
+              </Typography>
+              
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    select
+                    label="Роль пользователя"
+                    value={isViewMode ? user.role : formData?.role || 'customer'}
+                    onChange={(e) => handleChange('role', e.target.value)}
+                    size="small"
+                    disabled={isViewMode} // 🔥 Отключаем SELECT в режиме просмотра
+                    InputProps={{
+                        readOnly: isViewMode,
+                    }}
+                    SelectProps={{
+                      renderValue: (selected) => {
+                        const roles = {
+                          'customer': '👤 Покупатель',
+                          'moderator': '🛡️ Модератор',
+                          'manager': '📊 Менеджер',
+                          'admin': '⚙️ Администратор'
+                        };
+                        return roles[selected] || selected;
+                      }
+                    }}
+                  >
+                    <MenuItem value="customer">👤 Покупатель</MenuItem>
+                    <MenuItem value="moderator">🛡️ Модератор</MenuItem>
+                    <MenuItem value="manager">📊 Менеджер</MenuItem>
+                    <MenuItem value="admin">⚙️ Администратор</MenuItem>
+                  </TextField>
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    p: 1,
+                    borderRadius: 1,
+                    backgroundColor: 'white'
+                  }}>
+                    <Box>
+                      <Typography variant="body2" fontWeight="500">
+                        Статус аккаунта
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {(isViewMode ? user.is_active : formData?.is_active) 
+                            ? 'Активен • Может войти в систему' 
+                            : 'Неактивен • Доступ заблокирован'}
+                      </Typography>
+                    </Box>
+                    {isViewMode ? ( // 🔥 В режиме просмотра показываем только чип
+                        <Chip
+                            label={(isViewMode ? user.is_active : formData?.is_active) ? 'Активен' : 'Неактивен'}
+                            color={(isViewMode ? user.is_active : formData?.is_active) ? 'success' : 'error'}
+                            icon={<Lock fontSize="small" />}
+                        />
+                    ) : (
+                        <Switch
+                            checked={formData?.is_active || false}
+                            onChange={(e) => handleChange('is_active', e.target.checked)}
+                            color="success"
+                        />
+                    )}
+                  </Box>
+                </Grid>
+              </Grid>
+            </Box>
+
+            {/* Дата регистрации */}
+            {user?.created_at && (
+              <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <Typography variant="caption" color="text.secondary">
+                  Дата регистрации: {new Date(user.created_at).toLocaleDateString('ru-RU')}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
+      </DialogContent>
+
+      <DialogActions sx={{ 
+        p: 3, 
+        pt: 0,
+        gap: 2,
+        justifyContent: 'center'
+      }}>
+        <Button 
+          onClick={onClose}
+          variant="outlined"
+          sx={{ 
+            borderRadius: 2, 
+            px: 4,
+            py: 1,
+            minWidth: 120,
+            borderColor: 'grey.300',
+            '&:hover': {
+              borderColor: 'grey.400',
+              backgroundColor: 'grey.50'
+            }
+          }}
+        >
+          {isViewMode ? 'Закрыть' : 'Отмена'}
+        </Button>
+        {!isViewMode && ( // 🔥 Скрываем кнопку "Сохранить" в режиме просмотра
+          <Button 
+            onClick={onSave}
+            variant="contained"
+            sx={{ 
+              borderRadius: 2, 
+              px: 4,
+              py: 1,
+              minWidth: 180,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              '&:hover': {
+                transform: 'translateY(-1px)',
+                boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
+                background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)'
+              },
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Сохранить изменения
+          </Button>
+        )}
+      </DialogActions>
+    </Dialog>
   );
 };
 

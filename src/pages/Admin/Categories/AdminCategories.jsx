@@ -24,7 +24,8 @@ import {
   IconButton,
   Paper,
   alpha,
-  Fade
+  Fade,
+  useMediaQuery
 } from '@mui/material';
 import {
   Add,
@@ -43,7 +44,7 @@ import {
 } from '@mui/icons-material';
 import { adminService } from '../../../services/adminService';
 
-// Функция для получения иконки по названию категории
+// ... (Функции getCategoryIcon и getCategoryColor оставляем без изменений)
 const getCategoryIcon = (categoryName) => {
   const iconMap = {
     'Смартфоны': <Smartphone sx={{ fontSize: 28 }} />,
@@ -74,6 +75,7 @@ const getCategoryColor = (categoryName, theme) => {
   return colorMap[categoryName] || theme.palette.primary.main;
 };
 
+// ... (CategoryCard оставляем без изменений, он адаптивен благодаря Grid)
 const CategoryCard = ({ category, onEdit, onDelete, theme }) => {
   const color = getCategoryColor(category.name, theme);
   
@@ -133,7 +135,10 @@ const CategoryCard = ({ category, onEdit, onDelete, theme }) => {
             background: `linear-gradient(135deg, ${color} 0%, ${theme.palette.primary.dark} 100%)`,
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
+            WebkitTextFillColor: 'transparent',
+            minHeight: '64px', // Фиксируем высоту заголовка для выравнивания
+            display: 'flex',
+            alignItems: 'center'
           }}>
             {category.name}
           </Typography>
@@ -163,15 +168,15 @@ const CategoryCard = ({ category, onEdit, onDelete, theme }) => {
             borderRadius: 2,
             border: `1px solid ${theme.palette.divider}`
           }}>
-            <Box>
+            <Box sx={{ overflow: 'hidden', maxWidth: '60%' }}>
               <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
                 SLUG:
               </Typography>
-              <Typography variant="body2" sx={{ 
+              <Typography variant="body2" noWrap sx={{ 
                 fontFamily: 'monospace', 
                 fontWeight: 600,
                 color: theme.palette.text.primary
-              }}>
+              }} title={category.slug}>
                 {category.slug}
               </Typography>
             </Box>
@@ -239,6 +244,9 @@ const CategoryCard = ({ category, onEdit, onDelete, theme }) => {
 
 const AdminCategories = () => {
   const theme = useTheme();
+  // Хук для определения размера экрана
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -251,6 +259,7 @@ const AdminCategories = () => {
   });
   const [saveLoading, setSaveLoading] = useState(false);
 
+  // ... (Остальные функции fetchCategories, handleAddCategory и т.д. без изменений)
   const fetchCategories = async () => {
     try {
       setLoading(true);
@@ -303,12 +312,10 @@ const AdminCategories = () => {
       setSaveLoading(true);
       setError(null);
 
-      // Валидация данных
       if (!formData.name.trim() || !formData.slug.trim()) {
         throw new Error('Название и slug категории обязательны для заполнения');
       }
 
-      // Подготовка данных для отправки
       const categoryData = {
         name: formData.name.trim(),
         slug: formData.slug.trim(),
@@ -378,10 +385,12 @@ const AdminCategories = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
-      {/* Заголовок и статистика */}
+    // Уменьшил padding по вертикали на мобильных
+    <Container maxWidth="xl" sx={{ py: { xs: 2, md: 3 } }}>
+      
+      {/* HEADER CARD */}
       <Paper sx={{ 
-        p: 4, 
+        p: { xs: 3, md: 4 }, // Адаптивный padding
         mb: 4,
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         color: 'white',
@@ -393,17 +402,30 @@ const AdminCategories = () => {
           <Category sx={{ fontSize: 200 }} />
         </Box>
         
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', md: 'row' }, // Колонка на мобильных
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', md: 'center' }, // Выравнивание
+          position: 'relative',
+          gap: { xs: 3, md: 0 } // Отступ между блоками на мобильных
+        }}>
           <Box>
-            <Typography variant="h3" gutterBottom sx={{ fontWeight: 800 }}>
+            <Typography variant={isMobile ? "h4" : "h3"} gutterBottom sx={{ fontWeight: 800 }}>
               Управление категориями
             </Typography>
-            <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400 }}>
+            <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400, fontSize: { xs: '1rem', md: '1.25rem' } }}>
               Создавайте и редактируйте категории товаров
             </Typography>
           </Box>
           
-          <Box sx={{ display: 'flex', gap: 3, textAlign: 'center' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 3, 
+            textAlign: { xs: 'left', md: 'center' },
+            width: { xs: '100%', md: 'auto' },
+            justifyContent: { xs: 'space-around', md: 'flex-end' } // Растягиваем статистику на мобильных
+          }}>
             <Box>
               <Typography variant="h4" sx={{ fontWeight: 800 }}>
                 {categories.length}
@@ -424,13 +446,25 @@ const AdminCategories = () => {
         </Box>
       </Paper>
 
-      {/* Панель управления */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+      {/* CONTROLS PANEL */}
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', md: 'row' }, // Колонка на мобильных
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'stretch', md: 'center' }, // Растянуть на мобильных
+        mb: 4,
+        gap: { xs: 2, md: 0 }
+      }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' }, // Кнопки в колонку на очень маленьких экранах
+          gap: 2 
+        }}>
           <Button
             variant="contained"
             startIcon={<Add />}
             onClick={handleAddCategory}
+            fullWidth={isMobile} // На всю ширину на мобильных
             sx={{
               borderRadius: 3,
               px: 4,
@@ -451,6 +485,7 @@ const AdminCategories = () => {
             variant="outlined"
             startIcon={<Refresh />}
             onClick={fetchCategories}
+            fullWidth={isMobile}
             sx={{
               borderRadius: 3,
               px: 3,
@@ -466,18 +501,25 @@ const AdminCategories = () => {
           </Button>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 2,
+          flexWrap: 'wrap', // Разрешить перенос чипов
+          justifyContent: { xs: 'flex-start', md: 'flex-end' }
+        }}>
           <Chip
             icon={<Category />}
             label={`Основные: ${mainCategories}`}
             variant="outlined"
             color="primary"
+            sx={{ flexGrow: { xs: 1, sm: 0 } }} // Растягивать на очень маленьких экранах
           />
           <Chip
             icon={<TrendingUp />}
             label={`Подкатегории: ${subCategories}`}
             variant="outlined"
             color="secondary"
+            sx={{ flexGrow: { xs: 1, sm: 0 } }}
           />
         </Box>
       </Box>
@@ -499,7 +541,7 @@ const AdminCategories = () => {
       {/* Сетка категорий */}
       {categories.length === 0 ? (
         <Paper sx={{ 
-          p: 8, 
+          p: { xs: 4, md: 8 }, 
           textAlign: 'center',
           borderRadius: 3,
           background: alpha(theme.palette.background.paper, 0.5)
@@ -522,7 +564,7 @@ const AdminCategories = () => {
           </Button>
         </Paper>
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, md: 3 }}> {/* Уменьшенный spacing на мобильных */}
           {categories.map((category) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={category.id}>
               <CategoryCard 
@@ -536,30 +578,19 @@ const AdminCategories = () => {
         </Grid>
       )}
 
-      {error && (
-        <Alert 
-          severity="error" 
-          sx={{ mb: 3, borderRadius: 3 }}
-          action={
-            <Button color="inherit" size="small" onClick={() => setError(null)}>
-              Скрыть
-            </Button>
-          }
-        >
-          {error}
-        </Alert>
-      )}
-
       {/* Диалог редактирования */}
       <Dialog 
         open={openDialog} 
         onClose={() => !saveLoading && setOpenDialog(false)} 
         maxWidth="sm" 
         fullWidth
+        // Делаем диалог на весь экран на очень маленьких устройствах, если нужно
+        // fullScreen={isMobile} // Раскомментируйте, если хотите fullScreen на мобильных
         PaperProps={{ 
           sx: { 
-            borderRadius: 3,
-            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
+            borderRadius: { xs: 0, sm: 3 }, // Убираем скругление в fullScreen режиме
+            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+            m: { xs: 1, sm: 2 } // Отступы самого диалога от краев экрана
           } 
         }}
       >
@@ -567,12 +598,13 @@ const AdminCategories = () => {
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           color: 'white',
           fontWeight: 700,
-          textAlign: 'center'
+          textAlign: 'center',
+          py: 2
         }}>
-          {editingCategory ? '✏️ Редактирование категории' : '➕ Новая категория'}
+          {editingCategory ? '✏️ Редактирование' : '➕ Новая категория'}
         </DialogTitle>
         
-        <DialogContent sx={{ p: 4 }}>
+        <DialogContent sx={{ p: { xs: 2, sm: 4 }, mt: 2 }}>
           <TextField
             autoFocus
             name="name"
@@ -581,7 +613,7 @@ const AdminCategories = () => {
             value={formData.name}
             onChange={handleInputChange}
             onBlur={generateSlugFromName}
-            sx={{ mb: 3 }}
+            sx={{ mb: 3, mt: 1 }}
             InputProps={{
               sx: { borderRadius: 2 }
             }}
@@ -600,7 +632,7 @@ const AdminCategories = () => {
               sx: { borderRadius: 2 }
             }}
             error={!formData.slug.trim()}
-            helperText={!formData.slug.trim() ? 'Обязательное поле' : 'Уникальный идентификатор для URL'}
+            helperText={!formData.slug.trim() ? 'Обязательное поле' : 'Уникальный идентификатор'}
           />
           
           <FormControl fullWidth sx={{ mb: 2 }}>
@@ -624,11 +656,12 @@ const AdminCategories = () => {
           </FormControl>
         </DialogContent>
         
-        <DialogActions sx={{ p: 3, gap: 2 }}>
+        <DialogActions sx={{ p: { xs: 2, sm: 3 }, gap: 1, flexDirection: { xs: 'column-reverse', sm: 'row' } }}>
           <Button 
             onClick={() => setOpenDialog(false)}
             variant="outlined"
             disabled={saveLoading}
+            fullWidth={isMobile}
             sx={{ borderRadius: 2, px: 4 }}
           >
             Отмена
@@ -637,6 +670,7 @@ const AdminCategories = () => {
             variant="contained"
             onClick={handleSaveCategory}
             disabled={saveLoading || !formData.name.trim() || !formData.slug.trim()}
+            fullWidth={isMobile}
             sx={{ 
               borderRadius: 2, 
               px: 4,

@@ -29,7 +29,7 @@ import {
   FilterList,
   Delete,
   Edit,
-  Visibility, // Добавляем иконку просмотра
+  Visibility,
   Image,
   Category,
   Inventory,
@@ -37,7 +37,7 @@ import {
   BrandingWatermark
 } from '@mui/icons-material';
 import { adminService } from '../../../services/adminService';
-import { useNavigate } from 'react-router-dom'; // Добавляем useNavigate для перехода к товару
+import { useNavigate } from 'react-router-dom';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -52,8 +52,10 @@ const AdminProducts = () => {
   const [sortField, setSortField] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [isViewMode, setIsViewMode] = useState(false); // 🔥 НОВОЕ СОСТОЯНИЕ ДЛЯ РЕЖИМА ПРОСМОТРА
+
   const theme = useTheme();
-  const navigate = useNavigate(); // Хук для навигации
+  const navigate = useNavigate();
 
   const fetchCategories = async () => {
     try {
@@ -143,25 +145,32 @@ const AdminProducts = () => {
     }
   };
 
+  // 🔥 АДАПТИРОВАНА: Устанавливает режим редактирования
   const handleEdit = (product) => {
     setEditingProduct(product);
+    setIsViewMode(false); 
     setOpenDialog(true);
   };
 
-  // Функция для просмотра товара
+  // 🔥 АДАПТИРОВАНА: Устанавливает режим просмотра
   const handleView = (product) => {
-    // Переходим на страницу товара
-    navigate(`/product/${product.id}`);
+    setEditingProduct(product);
+    setIsViewMode(true); 
+    setOpenDialog(true);
+    // Предыдущая логика navigate(`/product/${product.id}`) удалена для использования модального окна
   };
 
+  // 🔥 АДАПТИРОВАНА: Устанавливает режим создания
   const handleCreate = () => {
     setEditingProduct(null);
+    setIsViewMode(false); 
     setOpenDialog(true);
   };
 
   const handleDialogClose = () => {
     setOpenDialog(false);
     setEditingProduct(null);
+    setIsViewMode(false); // Сброс режима при закрытии
   };
 
   const showSnackbar = (message, severity = 'success') => {
@@ -387,11 +396,11 @@ const AdminProducts = () => {
           </Box>
         ) : (
           <Box sx={{ overflowX: 'auto' }}>
-            <Box sx={{ minWidth: 750 }}> {/* Увеличиваем минимальную ширину для дополнительной кнопки */}
+            <Box sx={{ minWidth: 750 }}>
               {/* Заголовок таблицы */}
               <Box sx={{ 
                 display: 'grid',
-                gridTemplateColumns: '60px 1fr 100px 80px 100px 140px', // Увеличиваем ширину колонки действий
+                gridTemplateColumns: '60px 1fr 100px 80px 100px 140px',
                 gap: 1,
                 p: 1.5,
                 backgroundColor: alpha(theme.palette.primary.main, 0.05),
@@ -411,7 +420,7 @@ const AdminProducts = () => {
                   key={product.id}
                   sx={{
                     display: 'grid',
-                    gridTemplateColumns: '60px 1fr 100px 80px 100px 140px', // Увеличиваем ширину колонки действий
+                    gridTemplateColumns: '60px 1fr 100px 80px 100px 140px',
                     gap: 1,
                     p: 1.5,
                     alignItems: 'center',
@@ -468,7 +477,7 @@ const AdminProducts = () => {
                     variant="outlined"
                   />
 
-                  {/* Действия - добавляем кнопку просмотра */}
+                  {/* Действия */}
                   <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
                     <IconButton
                       size="small"
@@ -511,13 +520,14 @@ const AdminProducts = () => {
         )}
       </Paper>
 
-      {/* Диалог редактирования/создания */}
+      {/* Диалог редактирования/создания/просмотра */}
       <ProductDialog
         open={openDialog}
         onClose={handleDialogClose}
         onSubmit={handleSubmit}
         product={editingProduct}
         categories={categories}
+        isViewMode={isViewMode} // 🔥 ПЕРЕДАЕМ isViewMode
       />
 
       <Snackbar
@@ -538,8 +548,8 @@ const AdminProducts = () => {
   );
 };
 
-// ProductDialog остается без изменений
-const ProductDialog = ({ open, onClose, onSubmit, product, categories }) => {
+// 🔥 АДАПТИРОВАННЫЙ ProductDialog
+const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMode }) => {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -576,6 +586,7 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (isViewMode) return; // Защита от отправки в режиме просмотра
     const submitData = {
       ...formData,
       images: formData.image_url ? [formData.image_url] : []
@@ -583,9 +594,13 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories }) => {
     onSubmit(submitData);
   };
 
-  const handleImageChange = (e) => {
-    setFormData({ ...formData, image_url: e.target.value });
+  const handleChange = (e) => {
+    // Разрешаем изменения только если это не режим просмотра
+    if (!isViewMode) {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    }
   };
+
 
   return (
     <Dialog 
@@ -606,93 +621,110 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories }) => {
         fontWeight: 'bold',
         p: 2
       }}>
-        {product ? '✏️ Редактировать товар' : '➕ Добавить товар'}
+        {isViewMode 
+            ? '👁️ Просмотр товара' 
+            : product ? '✏️ Редактировать товар' : '➕ Добавить товар'}
       </DialogTitle>
       
       <form onSubmit={handleSubmit}>
         <DialogContent sx={{ p: 2 }}>
           <Grid container spacing={2}>
+            {/* Название */}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Название товара"
+                name="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={handleChange}
                 required
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
                       <Inventory />
                     </InputAdornment>
-                  )
+                  ),
+                  readOnly: isViewMode, // 🔥 Только для чтения в режиме просмотра
                 }}
               />
             </Grid>
             
+            {/* Цена */}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Цена"
+                name="price"
                 type="number"
                 value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                onChange={handleChange}
                 required
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
                       <LocalOffer />
                     </InputAdornment>
-                  )
+                  ),
+                  readOnly: isViewMode, // 🔥 Только для чтения
                 }}
               />
             </Grid>
 
+            {/* Бренд */}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Бренд"
+                name="brand"
                 value={formData.brand}
-                onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                onChange={handleChange}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
                       <BrandingWatermark />
                     </InputAdornment>
-                  )
+                  ),
+                  readOnly: isViewMode, // 🔥 Только для чтения
                 }}
               />
             </Grid>
 
+            {/* Количество на складе */}
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Количество на складе"
+                name="stock"
                 type="number"
                 value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                onChange={handleChange}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
                       <Inventory />
                     </InputAdornment>
-                  )
+                  ),
+                  readOnly: isViewMode, // 🔥 Только для чтения
                 }}
               />
             </Grid>
 
+            {/* Категория */}
             <Grid item xs={12}>
               <TextField
                 fullWidth
                 label="Категория"
+                name="category_slug"
                 select
                 value={formData.category_slug}
-                onChange={(e) => setFormData({ ...formData, category_slug: e.target.value })}
+                onChange={handleChange}
+                disabled={isViewMode} // 🔥 Отключаем SELECT в режиме просмотра
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
                       <Category />
                     </InputAdornment>
-                  )
+                  ),
                 }}
               >
                 {categories.map(category => (
@@ -703,30 +735,38 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories }) => {
               </TextField>
             </Grid>
 
+            {/* Описание */}
             <Grid item xs={12}>
               <TextField
                 fullWidth
                 label="Описание"
+                name="description"
                 multiline
                 rows={3}
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={handleChange}
+                InputProps={{
+                    readOnly: isViewMode, // 🔥 Только для чтения
+                }}
               />
             </Grid>
 
+            {/* URL изображения */}
             <Grid item xs={12}>
               <TextField
                 fullWidth
                 label="URL изображения"
+                name="image_url"
                 value={formData.image_url}
-                onChange={handleImageChange}
+                onChange={handleChange}
                 helperText="Введите URL основного изображения товара"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
                       <Image />
                     </InputAdornment>
-                  )
+                  ),
+                  readOnly: isViewMode, // 🔥 Только для чтения
                 }}
               />
             </Grid>
@@ -758,11 +798,13 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories }) => {
 
         <DialogActions sx={{ p: 2, pt: 0 }}>
           <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 1 }}>
-            Отмена
+            {isViewMode ? 'Закрыть' : 'Отмена'} {/* 🔥 Изменение текста кнопки */}
           </Button>
-          <Button type="submit" variant="contained" sx={{ borderRadius: 1 }}>
-            {product ? 'Сохранить изменения' : 'Создать товар'}
-          </Button>
+          {!isViewMode && ( // 🔥 Скрываем кнопку "Сохранить" в режиме просмотра
+            <Button type="submit" variant="contained" sx={{ borderRadius: 1 }}>
+              {product ? 'Сохранить изменения' : 'Создать товар'}
+            </Button>
+          )}
         </DialogActions>
       </form>
     </Dialog>
