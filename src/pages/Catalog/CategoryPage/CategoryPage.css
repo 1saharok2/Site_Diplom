@@ -73,10 +73,10 @@
   outline: none;
 }
 
-/* Контейнер для кнопки возврата - ПЕРЕМЕЩЕН НИЖЕ */
+/* Контейнер для кнопки возврата */
 .back-button-container {
   display: block;
-  margin-top: 2rem; /* Увеличено расстояние сверху */
+  margin-top: 2rem;
   margin-bottom: 1rem;
 }
 
@@ -103,6 +103,7 @@
   box-shadow: 0 2px 8px rgba(108,117,125,0.3);
 }
 
+/* Стили для карточки фильтров */
 .filters-card {
   top: 20px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.08);
@@ -122,7 +123,6 @@
 
 .filters-card .card-body {
   padding: 1.25rem;
-  /* Убрано ограничение по высоте и скролл */
   overflow-y: visible;
 }
 
@@ -147,7 +147,7 @@
   align-items: center;
 }
 
-/* Стили для фильтров как в макете */
+/* Стили для фильтров */
 .filter-toggle-group {
   display: flex;
   flex-direction: column;
@@ -284,7 +284,7 @@ input:checked + .slider:before {
   cursor: pointer;
 }
 
-/* Уменьшенные поля ввода цены */
+/* Поля ввода цены */
 .price-inputs {
   display: flex;
   gap: 0.5rem;
@@ -308,8 +308,8 @@ input:checked + .slider:before {
 }
 
 .brands-list {
-  max-height: none; /* Убрано ограничение высоты */
-  overflow-y: visible; /* Убрана прокрутка */
+  max-height: none;
+  overflow-y: visible;
 }
 
 .brand-item {
@@ -392,38 +392,362 @@ input:checked + .slider:before {
 }
 
 /* Мобильная оптимизация фильтров */
-@media (max-width: 992px) {
+@media (max-width: 991.98px) {
+  .category-page {
+    padding: 12px 8px;
+    overflow-x: hidden;
+  }
+  
   .filters-column {
     padding-right: 0;
     margin-bottom: 1rem;
+    width: 100%;
   }
   
   .products-column {
     padding-left: 0;
+    width: 100%;
   }
   
   .filters-card {
     position: static;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    box-sizing: border-box;
   }
   
-  /* На мобильных кнопка ближе к фильтрам */
   .back-button-container {
     margin-top: 2rem;
   }
   
-  /* Мобильная версия фильтров */
-  .filters-card .card-body {
-    padding: 1rem;
+  /* Улучшенная мобильная версия фильтров */
+  .filters-card {
+    border-radius: 16px !important;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #e1e5e9 !important;
+    width: calc(100% - 16px);
+    margin-left: 8px;
+    margin-right: 8px;
   }
-  
+
+  .filters-card-header {
+    padding: 20px 20px 16px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white;
+    border-bottom: none !important;
+    position: relative;
+  }
+
+  .filters-title {
+    color: white !important;
+    font-weight: 700;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .active-filters-badge {
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: #667eea !important;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-left: auto;
+  }
+
+  .filters-card-body {
+    padding: 0 16px 16px !important;
+    max-height: 60vh;
+    overflow-y: auto;
+    background: #fafbfc;
+    box-sizing: border-box;
+  }
+
+  .filters-content {
+    padding-top: 8px;
+  }
+
   .filter-group {
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e8ecef;
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    box-sizing: border-box;
   }
-  
-  .filter-group h6 {
+
+  .filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+  }
+
+  .filter-header:hover {
+    opacity: 0.8;
+  }
+
+  .filter-title {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 0.95rem;
+    margin: 0;
+    flex: 1;
+  }
+
+  .filter-caret {
+    color: #667eea;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+
+  .price-range-value {
     font-size: 0.85rem;
-    margin-bottom: 0.5rem;
+    color: #718096;
+    font-weight: 500;
+    background: #f7fafc;
+    padding: 4px 10px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  /* Улучшенные элементы форм для мобильных */
+  .filter-toggle-item,
+  .specification-item-simple,
+  .brand-item {
+    min-height: 52px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f1f3f4;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .filter-toggle-item:last-child,
+  .specification-item-simple:last-child,
+  .brand-item:last-child {
+    border-bottom: none;
+  }
+
+  .spec-label-simple,
+  .brand-item .form-check-label {
+    font-size: 0.9rem;
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .spec-text,
+  .brand-name {
+    color: #2d3748;
+    font-weight: 500;
+  }
+
+  .spec-count,
+  .brand-count {
+    background: #edf2f7;
+    color: #4a5568;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    min-width: 40px;
+    text-align: center;
+  }
+
+  /* Улучшенные кнопки управления фильтрами */
+  .filters-header-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 8px;
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+
+  .clear-filters-btn {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 10px 16px;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .clear-filters-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .clear-filters-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  .expand-all-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .expand-all-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Поля ввода цены */
+  .price-inputs-container {
+    padding-top: 12px;
+    width: 100%;
+  }
+
+  .price-inputs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .price-input-group {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .price-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #718096;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .price-input {
+    width: 100% !important;
+    padding: 12px !important;
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    font-size: 1rem !important;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .price-input:focus {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+  }
+
+  /* Пресеты цен */
+  .price-presets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .price-preset-btn {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 8px;
+    font-size: 0.8rem;
+    color: #4a5568;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    min-width: 0;
+  }
+
+  .price-preset-btn:hover {
+    border-color: #667eea;
+    background: #f7fafc;
+    transform: translateY(-1px);
+  }
+
+  /* Переключатели */
+  .switch-container {
+    padding: 16px 0 8px;
+    width: 100%;
+  }
+
+  .switch {
+    width: 52px;
+    height: 28px;
+  }
+
+  .slider {
+    border-radius: 28px;
+  }
+
+  .slider:before {
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(24px);
+  }
+
+  .switch-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #2d3748;
+  }
+
+  /* Подзаголовки в фильтрах */
+  .filter-subtitle {
+    font-size: 0.9rem;
+    color: #4a5568;
+    font-weight: 600;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f3f4;
+  }
+
+  /* Разделители */
+  .filter-divider {
+    margin: 20px 0;
+    border: none;
+    border-top: 1px solid #e8ecef;
+    opacity: 0.6;
   }
 }
 
@@ -445,9 +769,8 @@ input:checked + .slider:before {
     padding: 0.375rem 0;
   }
   
-  /* Улучшенная мобильная версия фильтров */
   .filters-card .card-body {
-    padding: 0.75rem;
+    padding: 0 12px 12px !important;
   }
   
   .filter-group {
@@ -462,7 +785,7 @@ input:checked + .slider:before {
   
   .specification-item-simple {
     padding: 0.25rem 0;
-    min-height: 44px; /* Touch-friendly размер */
+    min-height: 44px;
     display: flex;
     align-items: center;
   }
@@ -481,11 +804,22 @@ input:checked + .slider:before {
     min-width: 20px;
     min-height: 20px;
   }
+
+  /* Улучшенные кнопки на очень маленьких экранах */
+  .filters-header-controls {
+    gap: 8px;
+  }
+
+  .clear-filters-btn,
+  .expand-all-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
 }
 
 @media (max-width: 576px) {
   .category-page {
-    padding: 8px;
+    padding: 8px 4px;
   }
   
   .products-grid {
@@ -519,7 +853,6 @@ input:checked + .slider:before {
     padding: 0.25rem 0;
   }
   
-  /* Адаптация полей ввода цены для мобильных */
   .price-inputs {
     max-width: 100%;
   }
@@ -529,14 +862,18 @@ input:checked + .slider:before {
     flex: 1;
   }
   
-  /* На маленьких экранах меньше отступ */
   .back-button-container {
     margin-top: 2rem;
   }
   
-  /* Максимальная мобильная оптимизация */
+  .filters-card {
+    width: calc(100% - 8px);
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+
   .filters-card .card-body {
-    padding: 0.5rem;
+    padding: 0 8px 8px !important;
   }
   
   .filter-group {
@@ -551,7 +888,7 @@ input:checked + .slider:before {
   
   .specification-item-simple {
     padding: 0.375rem 0;
-    min-height: 48px; /* Еще больше для удобства */
+    min-height: 48px;
   }
   
   .spec-label-simple {
@@ -567,14 +904,17 @@ input:checked + .slider:before {
     font-size: 0.75rem;
   }
   
-  /* Улучшенные кнопки для мобильных */
+  .price-presets {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
   .price-presets button {
     min-height: 44px;
     padding: 8px 16px;
     font-size: 0.8rem;
   }
   
-  /* Мобильная оптимизация сортировки */
   .sorting-card .card-body {
     padding: 0.75rem;
   }
@@ -582,6 +922,36 @@ input:checked + .slider:before {
   .sort-select-custom {
     min-height: 44px;
     font-size: 0.85rem;
+  }
+
+  /* Вертикальное расположение кнопок на очень маленьких экранах */
+  .filters-header-controls {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .clear-filters-btn,
+  .expand-all-btn {
+    width: 100%;
+    margin: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .filters-card-header {
+    padding: 16px 12px 12px !important;
+  }
+
+  .filters-title {
+    font-size: 1.1rem;
+  }
+
+  .filter-group {
+    padding: 12px;
+  }
+
+  .price-presets {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -685,34 +1055,9 @@ input:checked + .slider:before {
   font-weight: 600;
 }
 
-/* Добавим визуальную галочку рядом */
-.filter-toggle-item input[type="checkbox"]:checked + label::after {
-  content: "✔";
-  color: #007bff;
-  font-size: 0.8rem;
-  margin-left: 6px;
-}
-
 /* При наведении на элемент */
 .filter-toggle-item:hover label {
   color: #0056b3;
-}
-
-/* Для радио-кнопок (наличие) */
-.filter-toggle-item input[type="radio"]:checked + label::after {
-  content: "•";
-  color: #007bff;
-  font-weight: bold;
-  margin-left: 6px;
-}
-
-/* Для брендов — флажок рядом с выбранным брендом */
-.brand-item .form-check-input:checked + .form-check-label::after {
-  content: "✔";
-  color: #007bff;
-  font-size: 0.8rem;
-  margin-left: 6px;
-  font-weight: bold;
 }
 
 /* --- iOS стиль чекбоксов --- */
@@ -770,13 +1115,6 @@ input:checked + .slider:before {
 .form-check-input[type="checkbox"]:checked + .form-check-label {
   color: #007aff;
   font-weight: 500;
-}
-
-/* --- Убираем старые костыли (✔ рядом и прочее) --- */
-.filter-toggle-item input[type="checkbox"]:checked + label::after,
-.filter-toggle-item input[type="radio"]:checked + label::after,
-.brand-item .form-check-input:checked + .form-check-label::after {
-  content: none !important;
 }
 
 /* --- Остальные фильтры (радио, переключатели, структура) --- */
@@ -882,4 +1220,170 @@ input:checked + .slider:before {
 .price-presets button:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(0,123,255,0.3);
+}
+
+/* Анимации */
+.collapsible {
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Улучшенные чекбоксы для всех устройств */
+.form-check-input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #cbd5e0;
+  border-radius: 8px;
+  background: white;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.form-check-input[type="checkbox"]:checked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+}
+
+.form-check-input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 6px;
+  height: 10px;
+  border-right: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: translate(-50%, -60%) rotate(45deg);
+}
+
+/* Ховер-эффекты */
+.filter-toggle-item:hover,
+.specification-item-simple:hover,
+.brand-item:hover {
+  background: #f8fafc;
+  border-radius: 8px;
+  margin: 0 -8px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+/* Плавная прокрутка */
+.filters-card-body {
+  scroll-behavior: smooth;
+}
+
+/* Убираем стандартные стили Bootstrap для лучшего контроля */
+.filters-card .form-check-input:focus {
+  box-shadow: none;
+}
+
+.filters-card .form-check-label {
+  cursor: pointer;
+}
+
+/* Новые классы для улучшенного мобильного интерфейса */
+.filter-header {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-caret {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  vertical-align: middle;
+  transform-origin: center;
+}
+
+.filter-caret[data-open="true"] {
+  transform: rotate(45deg);
+}
+
+.filters-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.active-filters-badge {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #667eea !important;
+  font-weight: 600;
+}
+
+.filters-header-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.price-inputs-container {
+  padding-top: 12px;
+}
+
+.price-input-group {
+  flex: 1;
+}
+
+.price-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #718096;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.price-preset-btn {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 8px;
+  font-size: 0.8rem;
+  color: #4a5568;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.filter-subtitle {
+  font-size: 0.9rem;
+  color: #4a5568;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.spec-text {
+  color: #2d3748;
+  font-weight: 500;
+}
+
+.brand-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.brand-name {
+  color: #2d3748;
+  font-weight: 500;
+}
+
+/* Убираем старые костыли */
+.filter-toggle-item input[type="checkbox"]:checked + label::after,
+.filter-toggle-item input[type="radio"]:checked + label::after,
+.brand-item .form-check-input:checked + .form-check-label::after {
+  content: none !important;
 }

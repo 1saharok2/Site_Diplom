@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Form, Badge, Button } from 'react-bootstrap';
 
 const FiltersCard = ({ 
@@ -27,19 +27,46 @@ const FiltersCard = ({
   setHasReview = () => {},
   getBrandCount = () => 0
 }) => {
+  // Определяем мобильное устройство
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 992);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  // Состояния сворачивания секций фильтров
-  const [isExtraOpen, setIsExtraOpen] = useState(false);
-  const [isStockOpen, setIsStockOpen] = useState(false);
-  const [isPriceOpen, setIsPriceOpen] = useState(false);
-  const [isBrandsOpen, setIsBrandsOpen] = useState(false);
-  const [isTechSpecsOpen, setIsTechSpecsOpen] = useState(false);
-  const [isMemoryOpen, setIsMemoryOpen] = useState(false);
-  const [isScreenOpen, setIsScreenOpen] = useState(false);
-  const [isCamerasOpen, setIsCamerasOpen] = useState(false);
-  const [isCpuOpen, setIsCpuOpen] = useState(false);
-  const [isBatteryOpen, setIsBatteryOpen] = useState(false);
-  const [isExtraSpecsOpen, setIsExtraSpecsOpen] = useState(false);
+  // Состояния сворачивания секций фильтров - на мобильных изначально свернуты
+  const [isExtraOpen, setIsExtraOpen] = useState(!isMobile);
+  const [isStockOpen, setIsStockOpen] = useState(!isMobile);
+  const [isPriceOpen, setIsPriceOpen] = useState(!isMobile);
+  const [isBrandsOpen, setIsBrandsOpen] = useState(!isMobile);
+  const [isTechSpecsOpen, setIsTechSpecsOpen] = useState(!isMobile);
+  const [isMemoryOpen, setIsMemoryOpen] = useState(!isMobile);
+  const [isScreenOpen, setIsScreenOpen] = useState(!isMobile);
+  const [isCamerasOpen, setIsCamerasOpen] = useState(!isMobile);
+  const [isCpuOpen, setIsCpuOpen] = useState(!isMobile);
+  const [isBatteryOpen, setIsBatteryOpen] = useState(!isMobile);
+  const [isExtraSpecsOpen, setIsExtraSpecsOpen] = useState(!isMobile);
+
+  // Функция для разворачивания/сворачивания всех секций
+  const toggleAllSections = (open) => {
+    setIsExtraOpen(open);
+    setIsStockOpen(open);
+    setIsPriceOpen(open);
+    setIsBrandsOpen(open);
+    setIsTechSpecsOpen(open);
+    setIsMemoryOpen(open);
+    setIsScreenOpen(open);
+    setIsCamerasOpen(open);
+    setIsCpuOpen(open);
+    setIsBatteryOpen(open);
+    setIsExtraSpecsOpen(open);
+  };
 
   const handlePriceRangeChange = (index, value) => {
     const parsed = value === '' ? '' : parseInt(value, 10);
@@ -83,7 +110,7 @@ const FiltersCard = ({
     if (values.length === 0) return null;
     return (
       <div className="mb-2">
-        <div className="fw-semibold mb-1">{getDisplayName(key)}</div>
+        <div className="fw-semibold mb-1 filter-subtitle">{getDisplayName(key)}</div>
         {values.map(value => {
           const count = getSpecificationCount(key, value);
           if (!count || count <= 0) return null;
@@ -99,7 +126,7 @@ const FiltersCard = ({
                 className="spec-checkbox-simple mb-0"
               />
               <label htmlFor={fid} className="spec-label-simple">
-                <span>{value}</span>
+                <span className="spec-text">{value}</span>
                 <span className="spec-count">{count}</span>
               </label>
             </div>
@@ -120,44 +147,99 @@ const FiltersCard = ({
 
   return (
     <Card className="filters-card">
-      <Card.Header className="d-flex justify-content-between align-items-center">
-        <h5 className="mb-0">Фильтры</h5>
-        <div className="d-flex align-items-center gap-2">
-          {activeFiltersCount > 0 && (
-            <Badge bg="primary" className="me-2">
-              {activeFiltersCount}
-            </Badge>
-          )}
-          <Button 
-            variant="link" 
-            size="sm" 
-            onClick={clearAllFilters}
-            className="p-0 text-decoration-none text-primary"
-            disabled={activeFiltersCount === 0}
-          >
-            Сбросить все
-          </Button>
+      <Card.Header className="filters-card-header">
+        <div className="d-flex justify-content-between align-items-center">
+          <h5 className="mb-0 filters-title">
+            Фильтры
+            {activeFiltersCount > 0 && (
+              <Badge bg="primary" className="active-filters-badge">
+                {activeFiltersCount}
+              </Badge>
+            )}
+          </h5>
+          <div className="d-flex align-items-center gap-2">
+            {isMobile && (
+              <Button 
+                variant="outline-secondary" 
+                size="sm" 
+                onClick={() => toggleAllSections(true)}
+                className="expand-all-btn"
+              >
+                Развернуть
+              </Button>
+            )}
+            <Button 
+              variant="link" 
+              size="sm" 
+              onClick={clearAllFilters}
+              className="clear-filters-btn"
+              disabled={activeFiltersCount === 0}
+            >
+              Сбросить
+            </Button>
+          </div>
         </div>
       </Card.Header>
 
-      <Card.Body>
-        {/* local styles for caret and collapse animation */}
+      <Card.Body className="filters-card-body">
+        {/* Modern CSS styles */}
         <style>{`
-          .filter-caret{display:inline-block;width:6px;height:6px;margin-right:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .2s ease;vertical-align:middle;align-self:center;transform-origin:center}
-          .filter-caret[data-open="true"]{transform:rotate(45deg)}
-          .collapsible{overflow:hidden;transition:max-height .25s ease}
+          .filter-caret {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-right: 8px;
+            border-right: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            transform: rotate(-45deg);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            vertical-align: middle;
+            transform-origin: center;
+          }
+          .filter-caret[data-open="true"] {
+            transform: rotate(45deg);
+          }
+          .collapsible {
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          
+          /* Mobile optimizations */
+          @media (max-width: 991.98px) {
+            .filters-card {
+              border-radius: 12px;
+              margin-bottom: 16px;
+            }
+            .filters-card-header {
+              padding: 16px;
+            }
+            .filters-card-body {
+              padding: 0 16px 16px;
+              max-height: 60vh;
+              overflow-y: auto;
+            }
+            .filter-group {
+              margin-bottom: 20px;
+              padding-bottom: 16px;
+            }
+            .filter-toggle-item,
+            .specification-item-simple,
+            .brand-item {
+              min-height: 48px;
+              padding: 12px 0;
+            }
+          }
         `}</style>
-        <div>
+        
+        <div className="filters-content">
           {/* Доп. фильтры */}
           <div className="filter-group">
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <div className="d-flex align-items-center gap-2 cursor-pointer user-select-none" role="button" onClick={() => setIsExtraOpen(v => !v)}>
-                <span className="filter-caret" data-open={isExtraOpen}></span>
-                <h6 className="mb-0">Доп. фильтры</h6>
-              </div>
+            <div className="filter-header" role="button" onClick={() => setIsExtraOpen(v => !v)}>
+              <span className="filter-caret" data-open={isExtraOpen}></span>
+              <h6 className="filter-title">Доп. фильтры</h6>
             </div>
             <div className="collapsible" style={{maxHeight: isExtraOpen ? 1000 : 0}}>
-              <div className="filter-toggle-group pb-2">
+              <div className="filter-toggle-group">
                 <div className="filter-toggle-item">
                   <Form.Check
                     type="checkbox"
@@ -193,14 +275,12 @@ const FiltersCard = ({
 
           {/* Только в наличии */}
           <div className="filter-group">
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <div className="d-flex align-items-center gap-2 cursor-pointer user-select-none" role="button" onClick={() => setIsStockOpen(v => !v)}>
-                <span className="filter-caret" data-open={isStockOpen}></span>
-                <h6 className="mb-0">Наличие</h6>
-              </div>
+            <div className="filter-header" role="button" onClick={() => setIsStockOpen(v => !v)}>
+              <span className="filter-caret" data-open={isStockOpen}></span>
+              <h6 className="filter-title">Наличие</h6>
             </div>
             <div className="collapsible" style={{maxHeight: isStockOpen ? 200 : 0}}>
-              <div className="switch-container pb-2">
+              <div className="switch-container">
                 <label className="switch">
                   <input
                     type="checkbox"
@@ -217,48 +297,56 @@ const FiltersCard = ({
 
           {/* Цена */}
           <div className="filter-group">
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <div className="d-flex align-items-center gap-2 cursor-pointer user-select-none" role="button" onClick={() => setIsPriceOpen(v => !v)}>
-                <span className="filter-caret" data-open={isPriceOpen}></span>
-                <h6 className="mb-0">Цена, ₽</h6>
-              </div>
+            <div className="filter-header" role="button" onClick={() => setIsPriceOpen(v => !v)}>
+              <span className="filter-caret" data-open={isPriceOpen}></span>
+              <h6 className="filter-title">Цена, ₽</h6>
               <span className="price-range-value">
                 {Number(priceRange[0]).toLocaleString('ru-RU')} - {Number(priceRange[1]).toLocaleString('ru-RU')}
               </span>
             </div>
             <div className="collapsible" style={{maxHeight: isPriceOpen ? 500 : 0}}>
-              <div className="price-inputs d-flex gap-2 mb-2">
-                <Form.Control
-                  type="number"
-                  placeholder="От"
-                  value={priceRange[0]}
-                  onChange={(e) => handlePriceRangeChange(0, e.target.value)}
-                  min="0"
-                  max={maxPrice}
-                  size="sm"
-                />
-                <Form.Control
-                  type="number"
-                  placeholder="До"
-                  value={priceRange[1]}
-                  onChange={(e) => handlePriceRangeChange(1, e.target.value)}
-                  min="0"
-                  max={maxPrice}
-                  size="sm"
-                />
-              </div>
+              <div className="price-inputs-container">
+                <div className="price-inputs">
+                  <div className="price-input-group">
+                    <label htmlFor="price-min" className="price-label">От</label>
+                    <Form.Control
+                      type="number"
+                      id="price-min"
+                      placeholder="0"
+                      value={priceRange[0]}
+                      onChange={(e) => handlePriceRangeChange(0, e.target.value)}
+                      min="0"
+                      max={maxPrice}
+                      className="price-input"
+                    />
+                  </div>
+                  <div className="price-input-group">
+                    <label htmlFor="price-max" className="price-label">До</label>
+                    <Form.Control
+                      type="number"
+                      id="price-max"
+                      placeholder={maxPrice.toLocaleString('ru-RU')}
+                      value={priceRange[1]}
+                      onChange={(e) => handlePriceRangeChange(1, e.target.value)}
+                      min="0"
+                      max={maxPrice}
+                      className="price-input"
+                    />
+                  </div>
+                </div>
 
-              <div className="price-presets d-flex flex-wrap gap-2 pb-2">
-                {pricePresets.map((preset, idx) => (
-                  <Button
-                    key={idx}
-                    size="sm"
-                    variant="outline-primary"
-                    onClick={() => setPriceRange(preset)}
-                  >
-                    {preset[0].toLocaleString('ru-RU')} - {preset[1].toLocaleString('ru-RU')}
-                  </Button>
-                ))}
+                <div className="price-presets">
+                  {pricePresets.map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      className="price-preset-btn"
+                      onClick={() => setPriceRange(preset)}
+                    >
+                      {preset[0].toLocaleString('ru-RU')} - {preset[1].toLocaleString('ru-RU')}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -266,14 +354,12 @@ const FiltersCard = ({
           {/* Бренды */}
           {brands && brands.length > 0 && (
             <div className="filter-group">
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <div className="d-flex align-items-center gap-2 cursor-pointer user-select-none" role="button" onClick={() => setIsBrandsOpen(v => !v)}>
+              <div className="filter-header" role="button" onClick={() => setIsBrandsOpen(v => !v)}>
                 <span className="filter-caret" data-open={isBrandsOpen}></span>
-                <h6 className="mb-0">Бренды</h6>
+                <h6 className="filter-title">Бренды</h6>
               </div>
-            </div>
               <div className="collapsible" style={{maxHeight: isBrandsOpen ? 800 : 0}}>
-                <div className="brands-list pb-2">
+                <div className="brands-list">
                   {brands.map((brand) => {
                     const brandCount = getBrandCount ? getBrandCount(brand) : 0;
                     const id = `brand-${sanitizeId(brand)}`;
@@ -283,8 +369,8 @@ const FiltersCard = ({
                           type="checkbox"
                           id={id}
                           label={
-                            <div className="d-flex justify-content-between w-100">
-                              <span>{brand}</span>
+                            <div className="brand-label">
+                              <span className="brand-name">{brand}</span>
                               <span className="brand-count">{brandCount}</span>
                             </div>
                           }
@@ -299,7 +385,7 @@ const FiltersCard = ({
             </div>
           )}
 
-          {/* Отдельные группы характеристик без общего раздела */}
+          {/* Отдельные группы характеристик */}
           {specifications && Object.keys(specifications).length > 0 && (
             <>
               {/* Технические характеристики */}
@@ -309,14 +395,12 @@ const FiltersCard = ({
                 if (!available) return null;
                 return (
                   <div className="filter-group">
-                    <div className="d-flex align-items-center justify-content-between mb-2">
-                      <div className="d-flex align-items-center gap-2 cursor-pointer user-select-none" role="button" onClick={() => setIsTechSpecsOpen(v => !v)}>
-                        <span className="filter-caret" data-open={isTechSpecsOpen}></span>
-                        <h6 className="mb-0">Технические характеристики</h6>
-                      </div>
+                    <div className="filter-header" role="button" onClick={() => setIsTechSpecsOpen(v => !v)}>
+                      <span className="filter-caret" data-open={isTechSpecsOpen}></span>
+                      <h6 className="filter-title">Технические характеристики</h6>
                     </div>
                     <div className="collapsible" style={{maxHeight: isTechSpecsOpen ? 1000 : 0}}>
-                      <div className="specifications-list-simple pb-2">
+                      <div className="specifications-list-simple">
                         {keys.map(k => renderKeySection(k))}
                       </div>
                     </div>
@@ -331,14 +415,12 @@ const FiltersCard = ({
                 if (!available) return null;
                 return (
                   <div className="filter-group">
-                    <div className="d-flex align-items-center justify-content-between mb-2">
-                      <div className="d-flex align-items-center gap-2 cursor-pointer user-select-none" role="button" onClick={() => setIsMemoryOpen(v => !v)}>
-                        <span className="filter-caret" data-open={isMemoryOpen}></span>
-                        <h6 className="mb-0">Память</h6>
-                      </div>
+                    <div className="filter-header" role="button" onClick={() => setIsMemoryOpen(v => !v)}>
+                      <span className="filter-caret" data-open={isMemoryOpen}></span>
+                      <h6 className="filter-title">Память</h6>
                     </div>
                     <div className="collapsible" style={{maxHeight: isMemoryOpen ? 800 : 0}}>
-                      <div className="specifications-list-simple pb-2">
+                      <div className="specifications-list-simple">
                         {keys.map(k => renderKeySection(k))}
                       </div>
                     </div>
@@ -353,14 +435,12 @@ const FiltersCard = ({
                 if (!available) return null;
                 return (
                   <div className="filter-group">
-                    <div className="d-flex align-items-center justify-content-between mb-2">
-                      <div className="d-flex align-items-center gap-2 cursor-pointer user-select-none" role="button" onClick={() => setIsScreenOpen(v => !v)}>
-                        <span className="filter-caret" data-open={isScreenOpen}></span>
-                        <h6 className="mb-0">Экран</h6>
-                      </div>
+                    <div className="filter-header" role="button" onClick={() => setIsScreenOpen(v => !v)}>
+                      <span className="filter-caret" data-open={isScreenOpen}></span>
+                      <h6 className="filter-title">Экран</h6>
                     </div>
                     <div className="collapsible" style={{maxHeight: isScreenOpen ? 1000 : 0}}>
-                      <div className="specifications-list-simple pb-2">
+                      <div className="specifications-list-simple">
                         {keys.map(k => renderKeySection(k))}
                       </div>
                     </div>
@@ -375,14 +455,12 @@ const FiltersCard = ({
                 if (!available) return null;
                 return (
                   <div className="filter-group">
-                    <div className="d-flex align-items-center justify-content-between mb-2">
-                      <div className="d-flex align-items-center gap-2 cursor-pointer user-select-none" role="button" onClick={() => setIsCamerasOpen(v => !v)}>
-                        <span className="filter-caret" data-open={isCamerasOpen}></span>
-                        <h6 className="mb-0">Камеры</h6>
-                      </div>
+                    <div className="filter-header" role="button" onClick={() => setIsCamerasOpen(v => !v)}>
+                      <span className="filter-caret" data-open={isCamerasOpen}></span>
+                      <h6 className="filter-title">Камеры</h6>
                     </div>
                     <div className="collapsible" style={{maxHeight: isCamerasOpen ? 800 : 0}}>
-                      <div className="specifications-list-simple pb-2">
+                      <div className="specifications-list-simple">
                         {keys.map(k => renderKeySection(k))}
                       </div>
                     </div>
@@ -397,14 +475,12 @@ const FiltersCard = ({
                 if (!available) return null;
                 return (
                   <div className="filter-group">
-                    <div className="d-flex align-items-center justify-content-between mb-2">
-                      <div className="d-flex align-items-center gap-2 cursor-pointer user-select-none" role="button" onClick={() => setIsCpuOpen(v => !v)}>
-                        <span className="filter-caret" data-open={isCpuOpen}></span>
-                        <h6 className="mb-0">Процессор</h6>
-                      </div>
+                    <div className="filter-header" role="button" onClick={() => setIsCpuOpen(v => !v)}>
+                      <span className="filter-caret" data-open={isCpuOpen}></span>
+                      <h6 className="filter-title">Процессор</h6>
                     </div>
                     <div className="collapsible" style={{maxHeight: isCpuOpen ? 600 : 0}}>
-                      <div className="specifications-list-simple pb-2">
+                      <div className="specifications-list-simple">
                         {keys.map(k => renderKeySection(k))}
                       </div>
                     </div>
@@ -419,14 +495,12 @@ const FiltersCard = ({
                 if (!available) return null;
                 return (
                   <div className="filter-group">
-                    <div className="d-flex align-items-center justify-content-between mb-2">
-                      <div className="d-flex align-items-center gap-2 cursor-pointer user-select-none" role="button" onClick={() => setIsBatteryOpen(v => !v)}>
-                        <span className="filter-caret" data-open={isBatteryOpen}></span>
-                        <h6 className="mb-0">Аккумулятор</h6>
-                      </div>
+                    <div className="filter-header" role="button" onClick={() => setIsBatteryOpen(v => !v)}>
+                      <span className="filter-caret" data-open={isBatteryOpen}></span>
+                      <h6 className="filter-title">Аккумулятор</h6>
                     </div>
                     <div className="collapsible" style={{maxHeight: isBatteryOpen ? 800 : 0}}>
-                      <div className="specifications-list-simple pb-2">
+                      <div className="specifications-list-simple">
                         {keys.map(k => renderKeySection(k))}
                       </div>
                     </div>
@@ -441,14 +515,12 @@ const FiltersCard = ({
                 if (!available) return null;
                 return (
                   <div className="filter-group">
-                    <div className="d-flex align-items-center justify-content-between mb-2">
-                      <div className="d-flex align-items-center gap-2 cursor-pointer user-select-none" role="button" onClick={() => setIsExtraSpecsOpen(v => !v)}>
-                        <span className="filter-caret" data-open={isExtraSpecsOpen}></span>
-                        <h6 className="mb-0">Дополнительно</h6>
-                      </div>
+                    <div className="filter-header" role="button" onClick={() => setIsExtraSpecsOpen(v => !v)}>
+                      <span className="filter-caret" data-open={isExtraSpecsOpen}></span>
+                      <h6 className="filter-title">Дополнительно</h6>
                     </div>
                     <div className="collapsible" style={{maxHeight: isExtraSpecsOpen ? 800 : 0}}>
-                      <div className="specifications-list-simple pb-2">
+                      <div className="specifications-list-simple">
                         {keys.map(k => renderKeySection(k))}
                       </div>
                     </div>
