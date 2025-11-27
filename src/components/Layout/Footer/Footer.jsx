@@ -6,20 +6,12 @@ import {
   Grid,
   Typography,
   Link as MuiLink,
-  IconButton,
   Divider,
-  TextField,
-  Button
 } from '@mui/material';
 import {
-  Facebook,
-  Instagram,
-  Twitter,
-  Telegram,
   Email,
   Phone,
-  LocationOn,
-  Send
+  LocationOn
 } from '@mui/icons-material';
 
 const Footer = () => {
@@ -78,15 +70,7 @@ const Footer = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <MuiLink
                 component={Link}
-                to="/catalog"
-                color="inherit"
-                sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
-              >
-                Все товары
-              </MuiLink>
-              <MuiLink
-                component={Link}
-                to="/catalog?category=smartphones"
+                to="/catalog/smartphones"
                 color="inherit"
                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
               >
@@ -94,7 +78,7 @@ const Footer = () => {
               </MuiLink>
               <MuiLink
                 component={Link}
-                to="/catalog?category=laptops"
+                to="/catalog/laptops"
                 color="inherit"
                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
               >
@@ -102,7 +86,7 @@ const Footer = () => {
               </MuiLink>
               <MuiLink
                 component={Link}
-                to="/catalog?category=accessories"
+                to="/catalog/accessories"
                 color="inherit"
                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
               >
@@ -110,7 +94,7 @@ const Footer = () => {
               </MuiLink>
               <MuiLink
                 component={Link}
-                to="/catalog?category=audio"
+                to="/catalog/audio"
                 color="inherit"
                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
               >
@@ -120,7 +104,7 @@ const Footer = () => {
           </Grid>
 
           {/* Полезные ссылки */}
-          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+          <Grid size={{ xs: 8, sm: 6, md: 2 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
               Полезное
             </Typography>
@@ -141,117 +125,6 @@ const Footer = () => {
               >
                 Контакты
               </MuiLink>
-              <MuiLink
-                component={Link}
-                to="/faq"
-                color="inherit"
-                sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
-              >
-                FAQ
-              </MuiLink>
-            </Box>
-          </Grid>
-
-          {/* Подписка на рассылку */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-              Подписка на новости
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2, opacity: 0.8 }}>
-              Подпишитесь на рассылку и будьте в курсе новых поступлений, 
-              акций и специальных предложений
-            </Typography>
-            
-            <Box component="form" sx={{ display: 'flex', gap: 1 }}>
-              <TextField
-                placeholder="Ваш email"
-                variant="outlined"
-                size="small"
-                fullWidth
-                sx={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: 1,
-                  '& .MuiOutlinedInput-root': {
-                    color: 'white',
-                    '& fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.3)',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: 'rgba(255, 255, 255, 0.5)',
-                    },
-                  }
-                }}
-              />
-              <Button
-                variant="contained"
-                sx={{
-                  minWidth: 'auto',
-                  px: 2,
-                  backgroundColor: 'primary.main',
-                  '&:hover': {
-                    backgroundColor: 'primary.dark'
-                  }
-                }}
-              >
-                <Send />
-              </Button>
-            </Box>
-
-            {/* Социальные сети */}
-            <Box sx={{ mt: 3 }}>
-              <Typography variant="body2" sx={{ mb: 1, opacity: 0.8 }}>
-                Мы в соцсетях:
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <IconButton
-                  size="small"
-                  sx={{
-                    color: 'white',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)'
-                    }
-                  }}
-                >
-                  <Facebook />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  sx={{
-                    color: 'white',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)'
-                    }
-                  }}
-                >
-                  <Instagram />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  sx={{
-                    color: 'white',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)'
-                    }
-                  }}
-                >
-                  <Twitter />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  sx={{
-                    color: 'white',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)'
-                    }
-                  }}
-                >
-                  <Telegram />
-                </IconButton>
-              </Box>
             </Box>
           </Grid>
         </Grid>

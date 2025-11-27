@@ -22,6 +22,7 @@ import {
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import YandexMap from '../../../components/YandexMap';
+import './ContactsPage.css';
 
 const ContactsPage = () => {
   const [formData, setFormData] = useState({
@@ -33,7 +34,7 @@ const ContactsPage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // <600px
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleChange = (e) => {
     setFormData({
@@ -78,58 +79,37 @@ const ContactsPage = () => {
   ];
 
   return (
-    <Box sx={{ py: { xs: 4, md: 8 }, minHeight: '100vh' }}>
+    <Box className="contactsPage">
       <Container maxWidth="lg">
         {/* Заголовок */}
-        <Box sx={{ textAlign: 'center', mb: { xs: 4, md: 8 }, px: 2 }}>
+        <Box className="contactsHeader">
           <Typography
             variant={isMobile ? 'h4' : 'h2'}
             component="h1"
+            className="contactsTitle"
             gutterBottom
-            sx={{
-              fontWeight: 'bold',
-              color: 'primary.main'
-            }}
           >
             Контакты
           </Typography>
           <Typography
             variant={isMobile ? 'body1' : 'h5'}
             color="text.secondary"
-            sx={{ maxWidth: 600, mx: 'auto' }}
+            className="contactsSubtitle"
           >
             Свяжитесь с нами любым удобным способом. Мы всегда рады помочь!
           </Typography>
         </Box>
 
-        <Grid container spacing={isMobile ? 4 : 6} alignItems="stretch">
+        <Grid container spacing={4} direction="column" className="contactsGrid">
           {/* Контактная информация - ЛЕВАЯ КОЛОНКА */}
-          <Grid item xs={12} md={6}>
-            <Box
-              sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 4
-              }}
-            >
+          <Grid item xs={12}>
+            <Box className="contactsLeftColumn">
               {/* Блок "Наши контакты" */}
-              <Paper
-                elevation={3}
-                sx={{
-                  p: { xs: 3, sm: 4 },
-                  borderRadius: 3,
-                  flex: '0 1 auto'
-                }}
-              >
+              <Paper elevation={3} className="contactsInfoBlock">
                 <Typography
                   variant={isMobile ? 'h5' : 'h4'}
+                  className="contactsInfoTitle"
                   gutterBottom
-                  sx={{ 
-                    fontWeight: 'bold', 
-                    mb: 4,
-                    textAlign: isMobile ? 'center' : 'left'
-                  }}
                 >
                   Наши контакты
                 </Typography>
@@ -137,23 +117,12 @@ const ContactsPage = () => {
                 <Grid container spacing={3}>
                   {contactMethods.map((method, index) => (
                     <Grid item xs={12} sm={6} key={index}>
-                      <Card
-                        sx={{
-                          height: '100%',
-                          p: 3,
-                          textAlign: 'center',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: 4
-                          }
-                        }}
-                      >
+                      <Card className="contactCard">
                         <CardContent>
-                          <Box sx={{ color: 'primary.main', mb: 2 }}>
+                          <Box className="contactIcon">
                             {method.icon}
                           </Box>
-                          <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                          <Typography variant="h6" className="contactCardTitle" gutterBottom>
                             {method.title}
                           </Typography>
                           <Typography variant="body1" gutterBottom>
@@ -170,27 +139,15 @@ const ContactsPage = () => {
               </Paper>
 
               {/* Карта */}
-              <Paper
-                elevation={3}
-                sx={{
-                  p: 3,
-                  borderRadius: 3,
-                  flex: '1 1 auto',
-                  minHeight: 400
-                }}
-              >
+              <Paper elevation={3} className="mapBlock">
                 <Typography
                   variant="h6"
+                  className="mapTitle"
                   gutterBottom
-                  sx={{ 
-                    fontWeight: 'bold', 
-                    mb: 2,
-                    textAlign: isMobile ? 'center' : 'left'
-                  }}
                 >
                   Мы на карте
                 </Typography>
-                <Box sx={{ height: 'calc(100% - 60px)' }}>
+                <Box className="mapContainer">
                   <YandexMap
                     center={[51.670550205174614, 36.147750777233355]}
                     zoom={16}
@@ -202,26 +159,12 @@ const ContactsPage = () => {
           </Grid>
 
           {/* Форма - ПРАВАЯ КОЛОНКА */}
-          <Grid item xs={12} md={6}>
-            <Paper
-              elevation={3}
-              sx={{
-                p: { xs: 3, sm: 4 },
-                borderRadius: 3,
-                background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-            >
+          <Grid item xs={12}>
+            <Paper elevation={3} className="formBlock">
               <Typography
                 variant={isMobile ? 'h5' : 'h4'}
+                className="formTitle"
                 gutterBottom
-                sx={{
-                  fontWeight: 'bold',
-                  mb: 3,
-                  textAlign: isMobile ? 'center' : 'left'
-                }}
               >
                 Напишите нам
               </Typography>
@@ -235,7 +178,7 @@ const ContactsPage = () => {
               <Box 
                 component="form" 
                 onSubmit={handleSubmit}
-                sx={{ flex: 1 }}
+                className="formContainer"
               >
                 {['name', 'email', 'phone', 'message'].map((field) => (
                   <TextField
@@ -257,12 +200,7 @@ const ContactsPage = () => {
                     margin="normal"
                     multiline={field === 'message'}
                     rows={field === 'message' ? 4 : 1}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        backgroundColor: 'white'
-                      }
-                    }}
+                    className="formField"
                   />
                 ))}
 
@@ -272,19 +210,7 @@ const ContactsPage = () => {
                   variant="contained"
                   size="large"
                   startIcon={<Send />}
-                  sx={{
-                    mt: 3,
-                    py: 1.5,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    borderRadius: 2,
-                    fontSize: '1.1rem',
-                    fontWeight: 600,
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 5px 15px rgba(102, 126, 234, 0.4)',
-                      background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)'
-                    }
-                  }}
+                  className="submitButton"
                 >
                   Отправить сообщение
                 </Button>
@@ -294,18 +220,8 @@ const ContactsPage = () => {
         </Grid>
 
         {/* Дополнительный блок */}
-        <Paper
-          elevation={2}
-          sx={{
-            p: { xs: 3, sm: 4 },
-            mt: { xs: 6, md: 8 },
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            borderRadius: 3,
-            textAlign: 'center'
-          }}
-        >
-          <Typography variant={isMobile ? 'h6' : 'h5'} gutterBottom sx={{ fontWeight: 'bold' }}>
+        <Paper elevation={2} className="emergencyBlock">
+          <Typography variant={isMobile ? 'h6' : 'h5'} className="emergencyTitle" gutterBottom>
             Нужна срочная помощь?
           </Typography>
           <Typography variant="body1" sx={{ mb: 2 }}>
@@ -313,11 +229,7 @@ const ContactsPage = () => {
           </Typography>
           <Typography
             variant={isMobile ? 'h5' : 'h4'}
-            sx={{
-              fontWeight: 'bold',
-              color: 'white',
-              textDecoration: 'none'
-            }}
+            className="emergencyPhone"
             component="a"
             href="tel:+79991234567"
           >

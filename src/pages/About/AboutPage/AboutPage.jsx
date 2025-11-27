@@ -145,10 +145,6 @@ const AboutPage = () => {
                   <Chip icon={<Group />} label="25+ сотрудников" color="secondary" variant="outlined" />
                 </Box>
               </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Box className="about-history-image" role="img" aria-label="История компании" />
-              </Grid>
             </Grid>
           </Paper>
         </Fade>

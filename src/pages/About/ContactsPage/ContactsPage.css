@@ -1,0 +1,239 @@
+/* pages/Contacts/ContactsPage.css */
+.contactsPage {
+  padding: 2rem 0;
+  min-height: 100vh;
+}
+
+@media (min-width: 900px) {
+  .contactsPage {
+    padding: 4rem 0;
+  }
+}
+
+.contactsHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+}
+
+@media (min-width: 900px) {
+  .contactsHeader {
+    margin-bottom: 4rem;
+  }
+}
+
+.contactsTitle {
+  font-weight: bold;
+  color: #1976d2;
+  margin-bottom: 1rem;
+}
+
+.contactsSubtitle {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.contactsGrid {
+  align-items: stretch;
+}
+
+.contactsLeftColumn {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.contactsInfoBlock {
+  padding: 1.5rem;
+  border-radius: 12px;
+  flex: 0 1 auto;
+}
+
+@media (min-width: 600px) {
+  .contactsInfoBlock {
+    padding: 2rem;
+  }
+}
+
+.contactsInfoTitle {
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+@media (max-width: 599px) {
+  .contactsInfoTitle {
+    text-align: center;
+  }
+}
+
+.contactCard {
+  height: 100%;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.contactCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.contactIcon {
+  color: #1976d2;
+  margin-bottom: 1rem;
+}
+
+.contactCardTitle {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.mapBlock {
+  padding: 1.5rem;
+  border-radius: 12px;
+  flex: 1 1 auto;
+  min-height: 400px;
+}
+
+.mapTitle {
+  font-weight: bold;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+@media (max-width: 599px) {
+  .mapTitle {
+    text-align: center;
+  }
+}
+
+.mapContainer {
+  height: calc(100% - 60px);
+  border-radius: 8px;
+}
+
+.formBlock {
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 600px) {
+  .formBlock {
+    padding: 2rem;
+  }
+}
+
+.formTitle {
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+@media (max-width: 599px) {
+  .formTitle {
+    text-align: center;
+  }
+}
+
+.formContainer {
+  flex: 1;
+}
+
+.formField {
+  border-radius: 8px;
+}
+
+.formField .MuiOutlinedInput-root {
+  border-radius: 8px;
+  background-color: white;
+}
+
+.submitButton {
+  margin-top: 1.5rem;
+  padding: 0.875rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.submitButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+
+.emergencyBlock {
+  padding: 1.5rem;
+  margin-top: 3rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  text-align: center;
+}
+
+@media (min-width: 900px) {
+  .emergencyBlock {
+    margin-top: 4rem;
+    padding: 2rem;
+  }
+}
+
+.emergencyTitle {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.emergencyPhone {
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+}
+
+.emergencyPhone:hover {
+  color: #e3f2fd;
+}
+
+.contactsGrid {
+  max-width: 700px;
+  margin: 0 auto !important;
+}
+
+.contactsLeftColumn,
+.formBlock,
+.contactsInfoBlock,
+.mapBlock,
+.emergencyBlock {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.contactsInfoBlock,
+.mapBlock,
+.formBlock,
+.emergencyBlock {
+  width: 100%;
+  max-width: 2700px;
+}
+
+.contactsHeader {
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mapBlock {
+  min-height: 350px;
+}
+
+.formBlock {
+  margin-top: 2rem;
+}
