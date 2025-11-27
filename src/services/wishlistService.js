@@ -68,5 +68,22 @@ export const wishlistService = {
       console.error('Error getting wishlist count:', error);
       return 0;
     }
-  }
+  },
+
+  toggleWishlist: async (userId, productId) => {
+        if (!userId || !productId) {
+            throw new Error("User ID and Product ID must be provided.");
+        }
+        try {
+            // Используем POST, чтобы активировать логику toggle в PHP
+            const result = await apiService.post('/wishlist.php', {
+                user_id: userId,
+                product_id: productId
+            });
+            return result; // Содержит {action: 'added'} или {action: 'removed'}
+        } catch (error) {
+            console.error('Error toggling wishlist status:', error);
+            throw error;
+        }
+    }
 };
