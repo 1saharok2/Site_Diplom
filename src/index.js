@@ -5,18 +5,6 @@ import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import reportWebVitals from './reportWebVitals';
 
-// Функция для регистрации Service Worker
-const registerServiceWorker = async () => {
-  if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-    try {
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('✅ Service Worker зарегистрирован:', registration);
-    } catch (error) {
-      console.error('❌ Ошибка регистрации Service Worker:', error);
-    }
-  }
-};
-
 // Компонент для отображения загрузки
 const AppLoader = () => (
   <div style={{
@@ -58,11 +46,6 @@ root.render(
     </React.Suspense>
   </React.StrictMode>
 );
-
-// Запускаем Service Worker
-if (process.env.NODE_ENV === 'production') {
-  registerServiceWorker().catch(console.error);
-}
 
 // Отчет о веб-метриках
 reportWebVitals(console.log);
