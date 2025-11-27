@@ -107,6 +107,21 @@ export const WishlistProvider = ({ children }) => {
     }
   }, [currentUser]);
 
+  const toggleWishlist = useCallback(async (userId, productId) => {
+    if (!currentUser) {
+        throw new Error('User must be logged in to modify wishlist');
+    }
+    try {
+        const result = await wishlistService.toggleWishlist(userId, productId);
+        await refreshWishlist(); 
+        
+        return result;
+    } catch (error) {
+        console.error('Error toggling wishlist:', error);
+        throw error;
+    }
+  }, [currentUser, refreshWishlist]);
+
   const value = {
     wishlist,
     loading,
@@ -115,6 +130,7 @@ export const WishlistProvider = ({ children }) => {
     removeFromWishlistByProduct,
     isInWishlist,
     getWishlistCount,
+    toggleWishlist,
     refreshWishlist
   };
 

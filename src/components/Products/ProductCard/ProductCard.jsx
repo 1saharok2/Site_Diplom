@@ -11,7 +11,7 @@ const ProductCard = ({ product }) => {
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { addToCart } = useCart();
-  const { addToWishlist, removeFromWishlistByProduct, isInWishlist } = useWishlist();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const { currentUser } = useAuth();
 
   const {
@@ -51,22 +51,17 @@ const ProductCard = ({ product }) => {
     e.stopPropagation();
 
     if (!currentUser || !currentUser.id) {
-      alert('Пожалуйста, авторизуйтесь чтобы добавить товар в избранное');
-      return;
+        alert('Пожалуйста, авторизуйтесь чтобы добавить товар в избранное');
+        return;
     }
-
+    const userId = currentUser.id; 
     try {
-      setIsAddingToWishlist(true);
-      
-      if (isInWishlistState) {
-        await removeFromWishlistByProduct(productId);
-      } else {
-        await addToWishlist(productId);
-      }
+        setIsAddingToWishlist(true);
+        const result = await toggleWishlist(userId, productId); 
     } catch (error) {
-      alert('Не удалось изменить избранное: ' + error.message);
+        alert('Не удалось изменить избранное: ' + error.message);
     } finally {
-      setIsAddingToWishlist(false);
+        setIsAddingToWishlist(false);
     }
   };
 
