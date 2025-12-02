@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, CircularProgress, Box } from '@mui/material';
@@ -9,6 +9,7 @@ import { AdminRoute, ProtectedRoute, ProtectedCheckoutRoute } from './components
 import { AuthProvider, CartProvider, ProductsProvider, CategoriesProvider, WishlistProvider } from './context';
 import { ReviewProvider } from './context/ReviewContext';
 import ScrollToTop from './components/ScrollToTop';
+import { initAuth } from './utils/authSync';
 import './App.css';
 
 // Ленивая загрузка страниц
@@ -30,7 +31,7 @@ const OrdersPage = lazy(() => import('./pages/User/OrdersPage'));
 const WishlistPage = lazy(() => import('./pages/User/WishlistPage'));
 const UserReviewsPage = lazy(() => import('./pages/User/UserReviewPage'));
 
-// Ленивая загрузка админских страниц - ИСПРАВЛЕННЫЕ ПУТИ
+// Ленивая загрузка админских страниц
 const AdminDashboard = lazy(() => import('./pages/Admin/Dashboard/AdminDashboard'));
 const AdminProducts = lazy(() => import('./pages/Admin/Products/AdminProducts'));
 const AdminOrders = lazy(() => import('./pages/Admin/Orders/AdminOrders'));
@@ -71,9 +72,34 @@ const SuspenseWrapper = ({ children }) => (
   </Suspense>
 );
 
+// Добавьте компонент для начальной загрузки
+const InitialLoader = () => (
+  <Box 
+    display="flex" 
+    justifyContent="center" 
+    alignItems="center" 
+    minHeight="100vh"
+    bgcolor="background.default"
+  >
+    <CircularProgress size={60} />
+  </Box>
+);
+
 function App() {
-  // Предзагрузка ключевых страниц
+  const [isAuthInitialized, setIsAuthInitialized] = useState(false);
+
+  // Инициализация авторизации при загрузке приложения
   useEffect(() => {
+    console.log('🚀 Инициализация приложения...');
+    
+    // 1. Инициализируем авторизацию
+    const authState = initAuth();
+    console.log('✅ Авторизация инициализирована:', authState);
+    
+    // 2. Устанавливаем флаг, что авторизация инициализирована
+    setIsAuthInitialized(true);
+    
+    // 3. Предзагрузка ключевых страниц
     const preloadCriticalPages = async () => {
       try {
         setTimeout(async () => {
@@ -82,6 +108,7 @@ function App() {
             import('./pages/Catalog/CategoriesPage/CategoriesPage'),
             import('./pages/Search/SearchPage')
           ]);
+          console.log('📦 Ключевые страницы предзагружены');
         }, 3000);
       } catch (error) {
         console.log('Предзагрузка страниц не удалась:', error);
@@ -89,7 +116,25 @@ function App() {
     };
 
     preloadCriticalPages();
+    
+    // 4. Логируем начальное состояние
+    console.log('📋 Начальное состояние localStorage:', {
+      userId: localStorage.getItem('userId'),
+      hasToken: !!localStorage.getItem('authToken'),
+      hasUserData: !!localStorage.getItem('userData')
+    });
+    
   }, []);
+
+  // Показываем загрузчик пока не инициализирована авторизация
+  if (!isAuthInitialized) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <InitialLoader />
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider theme={theme}>

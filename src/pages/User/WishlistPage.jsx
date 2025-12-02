@@ -594,7 +594,7 @@ const WishlistPage = () => {
                         <CardMedia
                           component="img"
                           height={isMobile ? 200 : 250}
-                          image={product?.image_url?.[0] || '/images/placeholder.jpg'}
+                          image={product?.image_url || '/images/placeholder.jpg'}
                           alt={product?.name}
                           sx={{ 
                             objectFit: 'cover',

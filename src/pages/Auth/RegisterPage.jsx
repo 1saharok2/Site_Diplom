@@ -77,14 +77,21 @@ const RegisterPage = () => {
         return;
       }
 
-      // Шаг 1: Подготовка данных для регистрации
+      // ✅ Исправляем: разбиваем имя и фамилию правильно
+      const nameParts = formData.name.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // Подготовка данных в формате, который ожидает API
       const userData = {
-        firstName: formData.name.split(' ')[0], // Берем первое слово как имя
-        lastName: formData.name.split(' ').slice(1).join(' ') || '', // Остальное как фамилию
+        firstName: firstName,
+        lastName: lastName,
         email: formData.email,
         password: formData.password,
-        phone: formData.phone || undefined // Необязательное поле
+        phone: formData.phone || '' // Отправляем пустую строку вместо undefined
       };
+
+      console.log('📤 Отправляемые данные:', userData); // Для отладки
 
       // Шаг 2: Вызов функции регистрации из контекста
       const result = await register(userData);
@@ -101,9 +108,16 @@ const RegisterPage = () => {
       }
 
     } catch (error) {
-      // Шаг 4: Обработка ошибок
       console.error('Registration error:', error);
-      setError(error.message || 'Произошла ошибка при регистрации');
+      
+      // Более информативные сообщения об ошибках
+      if (error.message.includes('Network')) {
+        setError('Проблема с подключением к серверу');
+      } else if (error.message.includes('409')) {
+        setError('Пользователь с таким email уже существует');
+      } else {
+        setError(error.message || 'Произошла ошибка при регистрации');
+      }
     } finally {
       setLoading(false);
     }

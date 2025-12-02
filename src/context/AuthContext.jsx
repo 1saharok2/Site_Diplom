@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import { adminService } from '../services/adminService';
+import { cartService } from '../services/cartService';
+import { wishlistService } from '../services/wishlistService';
+
 
 const AuthContext = createContext();
 
@@ -68,30 +71,59 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await apiService.register(userData);
-      let newUser, token;
+      console.log('🟡 Начало регистрации с данными:', userData);
       
-      if (response.user && response.token) {
-        newUser = response.user;
-        token = response.token;
-      } else if (response.data && response.data.user) {
-        newUser = response.data.user;
-        token = response.data.token;
-      } else {
-        throw new Error('Неверный формат ответа от сервера');
+      const res = await apiService.register(userData);
+      console.log('🟢 Ответ от API:', res);
+
+      if (!res || !res.user || !res.token) {
+        throw new Error('Сервер не вернул необходимые данные');
       }
-      
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('userData', JSON.stringify(newUser));
-      setCurrentUser(newUser);
-      
-      return { success: true, user: newUser };
-      
+
+      // ✅ КРИТИЧЕСКИ ВАЖНО: сохраняем все данные правильно
+    localStorage.setItem('authToken', res.token);
+    localStorage.setItem('userData', JSON.stringify(res.user));
+    localStorage.setItem('userId', res.user.id.toString());
+    
+    // Синхронизируем корзину если есть локальные данные
+    const localCart = localStorage.getItem('cart');
+    if (localCart) {
+      console.log('🔄 Синхронизация локальной корзины с сервером...');
+      try {
+        await cartService.syncCartWithServer(res.user.id);
+      } catch (syncError) {
+        console.warn('Не удалось синхронизировать корзину:', syncError);
+      }
+    }
+
+    // Синхронизируем избранное
+    const localWishlist = localStorage.getItem('wishlist');
+    if (localWishlist) {
+      try {
+        await wishlistService.syncWishlistWithServer(res.user.id);
+      } catch (syncError) {
+        console.warn('Не удалось синхронизировать избранное:', syncError);
+      }
+    }    
+
+      // Обновляем состояние
+      setCurrentUser(res.user);
+
+      return { 
+        success: true, 
+        user: res.user };
+
     } catch (error) {
-      console.error('Register error:', error);
+      console.error('❌ Register error in context:', error);
+      
+      // Очищаем localStorage в случае ошибки
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('userId');
+      
       return { 
         success: false, 
-        error: error.message || 'Ошибка регистрации' 
+        error: error.message || 'Неизвестная ошибка регистрации' 
       };
     }
   };
