@@ -50,7 +50,7 @@ import { useAuth } from '../../context/AuthContext';
 const WishlistPage = () => {
   const { wishlist, loading, removeFromWishlist, refreshWishlist } = useWishlist();
   const { addToCart, cartItems } = useCart();
-  const { currentUser } = useAuth();
+  const { currentUser, isAuthenticated } = useAuth(); // Добавили isAuthenticated
   const navigate = useNavigate();
   const theme = useTheme();
   
@@ -66,14 +66,62 @@ const WishlistPage = () => {
   // Медиа-запросы для адаптивности
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const cartItemsCount = cartItems ? cartItems.reduce((total, item) => total + item.quantity, 0) : 0;
+  const cartItemsCount = cartItems ? cartItems.reduce((total, item) => total + (item.quantity || 0), 0) : 0;
 
   useEffect(() => {
     setMounted(true);
-    if (currentUser) {
+    // Отладочная информация
+    console.log('Wishlist Page - Current User:', currentUser);
+    console.log('Wishlist Page - isAuthenticated:', isAuthenticated);
+    console.log('Wishlist Page - Wishlist:', wishlist);
+    console.log('Wishlist Page - Loading:', loading);
+    
+    // Проверяем, действительно ли пользователь авторизован
+    if (isAuthenticated && currentUser && currentUser.id !== '0') {
       refreshWishlist();
     }
-  }, [currentUser, refreshWishlist]);
+  }, [currentUser, isAuthenticated, refreshWishlist]);
+
+  // Функция для проверки, действительно ли пользователь авторизован
+  const isUserReallyAuthenticated = () => {
+    return isAuthenticated && currentUser && currentUser.id && currentUser.id !== '0';
+  };
+
+  // Функция для безопасного получения продукта
+  const getProduct = (item) => {
+    // Пробуем разные возможные пути к продукту
+    return item?.product || item?.products || item;
+  };
+
+  // Функция для безопасного получения ID продукта
+  const getProductId = (item) => {
+    const product = getProduct(item);
+    return product?.id || item?.id;
+  };
+
+  // Функция для безопасного получения имени продукта
+  const getProductName = (item) => {
+    const product = getProduct(item);
+    return product?.name || 'Неизвестный товар';
+  };
+
+  // Функция для безопасного получения цены продукта
+  const getProductPrice = (item) => {
+    const product = getProduct(item);
+    return product?.price || product?.price_current || 0;
+  };
+
+  // Функция для безопасного получения старой цены продукта
+  const getProductOldPrice = (item) => {
+    const product = getProduct(item);
+    return product?.old_price || product?.price_old;
+  };
+
+  // Функция для безопасного получения изображения продукта
+  const getProductImage = (item) => {
+    const product = getProduct(item);
+    return product?.image_url || product?.image || product?.images?.[0] || '/images/placeholder.jpg';
+  };
 
   const handleRemoveFromWishlist = async (wishlistItemId, productName) => {
     try {
@@ -86,9 +134,15 @@ const WishlistPage = () => {
   };
 
   const handleAddToCart = async (product) => {
-    if (!currentUser) {
+    if (!isUserReallyAuthenticated()) {
       showSnackbar('🔐 Пожалуйста, войдите в систему чтобы добавить товар в корзину', 'warning');
       navigate('/login');
+      return;
+    }
+
+    const productId = product?.id;
+    if (!productId) {
+      showSnackbar('❌ Ошибка: товар не найден', 'error');
       return;
     }
 
@@ -99,20 +153,23 @@ const WishlistPage = () => {
     }
 
     try {
-      setAddingToCart(prev => ({ ...prev, [product.id]: true }));
-      await addToCart(product.id, 1);
-      showSnackbar(`🛒 "${product.name}" добавлен в корзину!`, 'success');
+      setAddingToCart(prev => ({ ...prev, [productId]: true }));
+      await addToCart(productId, 1);
+      showSnackbar(`🛒 "${product.name || 'Товар'}" добавлен в корзину!`, 'success');
     } catch (error) {
       console.error('Error adding to cart:', error);
       showSnackbar('❌ Ошибка при добавлении в корзину', 'error');
     } finally {
-      setAddingToCart(prev => ({ ...prev, [product.id]: false }));
+      setAddingToCart(prev => ({ ...prev, [productId]: false }));
     }
   };
 
   const handleViewProduct = (product) => {
-    if (product && product.id) {
-      navigate(`/product/${product.id}`);
+    const productId = product?.id;
+    if (productId) {
+      navigate(`/product/${productId}`);
+    } else {
+      showSnackbar('❌ Не удалось открыть страницу товара', 'error');
     }
   };
 
@@ -127,25 +184,38 @@ const WishlistPage = () => {
   const handleShareProduct = async (product, e) => {
     e.stopPropagation();
     
+    const productId = product?.id;
+    if (!productId) return;
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: product.name,
-          text: `❤️ Посмотрите этот товар из моего избранного: ${product.name}`,
-          url: `${window.location.origin}/product/${product.id}`,
+          title: product.name || 'Товар',
+          text: `❤️ Посмотрите этот товар из моего избранного: ${product.name || 'Товар'}`,
+          url: `${window.location.origin}/product/${productId}`,
         });
       } catch (error) {
         console.log('Error sharing:', error);
       }
     } else {
-      navigator.clipboard.writeText(`${window.location.origin}/product/${product.id}`);
+      navigator.clipboard.writeText(`${window.location.origin}/product/${productId}`);
       showSnackbar('🔗 Ссылка скопирована в буфер обмена', 'info');
     }
   };
 
   const handleQuickAddAll = async () => {
-    const inStockProducts = wishlist.filter(item => isProductInStock(item.products));
-    
+    if (!isUserReallyAuthenticated()) {
+      showSnackbar('🔐 Пожалуйста, войдите в систему', 'warning');
+      navigate('/login');
+      return;
+    }
+
+    const inStockProducts = wishlist
+      .filter(item => {
+        const product = getProduct(item);
+        return product && isProductInStock(product);
+      });
+
     if (inStockProducts.length === 0) {
       showSnackbar('😔 Нет товаров в наличии для добавления в корзину', 'warning');
       return;
@@ -153,9 +223,12 @@ const WishlistPage = () => {
 
     try {
       for (const item of inStockProducts) {
-        await addToCart(item.products.id, 1);
+        const product = getProduct(item);
+        if (product?.id) {
+          await addToCart(product.id, 1);
+        }
       }
-      showSnackbar(`🎉 Все ${inStockProducts.length} товаров добавлены в корзину!`, 'success');
+      showSnackbar(`🎉 ${inStockProducts.length} товар(ов) добавлены в корзину!`, 'success');
     } catch (error) {
       console.error('Error adding all to cart:', error);
       showSnackbar('❌ Ошибка при добавлении товаров', 'error');
@@ -174,7 +247,11 @@ const WishlistPage = () => {
     if (product.inStock !== undefined && product.inStock !== null) {
       return product.inStock === true || product.inStock === 'true';
     }
+    if (product.in_stock !== undefined && product.in_stock !== null) {
+      return product.in_stock === true || product.in_stock === 'true';
+    }
     
+    // По умолчанию считаем, что товар в наличии
     return true;
   };
 
@@ -188,10 +265,13 @@ const WishlistPage = () => {
       return product.quantity;
     }
     
-    return (product.inStock === true || product.inStock === 'true') ? 1 : 0;
+    return (product.inStock === true || product.inStock === 'true' || 
+            product.in_stock === true || product.in_stock === 'true') ? 1 : 0;
   };
 
   const getStockText = (product) => {
+    if (!product) return 'Нет данных';
+    
     const inStock = isProductInStock(product);
     const stockQuantity = getProductStock(product);
     
@@ -204,6 +284,8 @@ const WishlistPage = () => {
   };
 
   const getStockColor = (product) => {
+    if (!product) return theme.palette.error.main;
+    
     const inStock = isProductInStock(product);
     const stockQuantity = getProductStock(product);
     
@@ -214,7 +296,39 @@ const WishlistPage = () => {
     return theme.palette.info.main;
   };
 
-  if (!currentUser) {
+  // Показать сообщение об ошибке, если wishlist не загружается
+  if (loading) {
+    return (
+      <Box sx={{ 
+        minHeight: '60vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+        px: 2
+      }}>
+        <Box sx={{ textAlign: 'center' }}>
+          <CircularProgress 
+            size={isMobile ? 60 : 80} 
+            thickness={3}
+            sx={{ 
+              color: 'primary.main',
+              mb: 3
+            }} 
+          />
+          <Typography variant="h5" color="text.secondary" sx={{ 
+            fontWeight: 'bold',
+            fontSize: { xs: '1.3rem', sm: '1.5rem' }
+          }}>
+            Загружаем ваши желания...
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Если пользователь не авторизован
+  if (!isUserReallyAuthenticated()) {
     return (
       <Box sx={{ 
         minHeight: '100vh',
@@ -282,42 +396,6 @@ const WishlistPage = () => {
     );
   }
 
-  if (loading) {
-    return (
-      <Box sx={{ 
-        minHeight: '60vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-        px: 2
-      }}>
-        <Box sx={{ textAlign: 'center' }}>
-          <CircularProgress 
-            size={isMobile ? 60 : 80} 
-            thickness={3}
-            sx={{ 
-              color: 'primary.main',
-              mb: 3
-            }} 
-          />
-          <Typography variant="h5" color="text.secondary" sx={{ 
-            fontWeight: 'bold',
-            fontSize: { xs: '1.3rem', sm: '1.5rem' }
-          }}>
-            Загружаем ваши желания...
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ 
-            mt: 1,
-            fontSize: { xs: '0.9rem', sm: '1rem' }
-          }}>
-            Это займет всего секунду
-          </Typography>
-        </Box>
-      </Box>
-    );
-  }
-
   return (
     <Box sx={{ 
       minHeight: '100vh',
@@ -337,27 +415,8 @@ const WishlistPage = () => {
             mb: { xs: 2, sm: 3, md: 4 },
             textAlign: 'center',
             position: 'relative',
-            overflow: 'hidden',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '3px',
-              background: 'linear-gradient(90deg, #667eea, #764ba2, #f093fb)',
-            }
+            overflow: 'hidden'
           }}>
-            <Box sx={{ 
-              position: 'absolute',
-              top: -50,
-              right: -50,
-              width: 200,
-              height: 200,
-              background: `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.1)} 0%, transparent 70%)`,
-              borderRadius: '50%'
-            }} />
-            
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -380,8 +439,7 @@ const WishlistPage = () => {
                     '&:hover': { 
                       background: 'white',
                       transform: 'scale(1.1)'
-                    },
-                    transition: 'all 0.3s ease'
+                    }
                   }}
                 >
                   <ArrowBack />
@@ -420,12 +478,12 @@ const WishlistPage = () => {
                   justifyContent: { xs: 'center', sm: 'flex-start' },
                   fontSize: { xs: '0.9rem', sm: '1rem' }
                 }}>
-                  {wishlist.length} {wishlist.length === 1 ? 'желанный товар' : wishlist.length < 5 ? 'желанных товара' : 'желанных товаров'}
+                  {Array.isArray(wishlist) ? wishlist.length : 0} {wishlist.length === 1 ? 'желанный товар' : wishlist.length < 5 ? 'желанных товара' : 'желанных товаров'}
                 </Typography>
               </Box>
             </Box>
             
-            {wishlist.length > 0 && (
+            {Array.isArray(wishlist) && wishlist.length > 0 && (
               <Fade in={mounted} timeout={1000}>
                 <Box sx={{ 
                   display: 'flex', 
@@ -475,7 +533,7 @@ const WishlistPage = () => {
         </Slide>
 
         {/* Пустой список */}
-        {wishlist.length === 0 ? (
+        {Array.isArray(wishlist) && wishlist.length === 0 ? (
           <Zoom in={mounted} timeout={800}>
             <Box sx={{ 
               textAlign: 'center', 
@@ -499,9 +557,6 @@ const WishlistPage = () => {
               <Typography variant="h3" gutterBottom sx={{ 
                 fontWeight: 'bold', 
                 mb: 2,
-                background: 'linear-gradient(135deg, #666 0%, #999 100%)',
-                backgroundClip: 'text',
-                textFillColor: 'transparent',
                 fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }
               }}>
                 Список желаний пуст
@@ -529,7 +584,6 @@ const WishlistPage = () => {
                   py: 1.5,
                   fontSize: { xs: '1rem', sm: '1.1rem' },
                   fontWeight: 'bold',
-                  boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
                   '&:hover': {
                     transform: 'translateY(-3px)',
                     boxShadow: '0 12px 35px rgba(102, 126, 234, 0.4)'
@@ -541,349 +595,283 @@ const WishlistPage = () => {
             </Box>
           </Zoom>
         ) : (
-          <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
-            {Array.isArray(wishlist) && wishlist
-              .filter(item => item && item.products) // ✅ убираем пустые или битые элементы
-              .map((item, index) => {
-                const product = item.products;
+          // Список товаров
+          Array.isArray(wishlist) && wishlist.length > 0 && (
+            <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }}>
+              {wishlist.map((item, index) => {
+                const product = getProduct(item);
+                const productId = getProductId(item);
+                const productName = getProductName(item);
+                const productImage = getProductImage(item);
+                const productPrice = getProductPrice(item);
+                const productOldPrice = getProductOldPrice(item);
 
-                if (!product || !product.id) return null; // ✅ пропускаем, если данных нет
+                if (!product || !productId) {
+                  console.warn('Invalid wishlist item:', item);
+                  return null;
+                }
 
-                const isAdding = addingToCart[product.id];
+                const isAdding = addingToCart[productId];
                 const inStock = isProductInStock(product);
                 const stockText = getStockText(product);
                 const stockColor = getStockColor(product);
 
                 return (
-                  <Grid item xs={12} sm={6} lg={4} key={item.id || index}>
-                  <Slide direction="up" in={mounted} timeout={400 + index * 100}>
-                    <Card 
-                      onMouseEnter={() => !isMobile && setHoveredCard(product.id)}
-                      onMouseLeave={() => !isMobile && setHoveredCard(null)}
-                      onClick={() => handleViewProduct(product)}
-                      sx={{ 
-                        height: '100%', 
-                        display: 'flex', 
-                        flexDirection: 'column',
-                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                        border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                        borderRadius: { xs: 2, sm: 3, md: 4 },
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-                        position: 'relative',
-                        transform: !isMobile && hoveredCard === product.id ? 'translateY(-8px) scale(1.02)' : 'translateY(0) scale(1)',
-                        boxShadow: !isMobile && hoveredCard === product.id 
-                          ? '0 20px 40px rgba(0,0,0,0.12)' 
-                          : '0 4px 12px rgba(0,0,0,0.05)',
-                        '&::before': {
-                          content: '""',
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          height: '3px',
-                          background: 'linear-gradient(90deg, #667eea, #764ba2, #f093fb)',
-                          transform: !isMobile && hoveredCard === product.id ? 'scaleX(1)' : 'scaleX(0)',
-                          transition: 'transform 0.3s ease',
-                        }
-                      }}
-                    >
-                      {/* Бейджи на изображении */}
-                      <Box sx={{ position: 'relative' }}>
-                        <CardMedia
-                          component="img"
-                          height={isMobile ? 200 : 250}
-                          image={product?.image_url || '/images/placeholder.jpg'}
-                          alt={product?.name}
-                          sx={{ 
-                            objectFit: 'cover',
-                            transition: !isMobile ? 'transform 0.4s ease' : 'none',
-                            transform: !isMobile && hoveredCard === product.id ? 'scale(1.05)' : 'scale(1)'
-                          }}
-                        />
-                        
-                        {/* Градиентный оверлей */}
-                        <Box sx={{ 
-                          position: 'absolute',
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          height: '60%',
-                          background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)',
-                          opacity: !isMobile && hoveredCard === product.id ? 1 : 0,
-                          transition: 'opacity 0.3s ease'
-                        }} />
-                        
-                        {/* Бейджи */}
-                        <Box sx={{ 
-                          position: 'absolute', 
-                          top: 12, 
-                          left: 12, 
+                  <Grid item xs={12} sm={6} lg={4} key={`${productId}-${index}`}>
+                    <Slide direction="up" in={mounted} timeout={400 + index * 100}>
+                      <Card 
+                        onMouseEnter={() => !isMobile && setHoveredCard(productId)}
+                        onMouseLeave={() => !isMobile && setHoveredCard(null)}
+                        onClick={() => handleViewProduct(product)}
+                        sx={{ 
+                          height: '100%', 
                           display: 'flex', 
-                          flexDirection: 'column', 
-                          gap: 1 
-                        }}>
-                          {product?.is_new && (
-                            <Chip 
-                              icon={<NewReleases sx={{ fontSize: 16 }} />}
-                              label="Новинка" 
-                              size="small"
-                              sx={{ 
-                                background: 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
-                                color: 'white',
-                                fontWeight: 'bold',
-                                fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                                height: { xs: 24, sm: 28 }
-                              }}
-                            />
-                          )}
-                          {product?.discount > 0 && (
-                            <Chip 
-                              icon={<LocalOffer sx={{ fontSize: 16 }} />}
-                              label={`-${product.discount}%`} 
-                              size="small"
-                              sx={{ 
-                                background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
-                                color: 'white',
-                                fontWeight: 'bold',
-                                fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                                height: { xs: 24, sm: 28 }
-                              }}
-                            />
-                          )}
-                        </Box>
-
-                        {/* Кнопки действий */}
-                        <Box sx={{ 
-                          position: 'absolute', 
-                          top: 12, 
-                          right: 12, 
-                          display: 'flex', 
-                          flexDirection: 'column', 
-                          gap: 1,
-                          opacity: !isMobile ? (hoveredCard === product.id ? 1 : 0.7) : 1,
-                          transform: !isMobile ? (hoveredCard === product.id ? 'translateX(0)' : 'translateX(10px)') : 'translateX(0)',
-                          transition: 'all 0.3s ease'
-                        }}>
-                          <Tooltip title="Поделиться">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => handleShareProduct(product, e)}
-                              sx={{ 
-                                background: 'rgba(255,255,255,0.95)',
-                                backdropFilter: 'blur(10px)',
-                                '&:hover': { 
-                                  background: 'white',
-                                  transform: 'scale(1.1)'
-                                }
-                              }}
-                            >
-                              <Share fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          
-                          <Tooltip title="Быстрый просмотр">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewProduct(product);
-                              }}
-                              sx={{ 
-                                background: 'rgba(255,255,255,0.95)',
-                                backdropFilter: 'blur(10px)',
-                                '&:hover': { 
-                                  background: 'white',
-                                  transform: 'scale(1.1)'
-                                }
-                              }}
-                            >
-                              <Visibility fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-
-                        {/* Цена на изображении */}
-                        <Box sx={{ 
-                          position: 'absolute',
-                          bottom: 12,
-                          left: 12,
-                          opacity: !isMobile && hoveredCard === product.id ? 1 : 0,
-                          transform: !isMobile && hoveredCard === product.id ? 'translateY(0)' : 'translateY(10px)',
-                          transition: 'all 0.3s ease'
-                        }}>
-                          <Typography variant="h5" sx={{ 
-                            color: 'white', 
-                            fontWeight: 'bold',
-                            textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-                            fontSize: { xs: '1rem', sm: '1.25rem' }
-                          }}>
-                            {product?.price?.toLocaleString('ru-RU')} ₽
-                          </Typography>
-                        </Box>
-                      </Box>
-                      
-                      <CardContent sx={{ 
-                        flexGrow: 1, 
-                        p: { xs: 2, sm: 3 }, 
-                        pb: { xs: 1, sm: 2 } 
-                      }}>
-                        <Typography 
-                          variant="h6" 
-                          gutterBottom 
-                          sx={{ 
-                            fontWeight: 'bold',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                            minHeight: { xs: 48, sm: 64 },
-                            lineHeight: 1.3,
-                            fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' }
-                          }}
-                        >
-                          {product?.name}
-                        </Typography>
-                        
-                        <Box sx={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: 1, 
-                          mb: 2 
-                        }}>
-                          <Inventory sx={{ 
-                            fontSize: { xs: 16, sm: 18 }, 
-                            color: stockColor 
-                          }} />
-                          <Typography 
-                            variant="body2" 
+                          flexDirection: 'column',
+                          transition: 'all 0.4s ease',
+                          border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                          borderRadius: { xs: 2, sm: 3 },
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            transform: !isMobile ? 'translateY(-8px)' : 'none',
+                            boxShadow: !isMobile ? '0 20px 40px rgba(0,0,0,0.12)' : 'none',
+                          }
+                        }}
+                      >
+                        {/* Бейджи на изображении */}
+                        <Box sx={{ position: 'relative' }}>
+                          <CardMedia
+                            component="img"
+                            height={isMobile ? 200 : 250}
+                            image={productImage}
+                            alt={productName}
                             sx={{ 
-                              fontWeight: 'bold',
-                              color: stockColor,
-                              fontSize: { xs: '0.75rem', sm: '0.8rem' }
+                              objectFit: 'cover',
+                              transition: !isMobile ? 'transform 0.4s ease' : 'none',
+                              transform: !isMobile && hoveredCard === productId ? 'scale(1.05)' : 'scale(1)'
                             }}
-                          >
-                            {stockText}
-                          </Typography>
-                        </Box>
-
-                        {product?.old_price && product.old_price > product?.price && (
-                          <Box sx={{ mb: 2 }}>
-                            <Box sx={{ 
-                              display: 'flex', 
-                              alignItems: 'baseline', 
-                              gap: { xs: 1, sm: 2 }, 
-                              flexWrap: 'wrap' 
-                            }}>
-                              <Typography variant="h4" color="primary" sx={{ 
-                                fontWeight: 'bold',
-                                fontSize: { xs: '1.25rem', sm: '1.5rem' }
-                              }}>
-                                {product?.price?.toLocaleString('ru-RU')} ₽
-                              </Typography>
-                              <Typography variant="body1" color="text.secondary" sx={{ 
-                                textDecoration: 'line-through',
-                                fontSize: { xs: '0.8rem', sm: '0.9rem' }
-                              }}>
-                                {product.old_price.toLocaleString('ru-RU')} ₽
-                              </Typography>
+                            onError={(e) => {
+                              e.target.src = '/images/placeholder.jpg';
+                            }}
+                          />
+                          
+                          {/* Бейджи */}
+                          <Box sx={{ 
+                            position: 'absolute', 
+                            top: 12, 
+                            left: 12, 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            gap: 1 
+                          }}>
+                            {product?.is_new && (
                               <Chip 
-                                label={`Экономия ${((product.old_price - product.price) / product.old_price * 100).toFixed(0)}%`}
+                                icon={<NewReleases sx={{ fontSize: 16 }} />}
+                                label="Новинка" 
                                 size="small"
-                                color="success"
                                 sx={{ 
+                                  background: 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
+                                  color: 'white',
                                   fontWeight: 'bold',
-                                  fontSize: { xs: '0.7rem', sm: '0.75rem' }
+                                  fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                  height: { xs: 24, sm: 28 }
                                 }}
                               />
-                            </Box>
+                            )}
                           </Box>
-                        )}
 
-                        {(!product?.old_price || product.old_price <= product?.price) && (
-                          <Typography variant="h5" color="primary" sx={{ 
-                            fontWeight: 'bold', 
-                            mb: 2,
-                            fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                          {/* Кнопки действий */}
+                          <Box sx={{ 
+                            position: 'absolute', 
+                            top: 12, 
+                            right: 12, 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            gap: 1,
+                            opacity: !isMobile ? (hoveredCard === productId ? 1 : 0.7) : 1,
+                            transform: !isMobile ? (hoveredCard === productId ? 'translateX(0)' : 'translateX(10px)') : 'translateX(0)',
+                            transition: 'all 0.3s ease'
                           }}>
-                            {product?.price?.toLocaleString('ru-RU')} ₽
-                          </Typography>
-                        )}
-                      </CardContent>
-
-                      <Divider sx={{ mx: 2 }} />
-                      
-                      <Box sx={{ 
-                        p: 2, 
-                        display: 'flex', 
-                        gap: 1,
-                        flexDirection: { xs: 'column', sm: 'row' }
-                      }}>
-                        <Button
-                          variant="contained"
-                          startIcon={isAdding ? <CircularProgress size={16} color="inherit" /> : <ShoppingCart />}
-                          fullWidth
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddToCart(product);
-                          }}
-                          disabled={isAdding || !inStock}
-                          sx={{ 
-                            borderRadius: 2,
-                            py: { xs: 1, sm: 1.2 },
-                            background: inStock 
-                              ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                              : 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)',
-                            fontWeight: 'bold',
-                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                            '&:hover': inStock ? {
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)'
-                            } : {},
-                            transition: 'all 0.3s ease',
-                            order: { xs: 2, sm: 1 }
-                          }}
-                        >
-                          {isAdding ? 'Добавление...' : inStock ? 'В корзину' : 'Нет в наличии'}
-                        </Button>
+                            <Tooltip title="Поделиться">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => handleShareProduct(product, e)}
+                                sx={{ 
+                                  background: 'rgba(255,255,255,0.95)',
+                                  '&:hover': { 
+                                    background: 'white'
+                                  }
+                                }}
+                              >
+                                <Share fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            
+                            <Tooltip title="Быстрый просмотр">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewProduct(product);
+                                }}
+                                sx={{ 
+                                  background: 'rgba(255,255,255,0.95)',
+                                  '&:hover': { 
+                                    background: 'white'
+                                  }
+                                }}
+                              >
+                                <Visibility fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </Box>
                         
-                        <Tooltip title="Удалить из избранного">
-                          <IconButton
-                            color="error"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveFromWishlist(item.id, product?.name);
-                            }}
-                            sx={{
-                              borderRadius: 2,
-                              background: 'rgba(244, 67, 54, 0.1)',
-                              '&:hover': {
-                                background: 'rgba(244, 67, 54, 0.2)',
-                                transform: 'scale(1.1)'
-                              },
-                              transition: 'all 0.3s ease',
-                              order: { xs: 1, sm: 2 },
-                              alignSelf: { xs: 'flex-end', sm: 'center' },
-                              minWidth: 'auto',
-                              width: { xs: 40, sm: 48 },
-                              height: { xs: 40, sm: 48 }
+                        <CardContent sx={{ 
+                          flexGrow: 1, 
+                          p: { xs: 2, sm: 3 }, 
+                          pb: { xs: 1, sm: 2 } 
+                        }}>
+                          <Typography 
+                            variant="h6" 
+                            gutterBottom 
+                            sx={{ 
+                              fontWeight: 'bold',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              minHeight: { xs: 48, sm: 64 },
+                              lineHeight: 1.3,
+                              fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' }
                             }}
                           >
-                            <Delete sx={{ fontSize: { xs: 20, sm: 24 } }} />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    </Card>
-                  </Slide>
-                </Grid>
-              );
-            })}
-          </Grid>
+                            {productName}
+                          </Typography>
+                          
+                          <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 1, 
+                            mb: 2 
+                          }}>
+                            <Inventory sx={{ 
+                              fontSize: { xs: 16, sm: 18 }, 
+                              color: stockColor 
+                            }} />
+                            <Typography 
+                              variant="body2" 
+                              sx={{ 
+                                fontWeight: 'bold',
+                                color: stockColor,
+                                fontSize: { xs: '0.75rem', sm: '0.8rem' }
+                              }}
+                            >
+                              {stockText}
+                            </Typography>
+                          </Box>
+
+                          {productOldPrice && productOldPrice > productPrice && (
+                            <Box sx={{ mb: 2 }}>
+                              <Box sx={{ 
+                                display: 'flex', 
+                                alignItems: 'baseline', 
+                                gap: { xs: 1, sm: 2 }, 
+                                flexWrap: 'wrap' 
+                              }}>
+                                <Typography variant="h4" color="primary" sx={{ 
+                                  fontWeight: 'bold',
+                                  fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                                }}>
+                                  {productPrice?.toLocaleString('ru-RU')} ₽
+                                </Typography>
+                                <Typography variant="body1" color="text.secondary" sx={{ 
+                                  textDecoration: 'line-through',
+                                  fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                                }}>
+                                  {productOldPrice.toLocaleString('ru-RU')} ₽
+                                </Typography>
+                              </Box>
+                            </Box>
+                          )}
+
+                          {(!productOldPrice || productOldPrice <= productPrice) && (
+                            <Typography variant="h5" color="primary" sx={{ 
+                              fontWeight: 'bold', 
+                              mb: 2,
+                              fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                            }}>
+                              {productPrice?.toLocaleString('ru-RU')} ₽
+                            </Typography>
+                          )}
+                        </CardContent>
+
+                        <Divider sx={{ mx: 2 }} />
+                        
+                        <Box sx={{ 
+                          p: 2, 
+                          display: 'flex', 
+                          gap: 1,
+                          flexDirection: { xs: 'column', sm: 'row' }
+                        }}>
+                          <Button
+                            variant="contained"
+                            startIcon={isAdding ? <CircularProgress size={16} color="inherit" /> : <ShoppingCart />}
+                            fullWidth
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddToCart(product);
+                            }}
+                            disabled={isAdding || !inStock}
+                            sx={{ 
+                              borderRadius: 2,
+                              py: { xs: 1, sm: 1.2 },
+                              background: inStock 
+                                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                                : 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)',
+                              fontWeight: 'bold',
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                              order: { xs: 2, sm: 1 }
+                            }}
+                          >
+                            {isAdding ? 'Добавление...' : inStock ? 'В корзину' : 'Нет в наличии'}
+                          </Button>
+                          
+                          <Tooltip title="Удалить из избранного">
+                            <IconButton
+                              color="error"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveFromWishlist(item.id, productName);
+                              }}
+                              sx={{
+                                borderRadius: 2,
+                                background: 'rgba(244, 67, 54, 0.1)',
+                                '&:hover': {
+                                  background: 'rgba(244, 67, 54, 0.2)'
+                                },
+                                order: { xs: 1, sm: 2 },
+                                alignSelf: { xs: 'flex-end', sm: 'center' },
+                                minWidth: 'auto',
+                                width: { xs: 40, sm: 48 },
+                                height: { xs: 40, sm: 48 }
+                              }}
+                            >
+                              <Delete sx={{ fontSize: { xs: 20, sm: 24 } }} />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </Card>
+                    </Slide>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          )
         )}
 
         {/* Плавающая кнопка корзины */}
-        {wishlist.length > 0 && (
+        {Array.isArray(wishlist) && wishlist.length > 0 && (
           <Zoom in={mounted} timeout={1000}>
             <Fab
               color="primary"
@@ -895,23 +883,12 @@ const WishlistPage = () => {
                 right: { xs: 16, sm: 24 },
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 width: { xs: 56, sm: 64 },
-                height: { xs: 56, sm: 64 },
-                '&:hover': {
-                  transform: 'scale(1.1)',
-                  background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)'
-                }
+                height: { xs: 56, sm: 64 }
               }}
             >
               <Badge 
                 badgeContent={cartItemsCount} 
                 color="error"
-                sx={{
-                  '& .MuiBadge-badge': {
-                    fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                    height: { xs: 18, sm: 20 },
-                    minWidth: { xs: 18, sm: 20 }
-                  }
-                }}
               >
                 <ShoppingCart sx={{ fontSize: { xs: 24, sm: 28 } }} />
               </Badge>
@@ -935,18 +912,10 @@ const WishlistPage = () => {
             sx={{ 
               borderRadius: 2,
               boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
-              alignItems: 'center',
-              fontSize: { xs: '0.9rem', sm: '1rem' }
-            }}
-            iconMapping={{
-              success: <Star sx={{ fontSize: { xs: 20, sm: 24 } }} />,
-              error: <Favorite sx={{ fontSize: { xs: 20, sm: 24 } }} />,
-              warning: <FlashOn sx={{ fontSize: { xs: 20, sm: 24 } }} />
+              alignItems: 'center'
             }}
           >
-            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-              {snackbar.message}
-            </Typography>
+            {snackbar.message}
           </Alert>
         </Snackbar>
       </Container>

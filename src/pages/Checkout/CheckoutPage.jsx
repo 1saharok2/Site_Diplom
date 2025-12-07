@@ -1,147 +1,256 @@
-// pages/Checkout/CheckoutPage.jsx
 import React, { useState } from 'react';
 import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Grid,
-  TextField,
-  Button,
-  Divider,
-  Alert,
-  MenuItem
+  Container,
+  Typography,
+  Box,
+  Paper,
+  Grid,
+  TextField,
+  Button,
+  Divider,
+  Alert,
+  MenuItem,
+  CircularProgress,
+  Avatar
 } from '@mui/material';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
-import { useOrders } from '../../context/OrderContext';
 import { useNavigate } from 'react-router-dom';
+import { apiService } from '../../services/api';
 
-const CheckoutPage = () => {
-  const { items, getTotalPrice, clearCart } = useCart();
-  const { currentUser } = useAuth();
-  const { createOrder } = useOrders();
-  const navigate = useNavigate();
-  
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  
-  const [formData, setFormData] = useState({
-    firstName: currentUser?.first_name || '',
-    lastName: currentUser?.last_name || '',
-    email: currentUser?.email || '',
-    phone: currentUser?.phone || '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: 'Россия',
-    paymentMethod: 'card'
-  });
+const CheckoutPage = (props) => {
+  // Переменные из хуков
+  const { items, getTotalPrice, clearCart } = useCart();
+  const { isAuthenticated: isAuthHook, currentUser: authUser } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log('🟢 handleSubmit вызван');
-    setLoading(true);
-    setError('');
+  const { apiService } = props; 
 
-    // Валидация формы
-    if (!formData.firstName || !formData.lastName || !formData.email || 
-        !formData.phone || !formData.address || !formData.city || !formData.postalCode) {
-      setError('Пожалуйста, заполните все обязательные поля');
-      setLoading(false);
-      return;
-    }
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  const [formData, setFormData] = useState({
+    firstName: authUser?.first_name || authUser?.firstName || '',
+    lastName: authUser?.last_name || authUser?.lastName || '',
+    email: authUser?.email || '',
+    phone: authUser?.phone || '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: 'Россия',
+    paymentMethod: 'card'
+  });
 
-    // Проверяем пользователя
-    if (!currentUser || !currentUser.id) {
-      setError('Требуется авторизация');
-      setLoading(false);
-      return;
-    }
+  const getProductName = (item) => {
+    return item?.product_name || 
+           item?.products?.name || 
+           item?.name || 
+           'Товар';
+  };
 
-    // Проверяем корзину
-    if (items.length === 0) {
-      setError('Корзина пуста');
-      setLoading(false);
-      return;
-    }
+  const getProductPrice = (item) => {
+    return item?.price || 
+           item?.products?.price || 
+           item?.product_price || 
+           0;
+  };
 
-    try {
-      console.log('📦 Создание заказа...');
-      const orderData = {
-        userId: currentUser.id,
-        items: items.map(item => ({
-          product_id: item.product_id,
-          quantity: item.quantity,
-          price: item.products?.price || 0,
-          name: item.products?.name || '',
-          image: item.products?.image_url?.[0] || ''
-        })),
-        totalAmount: getTotalPrice(),
-        shippingAddress: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          address: formData.address,
-          city: formData.city,
-          postalCode: formData.postalCode,
-          country: formData.country
-        },
-        paymentMethod: formData.paymentMethod
-      };
+  const getProductId = (item) => {
+    return item?.product_id || 
+           item?.id || 
+           item?.products?.id || 
+           0;
+  };
 
-      console.log('🚀 Данные заказа:', orderData);
+  const getProductImage = (item) => {
+    try {
+      // Если image_url - это JSON строка
+      if (item?.image_url) {
+        // Проверяем, это JSON массив или обычная строка
+        if (item.image_url.startsWith('[')) {
+          const images = JSON.parse(item.image_url);
+          if (Array.isArray(images) && images.length > 0) {
+            return images[0];
+          }
+        } else {
+          // Это обычная строка с путем
+          return item.image_url;
+        }
+      }
+      
+      // Проверяем другие возможные поля
+      return item?.product_image || 
+            item?.products?.image_url || 
+            '';
+    } catch (e) {
+      console.error('Ошибка парсинга image_url:', e);
+      return '';
+    }
+  };
 
-      // Создаем заказ
-      const order = await createOrder(orderData);
-      console.log('✅ Заказ создан:', order);
-      
-      // Очищаем корзину после успешного заказа
-      await clearCart();
-      console.log('🛒 Корзина очищена');
-      
-      // Перенаправляем на страницу подтверждения
-      navigate(`/order-success/${order.id}`);
-      
-    } catch (err) {
-      console.error('❌ Ошибка создания заказа:', err);
-      setError(err.message || 'Ошибка при оформлении заказа. Попробуйте еще раз.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true); // Включаем загрузку
+    setError(''); // Сбрасываем ошибку
 
-  // Добавим кнопку для отладки
-  const debugCheck = () => {
-    console.log('🔍 Отладка:');
-    console.log('currentUser:', currentUser);
-    console.log('items:', items);
-    console.log('items length:', items.length);
-    console.log('formData:', formData);
-  };
+    // Используем переменные из useAuth
+    if (!isAuthHook) {
+        alert('Пожалуйста, авторизуйтесь для оформления заказа.');
+        setLoading(false);
+        return;
+    }
 
-  if (items.length === 0) {
-    return (
-      <Container sx={{ py: 8, minHeight: '60vh' }}>
-        <Alert severity="info">
-          <Typography variant="h6" gutterBottom>
-            Корзина пуста
-          </Typography>
-          <Typography>
-            Добавьте товары в корзину перед оформлением заказа
-          </Typography>
-        </Alert>
-      </Container>
-    );
-  }
+    if (!items || items.length === 0) {
+        setError('Корзина пуста.');
+        setLoading(false);
+        return;
+    }
+
+    if (!authUser || !authUser.id) {
+        setError('Ошибка авторизации: не найден ID пользователя.');
+        setLoading(false);
+        return;
+    }
+
+    // --- 2. Подготовка ПОЛНЫХ данных для сервера ---
+    
+    const orderData = {
+        userId: authUser.id,
+        items: items.map(item => {
+            // !!! ГЛАВНОЕ ИСПРАВЛЕНИЕ: Использование вашей безопасной функции !!!
+            const product_id = getProductId(item);
+            const price = getProductPrice(item);
+
+            // ОТЛАДКА: Проверка, что ID не равен 0
+            console.log('🔍 Полный объект товара в корзине:', item); 
+            console.log(`🔍 Извлеченный ID: ${product_id}. Цена: ${price}`);
+            if (product_id === 0) {
+                console.error("⛔️ Ошибка: product_id равен 0. Проверьте структуру данных в CartContext.");
+            }
+            const pid = getProductId(item)
+            return {
+                product_id: pid, 
+                name: getProductName(item),
+                price: price,
+                quantity: item.quantity || 1,
+                image: getProductImage(item)
+            };
+        }),
+        totalAmount: getTotalPrice(),
+        
+        // !!! МАРКЕР ИСПРАВЛЕННОГО КОДА !!!
+        DEBUG_VERSION: 'FINAL_FIX_V2025_03', 
+        
+        // !!! ВОССТАНОВЛЕНО ОБЯЗАТЕЛЬНОЕ ПОЛЕ !!!
+        shippingAddress: {
+           firstName: formData.firstName,
+           lastName: formData.lastName,
+           email: formData.email,
+           phone: formData.phone,
+           address: formData.address,
+           city: formData.city,
+           postalCode: formData.postalCode,
+           country: formData.country || 'N/A'
+        },
+        paymentMethod: formData.paymentMethod || 'card'
+    };
+
+    console.log('🟢 Отправка данных заказа:', orderData); 
+    
+    // --- 3. Отправка заказа через API ---
+    try {
+        
+        const response = await apiService.createOrder(orderData); 
+
+        if (response && response.success) {
+            alert(`Заказ #${response.orderNumber || 'создан'} успешно оформлен!`);
+            clearCart(); // Очистка корзины
+            navigate('/order-success'); // Перенаправление
+        } else {
+            throw new Error(response?.message || 'Неизвестная ошибка сервера.');
+        }
+
+    } catch (error) {
+        console.error('Error creating order:', error);
+        setError(`❌ Ошибка оформления заказа: ${error.message}`);
+    } finally {
+        setLoading(false);
+    }
+};
+
+  // Отладочная функция
+  const debugCheck = () => {
+    console.log('🔍 Отладочная информация о корзине:');
+    console.log('Все элементы корзины:', items);
+    
+    // Детальная информация о каждом товаре
+    items.forEach((item, index) => {
+      console.log(`\nТовар ${index + 1}:`);
+      console.log('  Полный объект:', item);
+      console.log('  ID (getProductId):', getProductId(item)); // Выводим ID через функцию
+      console.log('  Имя (getProductName):', getProductName(item));
+      console.log('  Цена (getProductPrice):', getProductPrice(item));
+      console.log('  quantity:', item.quantity);
+      
+    });
+    
+    console.log('\nФорма данных:', formData);
+    console.log('Общая сумма:', getTotalPrice());
+  };
+
+  // Здесь мы используем authUser (из useAuth), который является фактическим объектом пользователя
+  const currentUser = authUser; 
+
+  if (items.length === 0) {
+    return (
+      <Container sx={{ py: 8, minHeight: '60vh' }}>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Корзина пуста
+          </Typography>
+          <Typography>
+            Добавьте товары в корзину перед оформлением заказа
+          </Typography>
+        </Alert>
+        <Button 
+          variant="contained" 
+          onClick={() => navigate('/catalog')}
+          sx={{ mt: 2 }}
+        >
+          Перейти в каталог
+        </Button>
+      </Container>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <Container sx={{ py: 8, minHeight: '60vh' }}>
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Требуется авторизация
+          </Typography>
+          <Typography>
+            Для оформления заказа необходимо войти в систему
+          </Typography>
+        </Alert>
+        <Button 
+          variant="contained" 
+          onClick={() => navigate('/login')}
+          sx={{ mt: 2 }}
+        >
+          Войти
+        </Button>
+      </Container>
+    );
+  }
 
   return (
     <Container sx={{ py: 4 }}>
@@ -149,16 +258,24 @@ const CheckoutPage = () => {
         Оформление заказа
       </Typography>
 
-      {/* Кнопка отладки */}
-      <Button onClick={debugCheck} variant="outlined" sx={{ mb: 2 }}>
-        Debug Info
-      </Button>
+      {/* Кнопка отладки (только в development) */}
+      {process.env.NODE_ENV === 'development' && (
+        <Button onClick={debugCheck} variant="outlined" sx={{ mb: 3 }}>
+          Debug Cart Items
+        </Button>
+      )}
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
       <form onSubmit={handleSubmit}>
         <Grid container spacing={4}>
           <Grid item xs={12} md={8}>
             <Paper elevation={2} sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
+              <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
                 Данные для доставки
               </Typography>
 
@@ -281,19 +398,47 @@ const CheckoutPage = () => {
           </Grid>
 
           <Grid item xs={12} md={4}>
-            <Paper elevation={2} sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
+            <Paper elevation={2} sx={{ p: 3, position: 'sticky', top: 20 }}>
+              <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
                 Ваш заказ
               </Typography>
 
-              <Box sx={{ mb: 2 }}>
-                {items.map((item) => (
-                  <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography variant="body2">
-                      {item.products?.name} × {item.quantity}
-                    </Typography>
-                    <Typography variant="body2">
-                      {((item.products?.price || 0) * item.quantity).toLocaleString('ru-RU')} ₽
+              <Box sx={{ mb: 2, maxHeight: 200, overflow: 'auto' }}>
+                {items.map((item, index) => (
+                  <Box 
+                    key={index} 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between', 
+                      mb: 1, 
+                      pb: 1, 
+                      borderBottom: index < items.length - 1 ? '1px solid #eee' : 'none' 
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, mr: 2 }}>
+                      {getProductImage(item) ? (
+                        <Avatar 
+                          src={getProductImage(item)} 
+                          alt={getProductName(item)}
+                          sx={{ width: 40, height: 40, mr: 1 }}
+                        />
+                      ) : (
+                        <Avatar sx={{ width: 40, height: 40, mr: 1, bgcolor: 'grey.300' }}>
+                          <Typography variant="caption">Т</Typography>
+                        </Avatar>
+                      )}
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.9rem' }}>
+                          {getProductName(item)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Количество: {item.quantity || 1}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 60, textAlign: 'right' }}>
+                      {(getProductPrice(item) * (item.quantity || 1)).toLocaleString('ru-RU')} ₽
                     </Typography>
                   </Box>
                 ))}
@@ -303,16 +448,10 @@ const CheckoutPage = () => {
 
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                 <Typography variant="h6">Итого:</Typography>
-                <Typography variant="h6" color="primary">
+                <Typography variant="h6" color="primary" fontWeight="bold">
                   {getTotalPrice().toLocaleString('ru-RU')} ₽
                 </Typography>
               </Box>
-
-              {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {error}
-                </Alert>
-              )}
 
               <Button
                 type="submit"
@@ -323,10 +462,18 @@ const CheckoutPage = () => {
                 sx={{
                   py: 1.5,
                   fontSize: '1.1rem',
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  mt: 2
                 }}
               >
-                {loading ? 'Оформление...' : `Оформить заказ - ${getTotalPrice().toLocaleString('ru-RU')} ₽`}
+                {loading ? (
+                  <>
+                    <CircularProgress size={24} sx={{ mr: 2, color: 'white' }} />
+                    Оформление...
+                  </>
+                ) : (
+                  `Оформить заказ - ${getTotalPrice().toLocaleString('ru-RU')} ₽`
+                )}
               </Button>
             </Paper>
           </Grid>

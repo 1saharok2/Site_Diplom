@@ -247,35 +247,76 @@ export const apiService = {
   },
 
   // Cart & Orders
-  createOrder: (orderData) => {
-    return apiService.post('/orders', orderData);
+  createOrder: async (orderData) => {
+    const url = `/orders`;
+    console.log('🔧 createOrder URL:', url, orderData);
+    
+    try {
+      const response = await fetchWithAuth(`${API_BASE}${url}`, {
+        method: 'POST',
+        body: JSON.stringify(orderData)
+      });
+      
+      const result = await handleResponse(response, url);
+      console.log('✅ Order created successfully:', result);
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Error creating order:', error);
+      throw new Error(`Failed to create order: ${error.message}`);
+    }
   },
 
-  getUserOrders: async (userId = null) => {
+  getUserOrders: async (userId) => {
+    const url = `/orders/user/${userId}`;
+    console.log('🔧 getUserOrders URL:', url);
+    
     try {
-      const actualUserId = userId || localStorage.getItem('userId') || 0;
+      const response = await fetchWithAuth(`${API_BASE}${url}`);
+      const result = await handleResponse(response, url);
+      console.log('✅ User orders fetched:', result.orders?.length || 0, 'orders');
+      return result;
       
-      // Если userId=0, возвращаем пустые данные
-      if (!actualUserId || actualUserId === '0') {
-        console.log('⚠ No valid user ID, returning empty orders');
-        return {
-          success: true,
-          orders: [],
-          count: 0
-        };
-      }
-      
-      const response = await apiService.get(`/orders/user/${actualUserId}`);
-      return response;
     } catch (error) {
-      console.error('Error getting user orders:', error);
-      // В случае ошибки возвращаем пустой массив
+      console.error('❌ Error fetching user orders:', error);
+      // Возвращаем пустые данные вместо ошибки
       return {
-        success: false,
+        success: true,
         orders: [],
-        count: 0,
-        message: error.message
+        count: 0
       };
+    }
+  },
+
+  getOrderById: async (orderId) => {
+    const url = `/orders/${orderId}`;
+    console.log('🔧 getOrderById URL:', url);
+    
+    try {
+      const response = await fetchWithAuth(`${API_BASE}${url}`);
+      return await handleResponse(response, url);
+      
+    } catch (error) {
+      console.error('❌ Error fetching order:', error);
+      throw error;
+    }
+  },
+
+  updateOrderStatus: async (orderId, status) => {
+    const url = `/admin/orders/${orderId}/status`;
+    console.log('🔧 updateOrderStatus URL:', url);
+    
+    try {
+      const response = await fetchWithAuth(`${API_BASE}${url}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status })
+      });
+      
+      return await handleResponse(response, url);
+      
+    } catch (error) {
+      console.error('❌ Error updating order status:', error);
+      throw error;
     }
   },
 
@@ -321,7 +362,18 @@ export const apiService = {
       console.log('⚠ No user ID, returning empty cart');
       return Promise.resolve({ success: true, items: [] });
     }
-    return apiService.get(`/cart.php?userId=${actualUserId}`);
+    
+    // Убедитесь, что userId не дублируется
+    const url = `/cart.php?userId=${actualUserId}`;
+    console.log('🔧 getCart URL:', url);
+    
+    // Используйте простой fetch без fetchWithAuth
+    return fetch(`${API_BASE}${url}`)
+      .then(response => handleResponse(response, url))
+      .catch(error => {
+        console.error('Cart fetch error:', error);
+        return { success: true, items: [] };
+      });
   },
 
   // Wishlist specific methods
