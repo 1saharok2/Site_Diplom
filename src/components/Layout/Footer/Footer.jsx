@@ -137,23 +137,17 @@ const Footer = () => {
             © 2025 Электроник. Все права защищены.
           </Typography>
           
-          <Box sx={{ display: 'flex', gap: 3 }}>
-            <MuiLink
-              component={Link}
-              to="/privacy"
-              color="inherit"
-              sx={{ textDecoration: 'none', opacity: 0.7, fontSize: '0.875rem', '&:hover': { opacity: 1 } }}
-            >
-              Политика конфиденциальности
-            </MuiLink>
-            <MuiLink
-              component={Link}
-              to="/terms"
-              color="inherit"
-              sx={{ textDecoration: 'none', opacity: 0.7, fontSize: '0.875rem', '&:hover': { opacity: 1 } }}
-            >
-              Условия использования
-            </MuiLink>
+          <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', mt: 2 }}>
+            <Link to="/privacy-policy" style={{ color: 'inherit', textDecoration: 'none' }}>
+              <Typography variant="body2" sx={{ '&:hover': { textDecoration: 'underline' } }}>
+                Политика конфиденциальности
+              </Typography>
+            </Link>
+            <Link to="/terms-of-service" style={{ color: 'inherit', textDecoration: 'none' }}>
+              <Typography variant="body2" sx={{ '&:hover': { textDecoration: 'underline' } }}>
+                Условия пользования
+              </Typography>
+            </Link>
           </Box>
         </Box>
       </Container>

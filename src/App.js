@@ -30,6 +30,8 @@ const ProfilePage = lazy(() => import('./pages/User/ProfilePage'));
 const OrdersPage = lazy(() => import('./pages/User/OrdersPage'));
 const WishlistPage = lazy(() => import('./pages/User/WishlistPage'));
 const UserReviewsPage = lazy(() => import('./pages/User/UserReviewPage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/About/PrivacyPolicyPage/PrivacyPolicyPage'));
+const TermsOfServicePage = lazy(() => import('./pages/About/TermsOfServicePage/TermsOfServicePage'));
 
 // Ленивая загрузка админских страниц
 const AdminDashboard = lazy(() => import('./pages/Admin/Dashboard/AdminDashboard'));
@@ -166,6 +168,8 @@ function App() {
                           <Route path="/register" element={<SuspenseWrapper><RegisterPage /></SuspenseWrapper>} />
                           <Route path="/catalog" element={<SuspenseWrapper><CategoriesPage /></SuspenseWrapper>} />
                           <Route path="/about" element={<SuspenseWrapper><AboutPage /></SuspenseWrapper>} />
+                          <Route path="/privacy-policy" element={<SuspenseWrapper><PrivacyPolicyPage /></SuspenseWrapper>} />
+                          <Route path="/terms-of-service" element={<SuspenseWrapper><TermsOfServicePage /></SuspenseWrapper>} />
                           <Route path="/contacts" element={<SuspenseWrapper><ContactsPage /></SuspenseWrapper>} />
                           <Route path="/cart" element={<SuspenseWrapper><CartPage /></SuspenseWrapper>} />
                           <Route path="/search" element={<SuspenseWrapper><SearchPage /></SuspenseWrapper>} />
