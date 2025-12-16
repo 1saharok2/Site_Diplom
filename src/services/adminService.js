@@ -21,31 +21,36 @@ const handleApiResponse = async (response) => {
   return response.json();
 };
 
-const fetchWithAuth = async (url, options = {}) => {
-  try {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      throw new Error('Токен авторизации не найден');
+export const fetchWithAuth = async (url, options = {}) => {
+  const token = localStorage.getItem('authToken');
+
+  const response = await fetch(`${API_BASE}${url}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {})
+    }
+  });
+
+  if (!response.ok) {
+    let errorData = {};
+    try {
+      errorData = await response.json();
+    } catch {}
+
+    // ❗ logout ТОЛЬКО при 401
+    if (response.status === 401) {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+      window.location.href = '/login';
     }
 
-    const fullUrl = `${API_BASE}${url}`;
-    console.log('🔧 Auth request to:', fullUrl);
-
-    const response = await fetch(fullUrl, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        ...options.headers,
-      },
-    });
-
-    return handleApiResponse(response);
-
-  } catch (error) {
-    console.error(`❌ Request error to ${url}:`, error);
-    throw error;
+    // ❌ НЕ logout при 403 и 500
+    throw new Error(errorData.message || `HTTP ${response.status}`);
   }
+
+  return response.json();
 };
 
 // Функция для обычных запросов без авторизации
@@ -245,16 +250,65 @@ export const adminService = {
 
   updateOrderStatus: async (orderId, status) => {
     try {
-      const order = await fetchWithAuth(`/admin/orders/${orderId}/status`, {
-        method: 'PUT',
-        body: JSON.stringify({ status })
-      });
-      return order;
+      console.log(`🔄 Attempting to update order ${orderId} status to ${status}`);
+      
+      // Сначала пробуем метод PATCH (чаще всего используется для частичных обновлений)
+      try {
+        const order = await fetchWithAuth(`/admin/orders/${orderId}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status })
+        });
+        console.log('✅ Status updated via PATCH method');
+        return order;
+      } catch (patchError) {
+        console.log('⚠️ PATCH method failed, trying POST...');
+        
+        // Пробуем метод POST
+        try {
+          const order = await fetchWithAuth(`/admin/orders/${orderId}/status`, {
+            method: 'POST',
+            body: JSON.stringify({ status })
+          });
+          console.log('✅ Status updated via POST method');
+          return order;
+        } catch (postError) {
+          console.log('⚠️ POST method failed, trying PUT again with different approach...');
+          
+          // Пробуем PUT на другой эндпоинт или с другими данными
+          try {
+            // Альтернатива: обновить весь заказ
+            const order = await fetchWithAuth(`/admin/orders/${orderId}`, {
+              method: 'PUT',
+              body: JSON.stringify({ status, action: 'update_status' })
+            });
+            console.log('✅ Status updated via PUT (full order update)');
+            return order;
+          } catch (putError) {
+            console.log('⚠️ All methods failed, trying final alternative...');
+            
+            // Последняя попытка: отдельный эндпоинт без /status
+            const order = await fetchWithAuth(`/admin/orders/${orderId}/update-status`, {
+              method: 'POST',
+              body: JSON.stringify({ status })
+            });
+            console.log('✅ Status updated via alternative endpoint');
+            return order;
+          }
+        }
+      }
     } catch (error) {
-      console.error('Error in updateOrderStatus:', error);
+      console.error('❌ All update methods failed:', error);
+      
+      // Проверяем структуру ошибки
+      if (error.message.includes('405')) {
+        throw new Error('Сервер не поддерживает данный метод. Пожалуйста, проверьте документацию API.');
+      }
+      
       throw error;
     }
   },
+
+  // Также добавим альтернативные методы для управления заказами:
 
   updateOrder: async (orderId, orderData) => {
     try {

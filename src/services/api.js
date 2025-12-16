@@ -55,26 +55,18 @@ const handleResponse = async (response, url) => {
 // Обертка для fetch с добавлением токена
 const fetchWithAuth = (url, options = {}) => {
   const token = localStorage.getItem('authToken');
-  const userId = localStorage.getItem('userId');
-  
+
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers
   };
-  
-  // Добавляем токен если есть
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
-  // Для некоторых API добавляем userId в параметры или заголовки
-  const fullUrl = new URL(url, window.location.origin);
-  if (userId && userId !== '0') {
-    // Добавляем userId к существующим query параметрам
-    fullUrl.searchParams.append('userId', userId);
-  }
-  
-  return fetch(fullUrl.toString(), {
+
+  // ❌ НИКАКОГО userId здесь
+  return fetch(url.startsWith('http') ? url : `${API_BASE}${url}`, {
     ...options,
     headers
   });
