@@ -1,9 +1,9 @@
 import { apiService } from './api';
 
 export const orderService = {
-  createOrder: async (orderData, userData = null) => {
+  createOrder: async (orderData) => {
     try {
-      const order = await apiService.post('/orders', orderData);
+      const order = await apiService.post('/orders.php', orderData);
       return order;
     } catch (error) {
       console.error('Error creating order:', error);
@@ -12,6 +12,12 @@ export const orderService = {
   },
 
   getUserOrders: async (userId) => {
+    // 1. Проверяем, что ID существует и он не равен 0
+    if (!userId || userId === 0 || userId === '0') {
+      console.warn('getUserOrders: запрос отменен, некорректный ID пользователя:', userId);
+      return []; // Возвращаем пустой массив без вызова API
+    }
+
     try {
       const orders = await apiService.get(`/orders/user/${userId}`);
       return orders || [];

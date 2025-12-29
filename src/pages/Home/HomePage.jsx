@@ -246,7 +246,7 @@ const HomePage = () => {
                     flexDirection: { xs: "column", md: "row" },
                     alignItems: "center",
                     justifyContent: "space-between",
-                    px: { xs: 2, md: 4, lg: 6, xl: 8 },
+                    px: { xs: 3, md: 6, lg: 9, xl: 12 },
                     py: { xs: 3, md: 0 }, // Уменьшаем отступы сверху/снизу на мобильных
                     height: '100%',
                     minHeight: { xs: "60vh", md: "85vh" }, // Минимальная высота слайда

@@ -24,7 +24,7 @@ const CartSummary = ({ cartItems, onClearCart, onRefreshCart }) => {
   const totalAmount = cartService.getCartTotal(cartItems);
   const itemsCount = cartService.getCartItemsCount(cartItems);
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = () => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: '/cart' } });
       return;
@@ -36,84 +36,8 @@ const CartSummary = ({ cartItems, onClearCart, onRefreshCart }) => {
       return;
     }
 
-    setLoading(true);
-    setError('');
-    setShowError(false);
-    
-    console.log('🔍 Данные пользователя в корзине:', {
-      id: user?.id,
-      email: user?.email,
-      name: user?.name,
-      first_name: user?.first_name, 
-      last_name: user?.last_name,
-      username: user?.username,
-      phone: user?.phone,
-      fullObject: user
-    });
-
-    try {
-      // Подготавливаем данные для заказа
-      const orderData = {
-        userId: user.id,
-        items: cartItems.map(item => ({
-          productId: item.product_id,
-          quantity: item.quantity,
-          price: item.products?.price || 0,
-          name: item.products?.name || 'Неизвестный товар'
-        })),
-        totalAmount: totalAmount
-      };
-
-      console.log('🟢 Отправка данных заказа:', orderData);
-
-      // Создаем заказ
-      const order = await orderService.createOrder(orderData, user);
-      
-      // Проверяем что заказ содержит order_number
-      if (!order || !order.order_number) {
-        // Если нет номера заказа, но есть ID, создаем номер вручную
-        if (order && order.id) {
-          order.order_number = 'ORD-' + order.id;
-        } else {
-          throw new Error('Заказ не содержит номер заказа');
-        }
-      }
-
-      // Очищаем корзину после успешного оформления
-      try {
-        await cartService.clearCart(user.id);
-        if (onClearCart) onClearCart();
-      } catch (clearError) {
-        console.warn('⚠️ Ошибка очистки корзины:', clearError);
-      }
-
-      // Перенаправляем на страницу успеха
-      navigate('/order-success', { 
-        state: { 
-          orderNumber: order.order_number,
-          totalAmount: totalAmount,
-          orderId: order.id
-        } 
-      });
-
-    } catch (error) {
-      console.error('❌ Ошибка оформления заказа:', error);
-      
-      let errorMessage = 'Произошла ошибка при оформлении заказа. ';
-      
-      if (error.message?.includes('order_number')) {
-        errorMessage += 'Проблема с генерацией номера заказа.';
-      } else if (error.message?.includes('null value')) {
-        errorMessage += 'Не заполнены обязательные поля. Проверьте данные профиля.';
-      } else {
-        errorMessage += error.message || 'Попробуйте еще раз.';
-      }
-      
-      setError(errorMessage);
-      setShowError(true);
-    } finally {
-      setLoading(false);
-    }
+    // Просто уходим на страницу оформления, ничего не отправляя на сервер!
+    navigate('/checkout'); 
   };
 
   const handleClearCart = async () => {

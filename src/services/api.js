@@ -1,14 +1,12 @@
 const getApiBase = () => {
-  // Если есть переменная окружения — используем её
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
-  // Локальная разработка
   if (window.location.hostname === 'localhost') {
     return 'http://localhost:5000/api';
   }
-  // Продакшн (на сервере)
-  return `${window.location.protocol}//${window.location.host}/api`;
+  const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+  return `https://electronic.tw1.ru/api`; 
 };
 
 const API_BASE = getApiBase();
@@ -172,8 +170,7 @@ export const apiService = {
 
   register: async (userData) => {
     try {
-      // Используйте правильный URL - ваш файл register.php
-      const url = 'https://electronic.tw1.ru/api/register.php';
+      const url = 'https://electronic.tw1.ru/api/auth/register.php';
       console.log('🔧 register URL:', url);
       console.log('🔧 register data:', { 
         ...userData, 
@@ -240,7 +237,7 @@ export const apiService = {
 
   // Cart & Orders
   createOrder: async (orderData) => {
-    const url = `/orders`;
+    const url = `/orders.php`;
     console.log('🔧 createOrder URL:', url, orderData);
     
     try {

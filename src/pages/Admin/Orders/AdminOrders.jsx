@@ -302,12 +302,21 @@ const AdminOrders = () => {
     try {
       setLoading(true);
       setError('');
-      const ordersData = await adminService.getOrders();
-      setOrders(Array.isArray(ordersData) ? ordersData : []);
+      const response = await adminService.getOrders();
+      
+      // ❗ Важно: проверяем, как именно пришли данные. 
+      // Если PHP возвращает { success: true, data: [...] }, берем response.data
+      const ordersArray = Array.isArray(response) 
+        ? response 
+        : (response && response.data ? response.data : []);
+        
+      setOrders(ordersArray);
     } catch (error) {
       console.error('Error fetching orders:', error);
-      setError('Ошибка при загрузке заказов');
-      setOrders([]);
+      // Если это не ошибка 401 (которую обработает сам сервис), показываем текст
+      if (!error.message.includes('401')) {
+        setError('Не удалось загрузить список заказов');
+      }
     } finally {
       setLoading(false);
     }

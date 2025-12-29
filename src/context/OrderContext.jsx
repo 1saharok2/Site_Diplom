@@ -139,16 +139,25 @@ export const OrderProvider = ({ children }) => {
   const createOrder = async (orderData) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const order = await orderService.createOrder(orderData);
-      dispatch({ type: 'ADD_ORDER', payload: order });
-      return order;
+      
+      // Вызов сервиса, который отправляет POST запрос на orders.php
+      const response = await orderService.createOrder(orderData);
+      
+      // Если сервер вернул успех
+      if (response && (response.success || response.orderId)) {
+        dispatch({ type: 'ADD_ORDER', payload: response });
+        return response; // Возвращаем весь ответ, включая orderNumber
+      }
+      throw new Error(response?.message || 'Ошибка сервера');
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error('Error in OrderContext:', error);
       dispatch({ 
         type: 'SET_ERROR', 
         payload: error.message || 'Ошибка при создании заказа' 
       });
       throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 

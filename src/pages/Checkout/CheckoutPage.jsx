@@ -24,8 +24,6 @@ const CheckoutPage = (props) => {
   const { isAuthenticated: isAuthHook, currentUser: authUser } = useAuth();
   const navigate = useNavigate();
 
-  const { apiService } = props; 
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -36,8 +34,6 @@ const CheckoutPage = (props) => {
     phone: authUser?.phone || '',
     address: '',
     city: '',
-    postalCode: '',
-    country: 'Россия',
     paymentMethod: 'card'
   });
 
@@ -121,68 +117,49 @@ const handleSubmit = async (e) => {
 
     // --- 2. Подготовка ПОЛНЫХ данных для сервера ---
     
-    const orderData = {
-        userId: authUser.id,
-        items: items.map(item => {
-            // !!! ГЛАВНОЕ ИСПРАВЛЕНИЕ: Использование вашей безопасной функции !!!
-            const product_id = getProductId(item);
-            const price = getProductPrice(item);
-
-            // ОТЛАДКА: Проверка, что ID не равен 0
-            console.log('🔍 Полный объект товара в корзине:', item); 
-            console.log(`🔍 Извлеченный ID: ${product_id}. Цена: ${price}`);
-            if (product_id === 0) {
-                console.error("⛔️ Ошибка: product_id равен 0. Проверьте структуру данных в CartContext.");
-            }
-            const pid = getProductId(item)
-            return {
-                product_id: pid, 
-                name: getProductName(item),
-                price: price,
-                quantity: item.quantity || 1,
-                image: getProductImage(item)
-            };
-        }),
-        totalAmount: getTotalPrice(),
-        
-        // !!! МАРКЕР ИСПРАВЛЕННОГО КОДА !!!
-        DEBUG_VERSION: 'FINAL_FIX_V2025_03', 
-        
-        // !!! ВОССТАНОВЛЕНО ОБЯЗАТЕЛЬНОЕ ПОЛЕ !!!
-        shippingAddress: {
-           firstName: formData.firstName,
-           lastName: formData.lastName,
-           email: formData.email,
-           phone: formData.phone,
-           address: formData.address,
-           city: formData.city,
-           postalCode: formData.postalCode,
-           country: formData.country || 'N/A'
-        },
-        paymentMethod: formData.paymentMethod || 'card'
-    };
+    const orderData = {
+      userId: authUser?.id,
+      // ВАЖНО: Проверьте, что в formData именно эти ключи
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      phone: formData.phone,
+      email: formData.email,
+      address: formData.address,
+      payment_method: formData.paymentMethod ||'card',
+      total_amount: items.reduce((sum, item) => {
+        const price = parseFloat(item.price) || 0;
+        const qty = parseInt(item.quantity) || 0;
+        return sum + (price * qty);
+      }, 0).toFixed(2),
+      items: items.map(item => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.price
+      }))
+    };
 
     console.log('🟢 Отправка данных заказа:', orderData); 
     
     // --- 3. Отправка заказа через API ---
-    try {
-        
-        const response = await apiService.createOrder(orderData); 
+    try {
+            setLoading(true); // Не забудьте включить индикатор загрузки
+            console.log('🚀 Отправка данных заказа:', orderData); 
 
-        if (response && response.success) {
-            alert(`Заказ #${response.orderNumber || 'создан'} успешно оформлен!`);
-            clearCart(); // Очистка корзины
-            navigate('/order-success'); // Перенаправление
-        } else {
-            throw new Error(response?.message || 'Неизвестная ошибка сервера.');
-        }
+            const response = await apiService.createOrder(orderData); 
+            console.log('📥 Ответ от сервера:', response); // <--- ПОСМОТРИТЕ ЭТО В КОНСОЛИ
 
-    } catch (error) {
-        console.error('Error creating order:', error);
-        setError(`❌ Ошибка оформления заказа: ${error.message}`);
-    } finally {
-        setLoading(false);
-    }
+            if (response && (response.success || response.orderId)) {
+                // Используем ИЛИ для разных вариантов ключей
+                const finalOrderNumber = response.orderNumber || response.order_number || 'создан';
+                clearCart(); 
+                navigate('/order-success'); 
+            }
+        } catch (error) {
+            console.error('Full Error Object:', error);
+            setError(`❌ Ошибка оформления заказа: ${error.message}`);
+        } finally {
+            setLoading(false);
+        }
 };
 
   // Отладочная функция
@@ -338,44 +315,6 @@ const handleSubmit = async (e) => {
                     disabled={loading}
                     placeholder="ул. Примерная, д. 1, кв. 1"
                   />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Город *"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    required
-                    disabled={loading}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Почтовый индекс *"
-                    name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleInputChange}
-                    required
-                    disabled={loading}
-                    placeholder="123456"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    select
-                    label="Страна"
-                    name="country"
-                    value={formData.country}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                  >
-                    <MenuItem value="Россия">Россия</MenuItem>
-                    <MenuItem value="Казахстан">Казахстан</MenuItem>
-                    <MenuItem value="Беларусь">Беларусь</MenuItem>
-                  </TextField>
                 </Grid>
                 <Grid item xs={12}>
                   <TextField

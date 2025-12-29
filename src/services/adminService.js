@@ -1,5 +1,8 @@
 const getApiBase = () => {
-  return `${window.location.origin}/api`;
+  if (window.location.hostname === 'localhost') {
+    return 'http://localhost:5000/api';
+  }
+  return 'https://electronic.tw1.ru/api';
 };
 
 const API_BASE = getApiBase();
@@ -22,31 +25,25 @@ const handleApiResponse = async (response) => {
 };
 
 export const fetchWithAuth = async (url, options = {}) => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('token');
 
   const response = await fetch(`${API_BASE}${url}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}), // Если токена нет, заголовок не добавится
       ...(options.headers || {})
     }
   });
 
   if (!response.ok) {
-    let errorData = {};
-    try {
-      errorData = await response.json();
-    } catch {}
-
-    // ❗ logout ТОЛЬКО при 401
     if (response.status === 401) {
-      localStorage.removeItem('authToken');
+      console.warn('Сессия истекла или токен невалиден');
+      localStorage.removeItem('token');
       localStorage.removeItem('userData');
       window.location.href = '/login';
     }
-
-    // ❌ НЕ logout при 403 и 500
+    const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || `HTTP ${response.status}`);
   }
 
@@ -70,11 +67,35 @@ const fetchApi = async (url, options = {}) => {
 
 export const adminService = {
   // Auth
-  login: (credentials) => 
-    fetchApi('/auth/login', {
+  login: async (credentials) => {
+    const response = await fetchApi('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials)
-    }),
+    });
+
+    if (response.token) {
+      // 1. Сохраняем токен
+      localStorage.setItem('token', response.token);
+      
+      // 2. Создаем объект пользователя, который требует ваш AuthContext
+      // Если сервер не прислал response.user, создаем минимальный объект сами
+      const userData = response.user || { 
+        id: response.userId || 4, 
+        email: credentials.email,
+        role: 'admin' 
+      };
+      
+      // 3. Сохраняем userData (ОБЯЗАТЕЛЬНО как строку JSON)
+      localStorage.setItem('userData', JSON.stringify(userData));
+      
+      // 4. Синхронизируем userId (судя по логам, ваше приложение ищет его здесь)
+      localStorage.setItem('userId', userData.id);
+
+      console.log('✅ Данные для синхронизации сохранены:', { token: 'есть', userData: 'есть' });
+    }
+    
+    return response;
+  },
 
   register: (userData) =>
     fetchApi('/auth/register', {
@@ -230,11 +251,11 @@ export const adminService = {
   // Orders (пока оставляем заглушки - реализуете позже)
   getOrders: async () => {
     try {
-      const orders = await fetchWithAuth('/admin/orders');
-      return orders;
+      const response = await fetchWithAuth('/admin/orders');
+      return response.data || response;
     } catch (error) {
       console.error('Error in getOrders:', error);
-      return [];
+      throw error;
     }
   },
   
@@ -249,66 +270,11 @@ export const adminService = {
   },
 
   updateOrderStatus: async (orderId, status) => {
-    try {
-      console.log(`🔄 Attempting to update order ${orderId} status to ${status}`);
-      
-      // Сначала пробуем метод PATCH (чаще всего используется для частичных обновлений)
-      try {
-        const order = await fetchWithAuth(`/admin/orders/${orderId}/status`, {
-          method: 'PATCH',
-          body: JSON.stringify({ status })
-        });
-        console.log('✅ Status updated via PATCH method');
-        return order;
-      } catch (patchError) {
-        console.log('⚠️ PATCH method failed, trying POST...');
-        
-        // Пробуем метод POST
-        try {
-          const order = await fetchWithAuth(`/admin/orders/${orderId}/status`, {
-            method: 'POST',
-            body: JSON.stringify({ status })
-          });
-          console.log('✅ Status updated via POST method');
-          return order;
-        } catch (postError) {
-          console.log('⚠️ POST method failed, trying PUT again with different approach...');
-          
-          // Пробуем PUT на другой эндпоинт или с другими данными
-          try {
-            // Альтернатива: обновить весь заказ
-            const order = await fetchWithAuth(`/admin/orders/${orderId}`, {
-              method: 'PUT',
-              body: JSON.stringify({ status, action: 'update_status' })
-            });
-            console.log('✅ Status updated via PUT (full order update)');
-            return order;
-          } catch (putError) {
-            console.log('⚠️ All methods failed, trying final alternative...');
-            
-            // Последняя попытка: отдельный эндпоинт без /status
-            const order = await fetchWithAuth(`/admin/orders/${orderId}/update-status`, {
-              method: 'POST',
-              body: JSON.stringify({ status })
-            });
-            console.log('✅ Status updated via alternative endpoint');
-            return order;
-          }
-        }
-      }
-    } catch (error) {
-      console.error('❌ All update methods failed:', error);
-      
-      // Проверяем структуру ошибки
-      if (error.message.includes('405')) {
-        throw new Error('Сервер не поддерживает данный метод. Пожалуйста, проверьте документацию API.');
-      }
-      
-      throw error;
-    }
+    return await fetchWithAuth(`/admin/orders/update.php`, {
+      method: 'POST',
+      body: JSON.stringify({ order_id: orderId, status: status })
+    });
   },
-
-  // Также добавим альтернативные методы для управления заказами:
 
   updateOrder: async (orderId, orderData) => {
     try {
@@ -324,15 +290,10 @@ export const adminService = {
   },
 
   deleteOrder: async (orderId) => {
-    try {
-      await fetchWithAuth(`/admin/orders/${orderId}`, {
-        method: 'DELETE'
-      });
-      return true;
-    } catch (error) {
-      console.error('Error deleting order:', error);
-      throw error;
-    }
+    return await fetchWithAuth(`/admin/orders/delete.php`, {
+        method: 'POST',
+        body: JSON.stringify({ order_id: orderId })
+    });
   },
 
   getRecentOrders: async (limit = 10) => {

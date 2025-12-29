@@ -57,7 +57,7 @@ import { reviewService } from '../../services/reviewService';
 import { adminService } from '../../services/adminService';
 
 const ProfilePage = () => {
-  const { currentUser, updateProfile } = useAuth();
+  const { currentUser, updateProfile, loadUserData: fetchProfileFromApi } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
   const [formData, setFormData] = useState({
@@ -157,7 +157,7 @@ const ProfilePage = () => {
   }, [theme]);
 
   // Загрузка данных профиля
-  const loadUserData = useCallback(async () => {
+  const fetchUserStatsAndActivity = useCallback(async () => {
     if (!currentUser) return;
 
     try {
@@ -287,35 +287,34 @@ const ProfilePage = () => {
   ]);
 
   // Загрузка профиля пользователя
-  useEffect(() => {
-    const loadUserProfile = async () => {
-      if (!currentUser) return;
-      
-      try {
-        setProfileLoading(true);
-        
-        // Используем текущие данные пользователя
-        setUserProfile(currentUser);
-        
-        setFormData({
-          name: currentUser.name || '',
-          email: currentUser.email || '',
-          phone: currentUser.phone || '',
-          address: currentUser.address || ''
-        });
-        
-        await loadUserData();
-        
-      } catch (error) {
-        console.error('Ошибка загрузки данных:', error);
-        setUserProfile(currentUser);
-      } finally {
-        setProfileLoading(false);
-      }
-    };
+  const loadUserProfile = useCallback(async () => {
+    if (!currentUser) return;
+    
+    try {
+      setProfileLoading(true);
+      const freshData = await fetchProfileFromApi(); 
+      const user = freshData || currentUser;
+      setUserProfile(user);
+      setFormData({
+        name: user.name || 
+              (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : '') ||
+              (user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : '') || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || ''
+      });
+      await fetchUserStatsAndActivity();
+    } catch (error) {
+      console.error('Ошибка загрузки данных:', error);
+      setUserProfile(currentUser);
+    } finally {
+      setProfileLoading(false);
+    }
+  }, [currentUser, fetchProfileFromApi, fetchUserStatsAndActivity]); 
 
-    loadUserProfile();
-  }, [currentUser, loadUserData]);
+  useEffect(() => {
+    if (currentUser && !userProfile) { loadUserProfile(); }
+  }, [currentUser?.id]);
 
   const handleEdit = () => {
     setEditDialogOpen(true);
@@ -324,10 +323,9 @@ const ProfilePage = () => {
 
   const handleCancel = () => {
     setEditDialogOpen(false);
-    // Восстанавливаем оригинальные данные
     if (userProfile) {
       setFormData({
-        name: userProfile.name || '',
+        name: userProfile.first_name || '',
         email: userProfile.email || '',
         phone: userProfile.phone || '',
         address: userProfile.address || ''
@@ -376,7 +374,7 @@ const ProfilePage = () => {
         setMessageType('success');
         setEditDialogOpen(false);
         
-        await loadUserData();
+        await fetchProfileFromApi();
         
         setTimeout(() => {
           setMessage('');
@@ -576,7 +574,7 @@ const ProfilePage = () => {
                       fontWeight: 'bold'
                     }}
                   >
-                    {userProfile?.name?.charAt(0).toUpperCase() || userProfile?.email?.charAt(0).toUpperCase() || 'U'}
+                    {(userProfile?.name || userProfile?.firstName || userProfile?.email || 'U').charAt(0).toUpperCase()}
                   </Avatar>
 
                   <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
@@ -604,7 +602,7 @@ const ProfilePage = () => {
                       <CalendarToday sx={{ mr: 2, color: 'primary.main' }} />
                       <Typography>
                         {userProfile?.created_at 
-                          ? new Date(userProfile.created_at).toLocaleDateString('ru-RU')
+                          ? `На сайте с: ${new Date(userProfile.created_at).toLocaleDateString()}`
                           : 'Дата регистрации неизвестна'}
                       </Typography>
                     </Box>

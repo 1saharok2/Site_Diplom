@@ -29,6 +29,11 @@ export const reviewService = {
 
   // Получить отзывы пользователя
   getUserReviews: async (userId) => {
+    // Добавляем проверку: если ID не задан или равен 0, не идем на сервер
+    if (!userId || userId === 0 || userId === '0') {
+      return []; 
+    }
+
     try {
       const reviews = await apiService.get(`/reviews/user/${userId}`);
       return reviews || [];
