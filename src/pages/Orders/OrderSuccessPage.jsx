@@ -1,4 +1,3 @@
-// src/pages/OrderSuccess/OrderSuccessPage.jsx
 import React, { useEffect, useState } from 'react';
 import {
   Container,
@@ -8,7 +7,8 @@ import {
   Paper,
   Alert,
   CircularProgress,
-  Grid
+  Grid,
+  Divider
 } from '@mui/material';
 import { 
   CheckCircle, 
@@ -16,60 +16,93 @@ import {
   Home, 
   Email,
   Phone,
-  AccessTime
+  AccessTime,
+  LocalShipping,
+  Payment
 } from '@mui/icons-material';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const OrderSuccessPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [orderInfo, setOrderInfo] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedOrder = localStorage.getItem('lastOrder');
+    console.log('📍 Location state:', location.state); // Отладка
     
-    // Пробуем получить данные из location.state
+    // 1. Пробуем получить данные из location.state
     if (location.state) {
+      console.log('✅ Данные получены из location.state:', location.state);
       setOrderInfo(location.state);
       
       // Сохраняем в localStorage для повторного посещения
       if (location.state.orderNumber) {
         localStorage.setItem('lastOrder', JSON.stringify(location.state));
+        console.log('💾 Данные сохранены в localStorage');
       }
     } 
-    // Если нет в location.state, пробуем получить из localStorage
-    else if (savedOrder) {
-      try {
-        setOrderInfo(JSON.parse(savedOrder));
-      } catch (e) {
-        console.error('Error parsing saved order:', e);
-        localStorage.removeItem('lastOrder');
+    // 2. Если нет в location.state, пробуем из localStorage
+    else {
+      const savedOrder = localStorage.getItem('lastOrder');
+      if (savedOrder) {
+        try {
+          const parsedOrder = JSON.parse(savedOrder);
+          console.log('📦 Данные загружены из localStorage:', parsedOrder);
+          setOrderInfo(parsedOrder);
+        } catch (e) {
+          console.error('❌ Ошибка парсинга saved order:', e);
+          localStorage.removeItem('lastOrder');
+        }
+      } else {
+        console.log('⚠️ Данные о заказе не найдены нигде');
       }
     }
     
-    // Прокрутка вверх при загрузке
+    setLoading(false);
+    
+    // Прокрутка вверх
     window.scrollTo(0, 0);
     
-    // Очистка localStorage через 1 час
+    // Очистка через 1 час
     const cleanupTimer = setTimeout(() => {
       localStorage.removeItem('lastOrder');
+      console.log('🧹 localStorage очищен');
     }, 60 * 60 * 1000);
     
     return () => clearTimeout(cleanupTimer);
   }, [location.state]);
+
+  // Форматирование суммы
+  const formatAmount = (amount) => {
+    if (amount === undefined || amount === null) return '0';
+    
+    const num = typeof amount === 'number' ? amount : parseFloat(amount);
+    
+    if (isNaN(num)) {
+      console.error('❌ Некорректная сумма:', amount);
+      return '0';
+    }
+    
+    return num.toLocaleString('ru-RU');
+  };
+
+  // Форматирование способа оплаты
+  const formatPaymentMethod = (method) => {
+    switch (method) {
+      case 'card': return 'Банковская карта';
+      case 'cash': return 'Наличные при получении';
+      case 'sbp': return 'СБП (Система быстрых платежей)';
+      default: return method || 'Не указан';
+    }
+  };
 
   const handleContinueShopping = () => {
     navigate('/catalog');
   };
 
   const handleViewOrders = () => {
-    navigate('/orders');
-  };
-
-  const handleContactSupport = () => {
-    // Можно добавить ссылку на чат или email
-    window.location.href = 'mailto:support@electronic.tw1.ru';
+    navigate('/profile/orders');
   };
 
   if (loading) {
@@ -141,50 +174,81 @@ const OrderSuccessPage = () => {
 
         {/* Информация о заказе */}
         {orderInfo && orderInfo.orderNumber ? (
-          <Alert 
-            severity="info" 
+          <Paper 
+            elevation={1} 
             sx={{ 
+              p: 3, 
               mb: 4, 
-              maxWidth: 500, 
+              maxWidth: 600, 
               mx: 'auto',
               borderRadius: 2,
-              textAlign: 'left',
-              '& .MuiAlert-icon': {
-                alignItems: 'center'
-              }
+              textAlign: 'left'
             }}
           >
-            <Box>
-              <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
-                Номер заказа: <Box component="span" sx={{ color: 'primary.main' }}>#{orderInfo.orderNumber}</Box>
-              </Typography>
-              
-              {orderInfo.totalAmount && (
-                <Typography variant="body1" sx={{ mb: 1 }}>
-                  Сумма: <strong>{orderInfo.totalAmount.toLocaleString('ru-RU')} ₽</strong>
-                </Typography>
-              )}
-              
-              {orderInfo.paymentMethod && (
+            <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <ShoppingBag /> Детали заказа
+            </Typography>
+            
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
                 <Typography variant="body2" color="text.secondary">
-                  Способ оплаты: {orderInfo.paymentMethod === 'card' ? 'Банковская карта' : 
-                                orderInfo.paymentMethod === 'cash' ? 'Наличные при получении' : 
-                                orderInfo.paymentMethod}
+                  Номер заказа:
                 </Typography>
-              )}
-            </Box>
-          </Alert>
+                <Typography variant="h6" color="primary.main" fontWeight="bold">
+                  #{orderInfo.orderNumber}
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body2" color="text.secondary">
+                  Сумма:
+                </Typography>
+                <Typography variant="h6" fontWeight="bold">
+                  {formatAmount(orderInfo.totalAmount)} ₽
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body2" color="text.secondary">
+                  Способ оплаты:
+                </Typography>
+                <Typography variant="body1" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Payment fontSize="small" /> {formatPaymentMethod(orderInfo.paymentMethod)}
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body2" color="text.secondary">
+                  Статус:
+                </Typography>
+                <Typography variant="body1" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <AccessTime fontSize="small" /> Ожидает обработки
+                </Typography>
+              </Grid>
+            </Grid>
+            
+            <Divider sx={{ my: 2 }} />
+            
+            <Typography variant="body2" color="text.secondary">
+              Информация о заказе отправлена на ваш email.
+            </Typography>
+          </Paper>
         ) : (
           <Alert 
             severity="warning" 
             sx={{ 
               mb: 4, 
-              maxWidth: 500, 
+              maxWidth: 600, 
               mx: 'auto',
               borderRadius: 2 
             }}
           >
-            Информация о заказе не найдена. Проверьте историю заказов в личном кабинете.
+            <Typography variant="body1" fontWeight="bold">
+              Информация о заказе не найдена
+            </Typography>
+            <Typography variant="body2">
+              Проверьте историю заказов в личном кабинете или свяжитесь с поддержкой.
+            </Typography>
           </Alert>
         )}
 
@@ -211,6 +275,7 @@ const OrderSuccessPage = () => {
           >
             Продолжить покупки
           </Button>
+          
           <Button
             variant="outlined"
             size="large"
@@ -227,69 +292,8 @@ const OrderSuccessPage = () => {
             Мои заказы
           </Button>
         </Box>
-
-        {/* Дополнительная информация */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: { xs: 3, md: 4 }, 
-            bgcolor: 'grey.50', 
-            borderRadius: 3,
-            maxWidth: 800,
-            mx: 'auto'
-          }}
-        >
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-            Что дальше?
-          </Typography>
-          
-          <Grid container spacing={3} sx={{ textAlign: 'left' }}>
-            <Grid item xs={12} md={4}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <AccessTime sx={{ mr: 1, color: 'primary.main' }} />
-                <Typography variant="subtitle1" fontWeight="bold">
-                  Подтверждение
-                </Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Мы проверим ваш заказ в течение 1-2 часов в рабочее время (Пн-Пт, 9:00-18:00)
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12} md={4}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Email sx={{ mr: 1, color: 'primary.main' }} />
-                <Typography variant="subtitle1" fontWeight="bold">
-                  Уведомления
-                </Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                На ваш email будут отправлены все обновления по статусу заказа
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12} md={4}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Phone sx={{ mr: 1, color: 'primary.main' }} />
-                <Typography variant="subtitle1" fontWeight="bold">
-                  Поддержка
-                </Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Есть вопросы? Напишите нам на support@electronic.tw1.ru
-              </Typography>
-            </Grid>
-          </Grid>
-          
-          <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
-            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-              <span>💡</span> Вы можете отслеживать статус заказа в разделе "Мои заказы" в любое время
-            </Typography>
-          </Box>
-        </Paper>
       </Paper>
       
-      {/* Добавляем стили для анимации */}
       <style jsx>{`
         @keyframes scaleIn {
           0% {

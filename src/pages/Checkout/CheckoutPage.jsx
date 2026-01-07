@@ -17,11 +17,13 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/api';
+import { orderService } from '../../services/orderService';
+import { cartService } from '../../services/cartService';
 
-const CheckoutPage = (props) => {
-  // Переменные из хуков
+const CheckoutPage = (setCartItems) => {
   const { items, getTotalPrice, clearCart } = useCart();
   const { isAuthenticated: isAuthHook, currentUser: authUser } = useAuth();
+  const { user } =useAuth();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
@@ -37,52 +39,67 @@ const CheckoutPage = (props) => {
     paymentMethod: 'card'
   });
 
-  const getProductName = (item) => {
-    return item?.product_name || 
-           item?.products?.name || 
-           item?.name || 
-           'Товар';
-  };
+  const getProductName = (item) => {
+    return item?.product_name || 
+          item?.products?.name || 
+          item?.name || 
+          item?.title || 
+          item?.productName ||
+          'Товар';
+  };
 
-  const getProductPrice = (item) => {
-    return item?.price || 
-           item?.products?.price || 
-           item?.product_price || 
-           0;
-  };
+  const getProductPrice = (item) => {
+    const price = parseFloat(
+      item?.price || 
+      item?.products?.price || 
+      item?.product_price || 
+      item?.unitPrice ||
+      0
+    );
+    return isNaN(price) ? 0 : price;
+  };
 
-  const getProductId = (item) => {
-    return item?.product_id || 
-           item?.id || 
-           item?.products?.id || 
-           0;
-  };
+  const getProductId = (item) => {
+    return item?.product_id || 
+          item?.id || 
+          item?.products?.id || 
+          item?.productId ||
+          null;
+  };
 
-  const getProductImage = (item) => {
-    try {
-      // Если image_url - это JSON строка
-      if (item?.image_url) {
-        // Проверяем, это JSON массив или обычная строка
-        if (item.image_url.startsWith('[')) {
-          const images = JSON.parse(item.image_url);
-          if (Array.isArray(images) && images.length > 0) {
-            return images[0];
-          }
-        } else {
-          // Это обычная строка с путем
-          return item.image_url;
-        }
-      }
-      
-      // Проверяем другие возможные поля
-      return item?.product_image || 
-            item?.products?.image_url || 
-            '';
-    } catch (e) {
-      console.error('Ошибка парсинга image_url:', e);
-      return '';
-    }
-  };
+  const getProductImage = (item) => {
+    try {
+      const possibleImageFields = [
+        item?.image_url,
+        item?.product_image,
+        item?.image,
+        item?.products?.image_url,
+        item?.products?.image,
+        item?.mainImage,
+        item?.images?.[0]
+      ];
+
+      for (const imageField of possibleImageFields) {
+        if (imageField) {
+          if (typeof imageField === 'string' && imageField.startsWith('[')) {
+            try {
+              const images = JSON.parse(imageField);
+              if (Array.isArray(images) && images.length > 0) {
+                return images[0];
+              }
+            } catch (e) {
+            }
+          }
+          return imageField;
+        }
+      }
+      
+      return '';
+    } catch (e) {
+      console.error('Ошибка получения изображения:', e);
+      return '';
+    }
+  };
 
   const handleInputChange = (e) => {
     setFormData({
@@ -91,99 +108,148 @@ const CheckoutPage = (props) => {
     });
   };
 
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true); // Включаем загрузку
-    setError(''); // Сбрасываем ошибку
+  const handleCreateOrder = async (orderData) => {
+    try {
+      console.log('🛒 Начинаем оформление заказа...');
+      
+      // 1. Создаем заказ
+      const orderResult = await orderService.createOrder(orderData);
+      
+      if (orderResult.success) {
+        console.log('✅ Заказ создан, очищаем корзину...');
+        
+        // 2. Очищаем корзину
+        await cartService.clearCart(user.id);
+        
+        // 3. ДОПОЛНИТЕЛЬНО: принудительно обновляем состояние
+        // Если вы в компоненте корзины
+        setCartItems([]);
+        
+        // 4. Устанавливаем флаг "только что оформили заказ"
+        localStorage.setItem('order_completed', Date.now().toString());
+        
+        console.log('🎉 Заказ оформлен, корзина очищена!');
+        navigate('/orders');
+      }
+    } catch (error) {
+      console.error('❌ Ошибка оформления заказа:', error);
+    }
+  };
 
-    // Используем переменные из useAuth
-    if (!isAuthHook) {
-        alert('Пожалуйста, авторизуйтесь для оформления заказа.');
-        setLoading(false);
-        return;
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-    if (!items || items.length === 0) {
-        setError('Корзина пуста.');
-        setLoading(false);
-        return;
-    }
+    if (!isAuthHook) {
+      alert('Пожалуйста, авторизуйтесь для оформления заказа.');
+      setLoading(false);
+      return;
+    }
 
-    if (!authUser || !authUser.id) {
-        setError('Ошибка авторизации: не найден ID пользователя.');
-        setLoading(false);
-        return;
-    }
+    if (!items || items.length === 0) {
+      setError('Корзина пуста.');
+      setLoading(false);
+      return;
+    }
 
-    // --- 2. Подготовка ПОЛНЫХ данных для сервера ---
-    
+    if (!authUser || !authUser.id) {
+      setError('Ошибка авторизации: не найден ID пользователя.');
+      setLoading(false);
+      return;
+    }
+
+    // Проверяем что у всех товаров есть ID
+    const itemsWithMissingId = items.filter(item => !getProductId(item));
+    if (itemsWithMissingId.length > 0) {
+      console.error('Товары без ID:', itemsWithMissingId);
+      setError(`Найдено ${itemsWithMissingId.length} товаров без ID. Проверьте структуру данных.`);
+      setLoading(false);
+      return;
+    }
+
+    // Подготовка данных
     const orderData = {
       userId: authUser?.id,
-      // ВАЖНО: Проверьте, что в formData именно эти ключи
       first_name: formData.firstName,
       last_name: formData.lastName,
       phone: formData.phone,
       email: formData.email,
       address: formData.address,
-      payment_method: formData.paymentMethod ||'card',
+      payment_method: formData.paymentMethod || 'card',
       total_amount: items.reduce((sum, item) => {
-        const price = parseFloat(item.price) || 0;
-        const qty = parseInt(item.quantity) || 0;
+        const price = getProductPrice(item);
+        const qty = parseInt(item.quantity) || 1;
         return sum + (price * qty);
       }, 0).toFixed(2),
       items: items.map(item => ({
-        product_id: item.id,
-        quantity: item.quantity,
-        price: item.price
+        product_id: getProductId(item),
+        quantity: item.quantity || 1,
+        price: getProductPrice(item)
       }))
     };
 
-    console.log('🟢 Отправка данных заказа:', orderData); 
-    
-    // --- 3. Отправка заказа через API ---
+    console.log('🟢 Отправка данных заказа:', orderData);
+
     try {
-            setLoading(true); // Не забудьте включить индикатор загрузки
-            console.log('🚀 Отправка данных заказа:', orderData); 
+      const response = await apiService.createOrder(orderData);
+      console.log('📥 Ответ от сервера:', response);
 
-            const response = await apiService.createOrder(orderData); 
-            console.log('📥 Ответ от сервера:', response); // <--- ПОСМОТРИТЕ ЭТО В КОНСОЛИ
+      if (response && (response.success || response.orderId || response.id)) {
+        const finalOrderNumber = response.orderNumber || response.order_number || 'создан';
+        clearCart();
+        navigate('/order-success', { 
+          state: {
+            orderNumber: response.orderNumber || response.order_number || '12345',
+            totalAmount: getTotalPrice(),
+            paymentMethod: formData.paymentMethod
+          }
+        });
+      } else {
+        setError(`Ошибка сервера: ${response?.message || 'Неизвестная ошибка'}`);
+      }
+    } catch (error) {
+      console.error('Full Error Object:', error);
+      setError(`❌ Ошибка оформления заказа: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            if (response && (response.success || response.orderId)) {
-                // Используем ИЛИ для разных вариантов ключей
-                const finalOrderNumber = response.orderNumber || response.order_number || 'создан';
-                clearCart(); 
-                navigate('/order-success'); 
-            }
-        } catch (error) {
-            console.error('Full Error Object:', error);
-            setError(`❌ Ошибка оформления заказа: ${error.message}`);
-        } finally {
-            setLoading(false);
-        }
-};
+  const debugCheck = () => {
+    console.log('🔍 Детальная отладочная информация о корзине:');
+    console.log('Всего элементов:', items.length);
+    console.log('Полный массив:', JSON.parse(JSON.stringify(items)));
+    
+    items.forEach((item, index) => {
+      console.log(`\n=== Товар ${index + 1} ===`);
+      console.log('Полный объект:', item);
+      console.log('Ключи объекта:', Object.keys(item));
+      console.log('Типы значений:', Object.entries(item).map(([key, value]) => 
+        `${key}: ${typeof value} ${Array.isArray(value) ? '(array)' : ''}`
+      ));
+      console.log('ID (getProductId):', getProductId(item), '→', item?.product_id, item?.id, item?.products?.id);
+      console.log('Имя (getProductName):', getProductName(item));
+      console.log('Цена (getProductPrice):', getProductPrice(item));
+      console.log('Количество:', item.quantity);
+      console.log('Изображение (getProductImage):', getProductImage(item));
+    });
+    
+    console.log('\nДанные формы:', formData);
+    console.log('Общая сумма (getTotalPrice):', getTotalPrice());
 
-  // Отладочная функция
-  const debugCheck = () => {
-    console.log('🔍 Отладочная информация о корзине:');
-    console.log('Все элементы корзины:', items);
-    
-    // Детальная информация о каждом товаре
-    items.forEach((item, index) => {
-      console.log(`\nТовар ${index + 1}:`);
-      console.log('  Полный объект:', item);
-      console.log('  ID (getProductId):', getProductId(item)); // Выводим ID через функцию
-      console.log('  Имя (getProductName):', getProductName(item));
-      console.log('  Цена (getProductPrice):', getProductPrice(item));
-      console.log('  quantity:', item.quantity);
-      
-    });
-    
-    console.log('\nФорма данных:', formData);
-    console.log('Общая сумма:', getTotalPrice());
-  };
+    const testOrderData = {
+      userId: authUser?.id,
+      items: items.map(item => ({
+        product_id: getProductId(item),
+        quantity: item.quantity || 1,
+        price: getProductPrice(item)
+      }))
+    };
+    console.log('Тестовые данные для заказа:', testOrderData);
+  };
 
-  // Здесь мы используем authUser (из useAuth), который является фактическим объектом пользователя
-  const currentUser = authUser; 
+  const currentUser = authUser;
 
   if (items.length === 0) {
     return (
@@ -228,6 +294,79 @@ const handleSubmit = async (e) => {
       </Container>
     );
   }
+
+const handleOrderSuccess = async (cartItems, totalAmount) => {
+    try {
+      setLoading(true);
+      
+      // 1. Подготавливаем данные заказа
+      const orderData = {
+        userId: user?.id,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        payment_method: formData.paymentMethod,
+        total_amount: totalAmount,
+        items: cartItems
+      };
+      
+      console.log('📦 Создаем заказ с данными:', orderData);
+      
+      // 2. Создаем заказ
+      const orderResult = await orderService.createOrder(orderData);
+      
+      if (orderResult.success) {
+        console.log('✅ Заказ создан! ID:', orderResult.orderId);
+        
+        // 3. Устанавливаем флаг "был заказ"
+        localStorage.setItem('last_order_time', Date.now().toString());
+        console.log('⏱️ Флаг last_order_time установлен');
+        
+        // 4. ПРИНУДИТЕЛЬНАЯ очистка
+        console.log('🗑️ Начинаем принудительную очистку корзины...');
+        
+        // Сначала удаляем ВСЕ ключи localStorage
+        const allKeys = [
+          `cart_cache_${user?.id}`,
+          `cart_cache_${user?.id}_timestamp`,
+          'guestCart',
+          'cart',
+          'cartCache',
+          'cartCacheTimestamp'
+        ];
+        
+        allKeys.forEach(key => {
+          localStorage.removeItem(key);
+          console.log(`🗑️ Удален ${key}`);
+        });
+        
+        // Затем очищаем на сервере
+        await cartService.clearCart(user?.id);
+        console.log('✅ Очистка завершена');
+        
+        // 5. Перенаправляем
+        navigate('/orders', { 
+          state: { 
+            message: `Заказ #${orderResult.order_number} успешно оформлен!`,
+            orderId: orderResult.orderId
+          } 
+        });
+        
+      } else {
+        console.error('❌ Ошибка создания заказа:', orderResult.message);
+        alert('Ошибка: ' + (orderResult.message || 'Не удалось создать заказ'));
+      }
+      
+    } catch (error) {
+      console.error('❌ Ошибка в handleOrderSuccess:', error);
+      alert('Произошла ошибка при оформлении заказа');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Container sx={{ py: 4 }}>

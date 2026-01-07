@@ -40,6 +40,7 @@ const AdminOrders = lazy(() => import('./pages/Admin/Orders/AdminOrders'));
 const AdminUsers = lazy(() => import('./pages/Admin/Users/AdminUsers'));
 const AdminCategories = lazy(() => import('./pages/Admin/Categories/AdminCategories'));
 const AdminReviewsPage = lazy(() => import('./components/Admin/AdminReviewsPage'));
+const AdminSupportTickets = lazy(() => import ('./pages/Admin/Tickets/AdminSupportTickets'));
 
 const theme = createTheme({
   palette: {
@@ -206,6 +207,7 @@ function App() {
                                     <Route path="users" element={<AdminUsers />} />
                                     <Route path="categories" element={<AdminCategories />} />
                                     <Route path="reviews" element={<AdminReviewsPage />} />
+                                    <Route path="support" element={<AdminSupportTickets />} />
                                     <Route path="" element={<Navigate to="dashboard" />} />
                                   </Routes>
                                 </Suspense>

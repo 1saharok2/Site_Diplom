@@ -158,105 +158,167 @@ const ProfilePage = () => {
 
   // Загрузка данных профиля
   const fetchUserStatsAndActivity = useCallback(async () => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      console.log('❌ Нет currentUser');
+      setFallbackData();
+      return;
+    }
+
+    console.log('🟢 Начинаем загрузку данных для пользователя ID:', currentUser.id);
 
     try {
       // Загрузка заказов
       let orders = [];
       try {
-        orders = await orderService.getUserOrders(currentUser.id);
-        if (!Array.isArray(orders)) orders = [];
+        console.log('📥 Загружаем заказы...');
+        const response = await orderService.getUserOrders(currentUser.id);
+        console.log('✅ Ответ заказов:', response);
+        
+        // Получаем массив из data
+        if (response && response.success && Array.isArray(response.data)) {
+          orders = response.data;
+          console.log(`✅ Получено заказов: ${orders.length}`);
+        } else if (Array.isArray(response)) {
+          orders = response;
+        } else if (response && response.data && Array.isArray(response.data)) {
+          orders = response.data;
+        }
+        
+        console.log('📊 Финальные заказы:', orders);
       } catch (error) {
-        console.error('Ошибка загрузки заказов:', error);
+        console.error('❌ Ошибка загрузки заказов:', error);
         orders = [];
       }
 
       // Загрузка избранного
       let favorites = [];
+      let favoritesCount = 0;
       try {
-        if (favoritesService && typeof favoritesService.getUserFavorites === 'function') {
-          favorites = await favoritesService.getUserFavorites(currentUser.id);
+        console.log('📥 Загружаем избранное...');
+        const response = await favoritesService.getUserFavorites(currentUser.id);
+        console.log('✅ Ответ избранного:', response);
+        
+        // ПРАВИЛЬНАЯ обработка структуры {success: true, items: Array(3), count: 3}
+        if (response && response.success) {
+          // Берем items из корня ответа
+          if (response.items && Array.isArray(response.items)) {
+            favorites = response.items;
+            favoritesCount = response.items.length;
+            console.log(`✅ Избранное из response.items: ${favoritesCount} товаров`);
+          }
+          // Если items нет, пробуем count
+          else if (response.count !== undefined) {
+            favoritesCount = response.count;
+            console.log(`✅ Избранное из response.count: ${favoritesCount} товаров`);
+          }
         }
-        if (!Array.isArray(favorites)) favorites = [];
+        
       } catch (error) {
-        console.error('Ошибка загрузки избранного:', error);
+        console.error('❌ Ошибка загрузки избранного:', error);
         favorites = [];
+        favoritesCount = 0;
       }
 
       // Загрузка отзывов
       let reviews = [];
       try {
-        if (reviewService && typeof reviewService.getUserReviews === 'function') {
-          reviews = await reviewService.getUserReviews(currentUser.id);
+        console.log('📥 Загружаем отзывы...');
+        const response = await reviewService.getUserReviews(currentUser.id);
+        console.log('✅ Ответ отзывов:', response);
+        
+        // Получаем массив из reviews
+        if (response && response.success && Array.isArray(response.reviews)) {
+          reviews = response.reviews;
+          console.log(`✅ Получено отзывов: ${reviews.length}`);
+        } else if (Array.isArray(response)) {
+          reviews = response;
+        } else if (response && response.reviews && Array.isArray(response.reviews)) {
+          reviews = response.reviews;
         }
-        if (!Array.isArray(reviews)) reviews = [];
       } catch (error) {
-        console.error('Ошибка загрузки отзывов:', error);
+        console.error('❌ Ошибка загрузки отзывов:', error);
         reviews = [];
       }
 
       // Обновление статистики
-      setStats({
+      const newStats = {
         totalOrders: orders.length,
         favoriteItems: favorites.length,
         writtenReviews: reviews.length
-      });
+      };
+      
+      console.log('📊 Обновляем статистику:', newStats);
+      setStats(newStats);
 
       // Формирование активности
       const activities = [];
 
-      // Добавляем последние заказы
+      // Добавляем последние заказы - ИСПРАВЛЕНО
       if (orders.length > 0) {
+        console.log('📦 Добавляем заказы в активность, всего:', orders.length);
         const recentOrders = orders.slice(0, 3);
-        recentOrders.forEach(order => {
-          activities.push({
-            type: 'order',
-            title: `Заказ #${order.order_number || order.id} ${getOrderStatusText(order.status)}`,
-            description: order.order_items?.[0]?.name || 'Товары',
-            date: formatRelativeTime(order.created_at),
-            amount: `${order.total_amount?.toLocaleString('ru-RU')} ₽`,
-            icon: getOrderStatusIcon(order.status),
-            color: getOrderStatusColor(order.status),
-            onClick: () => navigate(`/orders/${order.id}`)
-          });
+        recentOrders.forEach((order, index) => {
+          console.log(`  Заказ ${index + 1}:`, order);
+          // Проверяем что order - это объект заказа, а не ответ API
+          if (order && typeof order === 'object' && order.id) {
+            activities.push({
+              type: 'order',
+              title: `Заказ #${order.order_number || order.id} ${getOrderStatusText(order.status)}`,
+              description: order.order_items?.[0]?.name || 'Товары',
+              date: formatRelativeTime(order.created_at),
+              amount: `${order.total_amount ? order.total_amount.toLocaleString('ru-RU') : 0} ₽`,
+              icon: getOrderStatusIcon(order.status),
+              color: getOrderStatusColor(order.status),
+              onClick: () => navigate(`/orders/${order.id}`)
+            });
+          }
         });
       }
 
       // Добавляем последние добавления в избранное
       if (favorites.length > 0) {
+        console.log('❤️ Добавляем избранное в активность, всего:', favorites.length);
         const recentFavorites = favorites.slice(0, 2);
-        recentFavorites.forEach(fav => {
-          activities.push({
-            type: 'favorite',
-            title: 'Добавлен в избранное',
-            description: fav.product?.name || 'Товар',
-            date: formatRelativeTime(fav.created_at || fav.added_at),
-            icon: <Favorite />,
-            color: theme.palette.error.main,
-            onClick: () => navigate(`/product/${fav.product_id || fav.id}`)
-          });
+        recentFavorites.forEach((fav, index) => {
+          console.log(`  Избранное ${index + 1}:`, fav);
+          if (fav && typeof fav === 'object') {
+            activities.push({
+              type: 'favorite',
+              title: 'Добавлен в избранное',
+              description: fav.product?.name || fav.name || 'Товар',
+              date: formatRelativeTime(fav.created_at || fav.added_at),
+              icon: <Favorite />,
+              color: theme.palette.error.main,
+              onClick: () => navigate(`/product/${fav.product_id || fav.id}`)
+            });
+          }
         });
       }
 
       // Добавляем последние отзывы
       if (reviews.length > 0) {
+        console.log('⭐ Добавляем отзывы в активность, всего:', reviews.length);
         const recentReviews = reviews.slice(0, 2);
-        recentReviews.forEach(review => {
-          activities.push({
-            type: 'review',
-            title: 'Оставлен отзыв',
-            description: review.product?.name || 'Товар',
-            date: formatRelativeTime(review.created_at),
-            rating: review.rating,
-            icon: <RateReview />,
-            color: theme.palette.warning.main,
-            onClick: () => navigate(`/product/${review.product_id}`)
-          });
+        recentReviews.forEach((review, index) => {
+          console.log(`  Отзыв ${index + 1}:`, review);
+          if (review && typeof review === 'object' && review.id) {
+            activities.push({
+              type: 'review',
+              title: 'Оставлен отзыв',
+              description: review.product?.name || 'Товар',
+              date: formatRelativeTime(review.created_at),
+              rating: review.rating,
+              icon: <RateReview />,
+              color: theme.palette.warning.main,
+              onClick: () => navigate(`/product/${review.product_id}`)
+            });
+          }
         });
       }
 
       // Если активность пустая, добавляем приветственное сообщение
       if (activities.length === 0) {
+        console.log('📭 Активность пуста, добавляем приветственное сообщение');
         activities.push({
           type: 'welcome',
           title: 'Добро пожаловать!',
@@ -267,12 +329,15 @@ const ProfilePage = () => {
         });
       }
 
+      console.log('📈 Всего активностей:', activities.length);
+      console.log('📅 Активности:', activities);
+
       // Сортируем по дате (новые сначала) и ограничиваем количеством
       activities.sort((a, b) => new Date(b.date) - new Date(a.date));
       setRecentActivities(activities.slice(0, 5));
 
     } catch (error) {
-      console.error('Ошибка загрузки данных пользователя:', error);
+      console.error('❌ Ошибка загрузки данных пользователя:', error);
       setFallbackData();
     }
   }, [
@@ -629,53 +694,6 @@ const ProfilePage = () => {
                   </Button>
                 </Paper>
               </Slide>
-
-              {/* Статистика */}
-              <Fade in={true} timeout={900}>
-                <Paper elevation={0} sx={{ 
-                  p: 3, 
-                  mt: 3,
-                  borderRadius: 4,
-                  background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
-                }}>
-                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center' }}>
-                    📊 Статистика
-                  </Typography>
-                  
-                  <Grid container spacing={2}>
-                    {statsData.map((stat, index) => (
-                      <Grid item xs={6} key={index}>
-                        <Card sx={{ 
-                          textAlign: 'center', 
-                          p: 2,
-                          background: 'transparent',
-                          boxShadow: 'none',
-                          border: `1px solid ${alpha(theme.palette[stat.color].main, 0.1)}`,
-                          borderRadius: 3
-                        }}>
-                          <Box sx={{ 
-                            color: `${stat.color}.main`,
-                            mb: 1
-                          }}>
-                            {stat.icon}
-                          </Box>
-                          <Typography variant="h4" sx={{ 
-                            fontWeight: 'bold',
-                            color: `${stat.color}.main`,
-                            mb: 0.5
-                          }}>
-                            {stat.value}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {stat.label}
-                          </Typography>
-                        </Card>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Paper>
-              </Fade>
             </Grid>
 
             {/* Основное содержание */}

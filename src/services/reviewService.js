@@ -29,17 +29,17 @@ export const reviewService = {
 
   // Получить отзывы пользователя
   getUserReviews: async (userId) => {
-    // Добавляем проверку: если ID не задан или равен 0, не идем на сервер
-    if (!userId || userId === 0 || userId === '0') {
-      return []; 
-    }
-
     try {
-      const reviews = await apiService.get(`/reviews/user/${userId}`);
-      return reviews || [];
+      console.log(`📥 Запрос отзывов пользователя ${userId}`);
+      
+      const response = await apiService.get(`/reviews/user/${userId}`);
+      console.log('✅ Ответ отзывов:', response);
+      
+      return response;
+      
     } catch (error) {
-      console.error('❌ Ошибка в getUserReviews:', error);
-      return [];
+      console.error('❌ Ошибка загрузки отзывов:', error);
+      return { success: false, reviews: [] };
     }
   },
 

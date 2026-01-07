@@ -12,17 +12,24 @@ export const orderService = {
   },
 
   getUserOrders: async (userId) => {
-    // 1. Проверяем, что ID существует и он не равен 0
-    if (!userId || userId === 0 || userId === '0') {
-      console.warn('getUserOrders: запрос отменен, некорректный ID пользователя:', userId);
-      return []; // Возвращаем пустой массив без вызова API
-    }
-
     try {
-      const orders = await apiService.get(`/orders/user/${userId}`);
-      return orders || [];
+      console.log(`📥 Запрос заказов пользователя ${userId}`);
+      
+      const response = await apiService.get(`/orders/user/${userId}`);
+      console.log('✅ Ответ заказов:', response);
+      
+      // ⚠️ ПРАВИЛЬНАЯ ОБРАБОТКА ОТВЕТА
+      // Ответ имеет структуру: {success: true, data: Array(30)}
+      if (response && response.success !== false && response.data) {
+        console.log(`📊 Найдено заказов: ${response.data.length}`);
+        return response.data; // ← Возвращаем массив из data
+      } else {
+        console.warn('⚠️ Неверная структура ответа или нет заказов:', response);
+        return [];
+      }
+      
     } catch (error) {
-      console.error('Error fetching user orders:', error);
+      console.error('❌ Ошибка загрузки заказов:', error);
       return [];
     }
   },
@@ -39,10 +46,12 @@ export const orderService = {
 
   getOrderById: async (orderId) => {
     try {
-      const order = await apiService.get(`/orders/${orderId}`);
-      return order;
+      console.log(`📋 Запрос деталей заказа ${orderId}`);      
+      const response = await apiService.get(`/order_details.php?id=${orderId}`);
+      console.log('✅ Ответ деталей заказа:', response);
+      return response.data;
     } catch (error) {
-      console.error('Error fetching order:', error);
+      console.error('❌ Ошибка получения заказа:', error);
       return null;
     }
   },

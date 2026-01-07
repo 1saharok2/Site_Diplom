@@ -31,7 +31,7 @@ export const fetchWithAuth = async (url, options = {}) => {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}), // Если токена нет, заголовок не добавится
+      ...(token ? { Authorization: `Bearer ${token}` } : {}), 
       ...(options.headers || {})
     }
   });
@@ -50,7 +50,6 @@ export const fetchWithAuth = async (url, options = {}) => {
   return response.json();
 };
 
-// Функция для обычных запросов без авторизации
 const fetchApi = async (url, options = {}) => {
   const fullUrl = `${API_BASE}${url}`;
   console.log('🔧 API request to:', fullUrl);
@@ -66,31 +65,20 @@ const fetchApi = async (url, options = {}) => {
 };
 
 export const adminService = {
-  // Auth
   login: async (credentials) => {
     const response = await fetchApi('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials)
     });
-
     if (response.token) {
-      // 1. Сохраняем токен
       localStorage.setItem('token', response.token);
-      
-      // 2. Создаем объект пользователя, который требует ваш AuthContext
-      // Если сервер не прислал response.user, создаем минимальный объект сами
       const userData = response.user || { 
         id: response.userId || 4, 
         email: credentials.email,
         role: 'admin' 
       };
-      
-      // 3. Сохраняем userData (ОБЯЗАТЕЛЬНО как строку JSON)
       localStorage.setItem('userData', JSON.stringify(userData));
-      
-      // 4. Синхронизируем userId (судя по логам, ваше приложение ищет его здесь)
       localStorage.setItem('userId', userData.id);
-
       console.log('✅ Данные для синхронизации сохранены:', { token: 'есть', userData: 'есть' });
     }
     
@@ -304,5 +292,60 @@ export const adminService = {
       console.error('Error in getRecentOrders:', error);
       return [];
     }
-  }
+  },
+
+  // Support tickets management
+  getSupportTickets: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      
+      if (filters.status) params.append('status', filters.status);
+      if (filters.priority) params.append('priority', filters.priority);
+      if (filters.search) params.append('search', filters.search);
+      if (filters.page) params.append('page', filters.page);
+      if (filters.limit) params.append('limit', filters.limit);
+      
+      const query = params.toString();
+      const url = query ? `/admin/support-tickets.php?${query}` : '/admin/support-tickets.php';
+      
+      return await fetchWithAuth(url);
+    } catch (error) {
+      console.error('Error fetching support tickets:', error);
+      return { tickets: [], pagination: { total: 0, page: 1, limit: 50, pages: 0 } };
+    }
+  },
+
+  updateSupportTicket: async (ticketId, data) => {
+    try {
+      return await fetchWithAuth('/admin/support-tickets.php', {
+        method: 'PUT',
+        body: JSON.stringify({ id: ticketId, ...data })
+      });
+    } catch (error) {
+      console.error('Error updating support ticket:', error);
+      throw error;
+    }
+  },
+
+  deleteSupportTicket: async (ticketId) => {
+    try {
+      return await fetchWithAuth('/admin/support-tickets.php', {
+        method: 'DELETE',
+        body: JSON.stringify({ id: ticketId })
+      });
+    } catch (error) {
+      console.error('Error deleting support ticket:', error);
+      throw error;
+    }
+  },
+
+  getSupportStats: async () => {
+    try {
+      const response = await fetchWithAuth('/admin/support-stats.php');
+      return response;
+    } catch (error) {
+      console.error('Error fetching support stats:', error);
+      return { new: 0, urgent: 0, total: 0 };
+    }
+  },
 };
