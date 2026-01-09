@@ -47,17 +47,46 @@ const CartPage = () => {
       let items = [];
       
       if (isAuthenticated && user) {
-        items = await cartService.getCart(user.id);
+        console.log(`👤 Загружаем корзину для пользователя ${user.id}`);
+        
+        // 1. Сначала пробуем localStorage
+        const cacheKey = `cart_cache_${user.id}`;
+        const cachedCart = localStorage.getItem(cacheKey);
+        
+        if (cachedCart) {
+          console.log('📦 Используем локальный кэш');
+          items = JSON.parse(cachedCart);
+          setCartItems(items);
+        }
+        
+        // 2. Всегда загружаем с сервера для синхронизации
+        try {
+          const serverItems = await cartService.getCart(user.id);
+          console.log('📡 Сервер вернул:', serverItems?.length || 0, 'товаров');
+          
+          // Если серверные данные есть - используем их
+          if (serverItems && serverItems.length > 0) {
+            items = serverItems;
+            setCartItems(items);
+            
+            // Обновляем кэш
+            localStorage.setItem(cacheKey, JSON.stringify(items));
+          }
+        } catch (serverError) {
+          console.warn('⚠️ Ошибка сервера, оставляем локальный кэш:', serverError);
+        }
+        
       } else {
-        const localCart = localStorage.getItem('guestCart');
+        // Гость
+        const localCart = localStorage.getItem('cart');
         if (localCart) {
           items = JSON.parse(localCart);
+          setCartItems(items);
         }
       }
       
-      setCartItems(items || []);
     } catch (error) {
-      console.error('Ошибка загрузки корзины:', error);
+      console.error('❌ Ошибка загрузки корзины:', error);
       setCartItems([]);
     } finally {
       setLoading(false);

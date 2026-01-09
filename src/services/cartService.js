@@ -6,28 +6,72 @@ export const cartService = {
     try {
       const actualUserId = userId || getUserId();
       
+      console.log('🔍 getCart вызван с userId:', {
+        полученный_userId: userId,
+        actualUserId,
+        тип: typeof actualUserId,
+        все_ключи_localStorage: Object.keys(localStorage).filter(k => k.includes('cart') || k.includes('user'))
+      });
+      
       // Если не авторизован - локальная корзина
-      if (actualUserId <= 0) {
+      if (!actualUserId || actualUserId === '0' || actualUserId <= 0) {
         const localCart = localStorage.getItem('cart');
         return localCart ? JSON.parse(localCart) : [];
       }
       
-      // Используем улучшенный метод apiService.getCart()
+      // ⚠️ ВАЖНО: Пробуем ОБА варианта ключа
+      const possibleCacheKeys = [
+        `cart_cache_${actualUserId}`,           // Как у вас сейчас
+        `cart_cache_${actualUserId.toString()}`, // Строковый вариант
+        'cart_cache',                           // Общий ключ
+        'cart'                                  // Простой ключ
+      ];
+      
+      // Пробуем каждый ключ
+      for (const cacheKey of possibleCacheKeys) {
+        const cachedCart = localStorage.getItem(cacheKey);
+        if (cachedCart) {
+          console.log(`📦 Нашли кэш по ключу: ${cacheKey}`);
+          return JSON.parse(cachedCart);
+        }
+      }
+      
+      console.log('📡 Кэш не найден, загружаем с сервера...');
+      
+      // Загружаем с сервера
       const response = await apiService.getCart(actualUserId);
       
       // Проверяем формат ответа
       if (response && response.success) {
+        console.log(`✅ Сервер вернул ${response.items?.length || 0} товаров`);
+        
+        // Сохраняем во ВСЕ возможные ключи
+        possibleCacheKeys.forEach(cacheKey => {
+          localStorage.setItem(cacheKey, JSON.stringify(response.items || []));
+        });
+        
         return response.items || [];
       } else if (Array.isArray(response)) {
-        // Для обратной совместимости
         return response;
       } else {
         throw new Error('Invalid cart response format');
       }
     } catch (error) {
       console.error('Error getting cart:', error);
-      const localCart = localStorage.getItem('cart');
-      return localCart ? JSON.parse(localCart) : [];
+      
+      // Пробуем найти кэш при ошибке
+      const allKeys = Object.keys(localStorage);
+      const cartKeys = allKeys.filter(k => k.includes('cart'));
+      
+      for (const key of cartKeys) {
+        const cachedCart = localStorage.getItem(key);
+        if (cachedCart) {
+          console.log(`🔄 Используем кэш из ${key} после ошибки`);
+          return JSON.parse(cachedCart);
+        }
+      }
+      
+      return [];
     }
   },
 
@@ -91,9 +135,20 @@ export const cartService = {
     try {
       const actualUserId = userId || getUserId();
       
+      console.log(`🔧 updateCartItem:`, {
+        cartItemId,
+        quantity,
+        actualUserId,
+        method: 'POST /cart.php'
+      });
+      
       if (actualUserId <= 0) {
+        console.log('👤 Гость, обновляем локально');
         return cartService.updateLocalCartItem(cartItemId, quantity);
       }
+      
+      // Проверьте, что actualUserId правильный
+      console.log(`📡 Отправка на сервер для userId: ${actualUserId}`);
       
       const result = await apiService.post('/cart.php', {
         action: 'update',
@@ -101,9 +156,12 @@ export const cartService = {
         quantity: quantity,
         user_id: actualUserId
       });
+      
+      console.log('✅ Ответ сервера:', result);
       return result;
+      
     } catch (error) {
-      console.error('Error in updateCartItem:', error);
+      console.error('❌ Ошибка updateCartItem:', error);
       return cartService.updateLocalCartItem(cartItemId, quantity);
     }
   },
@@ -112,20 +170,14 @@ export const cartService = {
     try {
       const localCart = localStorage.getItem('cart');
       let cart = localCart ? JSON.parse(localCart) : [];
-      
       const itemIndex = cart.findIndex(item => item.id == cartItemId);
-      
       if (itemIndex !== -1) {
         if (quantity <= 0) {
-          // Удаляем товар
           cart.splice(itemIndex, 1);
         } else {
-          // Обновляем количество
           cart[itemIndex].quantity = quantity;
         }
-        
         localStorage.setItem('cart', JSON.stringify(cart));
-        
         return {
           success: true,
           message: 'Корзина обновлена'
@@ -145,11 +197,17 @@ export const cartService = {
   removeFromCart: async (cartItemId, userId = null) => {
     try {
       const actualUserId = userId || getUserId();
-      
       if (actualUserId <= 0) {
         return cartService.removeFromLocalCart(cartItemId);
       }
-      
+      const cacheKey = `cart_cache_${actualUserId}`;
+      const cachedCart = localStorage.getItem(cacheKey);
+      if (cachedCart) {
+        const cart = JSON.parse(cachedCart);
+        const updatedCart = cart.filter(item => item.id != cartItemId);
+        localStorage.setItem(cacheKey, JSON.stringify(updatedCart));
+        console.log('💾 Товар удален из локального кэша');
+      }
       const result = await apiService.post('/cart.php', {
         action: 'remove',
         id: cartItemId,
@@ -184,7 +242,6 @@ export const cartService = {
   clearCart: async (userId = null) => {
     try {
       const actualUserId = userId || getUserId();
-      
       if (actualUserId <= 0) {
         localStorage.removeItem('cart');
         return {
@@ -192,7 +249,7 @@ export const cartService = {
           message: 'Локальная корзина очищена'
         };
       }
-      
+      localStorage.removeItem(`cart_cache_${actualUserId}`);
       const result = await apiService.post('/cart.php', {
         action: 'clear',
         user_id: actualUserId

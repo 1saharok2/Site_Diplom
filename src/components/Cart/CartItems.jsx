@@ -1,5 +1,5 @@
 // src/components/Cart/CartItems.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Paper,
   Typography,
@@ -17,24 +17,102 @@ import { cartService } from '../../services/cartService';
 
 const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
   const theme = useTheme();
+  const [updatingItems, setUpdatingItems] = useState({});
+
+  const saveToAllCacheKeys = (itemsToSave) => { // ← itemsToSave вместо updatedItems
+    try {
+      console.log('💾 Начинаем сохранение во все ключи...');
+      
+      // Все возможные ключи для вашего пользователя
+      const possibleKeys = [
+        `cart_cache_4d70129c-33d0-4379-ab10-24c64a3e30a9`, // Ваш UUID
+        `cart_cache_4`,                                    // Числовой ID
+        'cart_cache',                                      // Общий ключ
+        'cart',                                            // Простой ключ
+        'current_cart'                                     // Единый ключ для всех
+      ];
+      
+      possibleKeys.forEach(key => {
+        try {
+          localStorage.setItem(key, JSON.stringify(itemsToSave));
+          console.log(`✅ Сохранено в ${key}`);
+        } catch (e) {
+          console.warn(`⚠️ Не удалось сохранить в ${key}:`, e.message);
+        }
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Ошибка сохранения:', error);
+      return false;
+    }
+  };
 
   const handleQuantityChange = async (cartItemId, newQuantity) => {
+    if (newQuantity < 1) return;
+    
+    console.log(`🔄 Изменение количества: ${cartItemId} -> ${newQuantity}`);
+    
+    // Блокируем кнопку
+    setUpdatingItems(prev => ({ ...prev, [cartItemId]: true }));
+    
+    // Сохраняем текущее состояние для отката
+    const originalItems = [...cartItems];
+    
+    // Оптимистично обновляем UI мгновенно
+    const updatedItems = cartItems.map(item =>
+      item.id === cartItemId ? { ...item, quantity: newQuantity } : item
+    );
+    onCartUpdate(updatedItems);
+    
     try {
-      await cartService.updateCartItem(cartItemId, newQuantity);
-      onRefreshCart();
+      // ⚠️ ВАЖНО: Сохраняем во все возможные ключи
+      saveToAllCacheKeys(updatedItems);
+      
+      // Отправляем на сервер в фоне
+      cartService.updateCartItem(cartItemId, newQuantity)
+        .then(result => {
+          console.log('✅ Сервер обновил количество:', result);
+        })
+        .catch(error => {
+          console.error('❌ Ошибка сервера:', error);
+        });
+        
     } catch (error) {
-      console.error('Ошибка изменения количества:', error);
+      console.error('❌ Ошибка сохранения в localStorage:', error);
+      
+      // При ошибке возвращаем исходное состояние
+      onCartUpdate(originalItems);
+      alert('Не удалось сохранить изменения');
+      
+    } finally {
+      // Разблокируем кнопку
+      setUpdatingItems(prev => ({ ...prev, [cartItemId]: false }));
     }
   };
 
   const handleRemoveItem = async (cartItemId) => {
+    console.log(`🗑️ Удаление товара: ${cartItemId}`);
+    
+    // Оптимистичное удаление
+    const updatedItems = cartItems.filter(item => item.id !== cartItemId);
+    onCartUpdate(updatedItems);
+    
     try {
-      await cartService.removeFromCart(cartItemId);
-      const updatedItems = cartItems.filter(item => item.id !== cartItemId);
-      onCartUpdate(updatedItems);
+      // Сохраняем во все ключи
+      saveToAllCacheKeys(updatedItems);
+      
+      // Удаляем с сервера в фоне
+      cartService.removeFromCart(cartItemId)
+        .then(result => {
+          console.log('✅ Товар удален с сервера:', result);
+        })
+        .catch(error => {
+          console.error('❌ Ошибка сервера:', error);
+        });
+        
     } catch (error) {
-      console.error('Ошибка удаления товара:', error);
-      onRefreshCart();
+      console.error('❌ Ошибка при удалении:', error);
     }
   };
 
@@ -46,6 +124,7 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
     return item[field] || item.products?.[field] || null;
   };
 
+  // Рендер компонента - добавьте индикаторы обновления
   return (
     <Paper
       elevation={0}
@@ -91,6 +170,7 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
           const price = parseFloat(getField(item, 'price') || 0);
           const oldPrice = parseFloat(getField(item, 'old_price') || 0);
           const image = getField(item, 'image_url') || getField(item, 'image') || '/images/no-image.jpg';
+          const isUpdating = updatingItems[item.id];
 
           return (
             <Paper
@@ -103,9 +183,10 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
                 border: '1px solid',
                 borderColor: alpha(theme.palette.primary.main, 0.1),
                 transition: 'all 0.3s ease',
+                opacity: isUpdating ? 0.7 : 1,
                 '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+                  transform: isUpdating ? 'none' : 'translateY(-2px)',
+                  boxShadow: isUpdating ? 'none' : '0 8px 24px rgba(0, 0, 0, 0.12)',
                   borderColor: alpha(theme.palette.primary.main, 0.2)
                 }
               }}
@@ -140,7 +221,7 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
                       whiteSpace: 'nowrap'
                     }}
                   >
-                    {name}
+                    {name} {isUpdating && '(обновление...)'}
                   </Typography>
 
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -174,16 +255,17 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
                         borderRadius: 2,
                         border: '1px solid',
                         borderColor: 'grey.200',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        opacity: isUpdating ? 0.5 : 1
                       }}
                     >
                       <IconButton
                         size="small"
-                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
+                        onClick={() => !isUpdating && handleQuantityChange(item.id, item.quantity - 1)}
+                        disabled={item.quantity <= 1 || isUpdating}
                         sx={{
                           borderRadius: 0,
-                          color: item.quantity <= 1 ? 'grey.400' : 'primary.main',
+                          color: (item.quantity <= 1 || isUpdating) ? 'grey.400' : 'primary.main',
                           '&:hover': {
                             background: alpha(theme.palette.primary.main, 0.1)
                           }
@@ -193,7 +275,7 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
                       </IconButton>
 
                       <TextField
-                        value={item.quantity}
+                        value={isUpdating ? '...' : item.quantity}
                         sx={{
                           width: 60,
                           '& .MuiInputBase-root': {
@@ -203,21 +285,23 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
                           '& .MuiInputBase-input': {
                             textAlign: 'center',
                             fontWeight: 600,
-                            py: 1
+                            py: 1,
+                            color: isUpdating ? 'text.secondary' : 'text.primary'
                           }
                         }}
                         inputProps={{
                           style: { textAlign: 'center', fontSize: '1rem' }
                         }}
-                        disabled
+                        disabled={isUpdating}
                       />
 
                       <IconButton
                         size="small"
-                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                        onClick={() => !isUpdating && handleQuantityChange(item.id, item.quantity + 1)}
+                        disabled={isUpdating}
                         sx={{
                           borderRadius: 0,
-                          color: 'primary.main',
+                          color: isUpdating ? 'grey.400' : 'primary.main',
                           '&:hover': {
                             background: alpha(theme.palette.primary.main, 0.1)
                           }
@@ -232,11 +316,11 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
                       variant="h6"
                       sx={{
                         fontWeight: 700,
-                        color: 'primary.main',
+                        color: isUpdating ? 'text.secondary' : 'primary.main',
                         minWidth: 120
                       }}
                     >
-                      {(price * item.quantity).toLocaleString('ru-RU')} ₽
+                      {isUpdating ? 'Обновление...' : `${(price * item.quantity).toLocaleString('ru-RU')} ₽`}
                     </Typography>
                   </Box>
                 </Box>
@@ -244,11 +328,12 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
                 {/* Действия */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
                   <IconButton
-                    onClick={() => handleAddToWishlist(item)}
+                    onClick={() => !isUpdating && handleAddToWishlist(item)}
+                    disabled={isUpdating}
                     sx={{
-                      color: 'grey.600',
+                      color: isUpdating ? 'grey.400' : 'grey.600',
                       '&:hover': {
-                        color: 'error.main',
+                        color: isUpdating ? 'grey.400' : 'error.main',
                         background: alpha(theme.palette.error.main, 0.1)
                       }
                     }}
@@ -257,11 +342,12 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
                   </IconButton>
 
                   <IconButton
-                    onClick={() => handleRemoveItem(item.id)}
+                    onClick={() => !isUpdating && handleRemoveItem(item.id)}
+                    disabled={isUpdating}
                     sx={{
-                      color: 'grey.600',
+                      color: isUpdating ? 'grey.400' : 'grey.600',
                       '&:hover': {
-                        color: 'error.main',
+                        color: isUpdating ? 'grey.400' : 'error.main',
                         background: alpha(theme.palette.error.main, 0.1)
                       }
                     }}

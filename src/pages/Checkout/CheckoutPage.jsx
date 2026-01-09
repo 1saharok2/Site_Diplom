@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -20,15 +20,65 @@ import { apiService } from '../../services/api';
 import { orderService } from '../../services/orderService';
 import { cartService } from '../../services/cartService';
 
-const CheckoutPage = (setCartItems) => {
-  const { items, getTotalPrice, clearCart } = useCart();
-  const { isAuthenticated: isAuthHook, currentUser: authUser } = useAuth();
-  const { user } =useAuth();
-  const navigate = useNavigate();
+const CheckoutPage = () => {
+  const { items: contextItems, getTotalPrice, clearCart } = useCart();
+  const { isAuthenticated: isAuthHook, currentUser: authUser } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  // State для корзины из localStorage
+  const [cartItemsFromStorage, setCartItemsFromStorage] = useState([]);
+  
+  // Функция для получения корзины из localStorage
+  const getLatestCartFromStorage = () => {
+    const possibleKeys = [
+      'current_cart',
+      'cart',
+      'cart_cache',
+      `cart_cache_${user?.id}`,
+      `cart_cache_${user?.uuid || '4d70129c-33d0-4379-ab10-24c64a3e30a9'}`
+    ];
+    
+    for (const key of possibleKeys) {
+      const cached = localStorage.getItem(key);
+      if (cached) {
+        try {
+          const items = JSON.parse(cached);
+          console.log(`📦 Checkout: корзина из ${key}`, items.length, 'товаров');
+          return items;
+        } catch (e) {
+          console.warn(`⚠️ Ошибка парсинга ${key}:`, e);
+        }
+      }
+    }
+    
+    console.log('📦 Checkout: корзина не найдена в localStorage');
+    return [];
+  };
+
+  // Загружаем корзину при монтировании
+  useEffect(() => {
+    if (user) {
+      const latestCart = getLatestCartFromStorage();
+      setCartItemsFromStorage(latestCart);
+    }
+  }, [user]);
+
+  // ⚠️ ВАЖНО: Используем cartItems (переименовали из items)
+  const cartItems = cartItemsFromStorage.length > 0 ? cartItemsFromStorage : contextItems;
+  
+  // Функция для расчета суммы
+  const calculateTotalPrice = () => {
+    return cartItems.reduce((total, item) => {
+      const price = getProductPrice(item);
+      const quantity = item.quantity || 1;
+      return total + (price * quantity);
+    }, 0);
+  };
+
   const [formData, setFormData] = useState({
     firstName: authUser?.first_name || authUser?.firstName || '',
     lastName: authUser?.last_name || authUser?.lastName || '',
@@ -108,34 +158,6 @@ const CheckoutPage = (setCartItems) => {
     });
   };
 
-  const handleCreateOrder = async (orderData) => {
-    try {
-      console.log('🛒 Начинаем оформление заказа...');
-      
-      // 1. Создаем заказ
-      const orderResult = await orderService.createOrder(orderData);
-      
-      if (orderResult.success) {
-        console.log('✅ Заказ создан, очищаем корзину...');
-        
-        // 2. Очищаем корзину
-        await cartService.clearCart(user.id);
-        
-        // 3. ДОПОЛНИТЕЛЬНО: принудительно обновляем состояние
-        // Если вы в компоненте корзины
-        setCartItems([]);
-        
-        // 4. Устанавливаем флаг "только что оформили заказ"
-        localStorage.setItem('order_completed', Date.now().toString());
-        
-        console.log('🎉 Заказ оформлен, корзина очищена!');
-        navigate('/orders');
-      }
-    } catch (error) {
-      console.error('❌ Ошибка оформления заказа:', error);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -147,7 +169,8 @@ const CheckoutPage = (setCartItems) => {
       return;
     }
 
-    if (!items || items.length === 0) {
+    // ⚠️ Используем cartItems
+    if (!cartItems || cartItems.length === 0) {
       setError('Корзина пуста.');
       setLoading(false);
       return;
@@ -160,7 +183,7 @@ const CheckoutPage = (setCartItems) => {
     }
 
     // Проверяем что у всех товаров есть ID
-    const itemsWithMissingId = items.filter(item => !getProductId(item));
+    const itemsWithMissingId = cartItems.filter(item => !getProductId(item));
     if (itemsWithMissingId.length > 0) {
       console.error('Товары без ID:', itemsWithMissingId);
       setError(`Найдено ${itemsWithMissingId.length} товаров без ID. Проверьте структуру данных.`);
@@ -168,7 +191,7 @@ const CheckoutPage = (setCartItems) => {
       return;
     }
 
-    // Подготовка данных
+    // Подготовка данных - используем cartItems
     const orderData = {
       userId: authUser?.id,
       first_name: formData.firstName,
@@ -177,31 +200,32 @@ const CheckoutPage = (setCartItems) => {
       email: formData.email,
       address: formData.address,
       payment_method: formData.paymentMethod || 'card',
-      total_amount: items.reduce((sum, item) => {
-        const price = getProductPrice(item);
-        const qty = parseInt(item.quantity) || 1;
-        return sum + (price * qty);
-      }, 0).toFixed(2),
-      items: items.map(item => ({
+      total_amount: calculateTotalPrice().toFixed(2),
+      items: cartItems.map(item => ({
         product_id: getProductId(item),
         quantity: item.quantity || 1,
         price: getProductPrice(item)
       }))
     };
 
-    console.log('🟢 Отправка данных заказа:', orderData);
+    console.log('🛒 Данные заказа:', orderData);
 
     try {
       const response = await apiService.createOrder(orderData);
-      console.log('📥 Ответ от сервера:', response);
+      console.log('✅ Ответ сервера:', response);
 
       if (response && (response.success || response.orderId || response.id)) {
-        const finalOrderNumber = response.orderNumber || response.order_number || 'создан';
+        // Очищаем корзину
         clearCart();
+        
+        // Также очищаем localStorage
+        const keysToRemove = ['current_cart', 'cart', 'cart_cache'];
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        
         navigate('/order-success', { 
           state: {
             orderNumber: response.orderNumber || response.order_number || '12345',
-            totalAmount: getTotalPrice(),
+            totalAmount: calculateTotalPrice(),
             paymentMethod: formData.paymentMethod
           }
         });
@@ -209,8 +233,8 @@ const CheckoutPage = (setCartItems) => {
         setError(`Ошибка сервера: ${response?.message || 'Неизвестная ошибка'}`);
       }
     } catch (error) {
-      console.error('Full Error Object:', error);
-      setError(`❌ Ошибка оформления заказа: ${error.message}`);
+      console.error('❌ Ошибка оформления:', error);
+      setError(`Ошибка оформления заказа: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -218,10 +242,10 @@ const CheckoutPage = (setCartItems) => {
 
   const debugCheck = () => {
     console.log('🔍 Детальная отладочная информация о корзине:');
-    console.log('Всего элементов:', items.length);
-    console.log('Полный массив:', JSON.parse(JSON.stringify(items)));
+    console.log('Всего элементов:', cartItems.length);
+    console.log('Полный массив:', JSON.parse(JSON.stringify(cartItems)));
     
-    items.forEach((item, index) => {
+    cartItems.forEach((item, index) => {
       console.log(`\n=== Товар ${index + 1} ===`);
       console.log('Полный объект:', item);
       console.log('Ключи объекта:', Object.keys(item));
@@ -240,7 +264,7 @@ const CheckoutPage = (setCartItems) => {
 
     const testOrderData = {
       userId: authUser?.id,
-      items: items.map(item => ({
+      cartItems: cartItems.map(item => ({
         product_id: getProductId(item),
         quantity: item.quantity || 1,
         price: getProductPrice(item)
@@ -251,7 +275,7 @@ const CheckoutPage = (setCartItems) => {
 
   const currentUser = authUser;
 
-  if (items.length === 0) {
+  if (cartItems.length === 0) {
     return (
       <Container sx={{ py: 8, minHeight: '60vh' }}>
         <Alert severity="info" sx={{ mb: 3 }}>
@@ -295,7 +319,7 @@ const CheckoutPage = (setCartItems) => {
     );
   }
 
-const handleOrderSuccess = async (cartItems, totalAmount) => {
+const handleOrderSuccess = async (cartcartItems, totalAmount) => {
     try {
       setLoading(true);
       
@@ -310,7 +334,7 @@ const handleOrderSuccess = async (cartItems, totalAmount) => {
         city: formData.city,
         payment_method: formData.paymentMethod,
         total_amount: totalAmount,
-        items: cartItems
+        cartItems: cartcartItems
       };
       
       console.log('📦 Создаем заказ с данными:', orderData);
@@ -377,7 +401,7 @@ const handleOrderSuccess = async (cartItems, totalAmount) => {
       {/* Кнопка отладки (только в development) */}
       {process.env.NODE_ENV === 'development' && (
         <Button onClick={debugCheck} variant="outlined" sx={{ mb: 3 }}>
-          Debug Cart Items
+          Debug Cart cartItems
         </Button>
       )}
 
@@ -482,19 +506,19 @@ const handleOrderSuccess = async (cartItems, totalAmount) => {
               </Typography>
 
               <Box sx={{ mb: 2, maxHeight: 200, overflow: 'auto' }}>
-                {items.map((item, index) => (
+                {cartItems.map((item, index) => (
                   <Box 
                     key={index} 
                     sx={{ 
                       display: 'flex', 
-                      alignItems: 'center', 
+                      aligncartItems: 'center', 
                       justifyContent: 'space-between', 
                       mb: 1, 
                       pb: 1, 
-                      borderBottom: index < items.length - 1 ? '1px solid #eee' : 'none' 
+                      borderBottom: index < cartItems.length - 1 ? '1px solid #eee' : 'none' 
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, mr: 2 }}>
+                    <Box sx={{ display: 'flex', aligncartItems: 'center', flex: 1, mr: 2 }}>
                       {getProductImage(item) ? (
                         <Avatar 
                           src={getProductImage(item)} 
