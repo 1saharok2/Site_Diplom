@@ -64,8 +64,6 @@ const AdminLayout = ({ children }) => {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Админ Панель
           </Typography>
-          <IconButton color="inherit"><NotificationsIcon /></IconButton>
-          <IconButton color="inherit"><AccountIcon /></IconButton>
         </Toolbar>
       </AppBar>
 

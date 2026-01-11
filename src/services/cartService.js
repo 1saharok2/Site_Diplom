@@ -2,15 +2,15 @@ import { apiService } from './api';
 import { getUserId } from '../utils/authUtils';
 
 export const cartService = {
-  getCart: async (userId = null) => {
+  getCart: async (userId = null, forceRefresh = false) => {
     try {
       const actualUserId = userId || getUserId();
       
-      console.log('🔍 getCart вызван с userId:', {
-        полученный_userId: userId,
+      console.log('🔍 getCart вызван с параметрами:', {
+        userId,
         actualUserId,
-        тип: typeof actualUserId,
-        все_ключи_localStorage: Object.keys(localStorage).filter(k => k.includes('cart') || k.includes('user'))
+        forceRefresh,
+        type: typeof actualUserId
       });
       
       // Если не авторизован - локальная корзина
@@ -19,56 +19,55 @@ export const cartService = {
         return localCart ? JSON.parse(localCart) : [];
       }
       
-      // ⚠️ ВАЖНО: Пробуем ОБА варианта ключа
-      const possibleCacheKeys = [
-        `cart_cache_${actualUserId}`,           // Как у вас сейчас
-        `cart_cache_${actualUserId.toString()}`, // Строковый вариант
-        'cart_cache',                           // Общий ключ
-        'cart'                                  // Простой ключ
-      ];
-      
-      // Пробуем каждый ключ
-      for (const cacheKey of possibleCacheKeys) {
+      // Если НЕ принудительное обновление, пробуем кеш
+      if (!forceRefresh) {
+        const cacheKey = `cart_cache_${actualUserId}`;
         const cachedCart = localStorage.getItem(cacheKey);
         if (cachedCart) {
-          console.log(`📦 Нашли кэш по ключу: ${cacheKey}`);
-          return JSON.parse(cachedCart);
+          console.log(`📦 Используем кэш из ${cacheKey}`);
+          const items = JSON.parse(cachedCart);
+          console.log(`📦 В кэше ${items.length} товаров`);
+          return items;
         }
       }
       
-      console.log('📡 Кэш не найден, загружаем с сервера...');
+      console.log('📡 Загружаем корзину с сервера...');
       
       // Загружаем с сервера
       const response = await apiService.getCart(actualUserId);
       
-      // Проверяем формат ответа
-      if (response && response.success) {
-        console.log(`✅ Сервер вернул ${response.items?.length || 0} товаров`);
+      console.log('📡 Ответ от сервера:', response);
+      
+      // Исправленная проверка формата ответа
+      if (response && response.success && response.items) {
+        console.log(`✅ Сервер вернул ${response.items.length || 0} товаров`);
         
-        // Сохраняем во ВСЕ возможные ключи
-        possibleCacheKeys.forEach(cacheKey => {
-          localStorage.setItem(cacheKey, JSON.stringify(response.items || []));
-        });
+        // Сохраняем в кеш
+        const cacheKey = `cart_cache_${actualUserId}`;
+        localStorage.setItem(cacheKey, JSON.stringify(response.items));
+        localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
         
-        return response.items || [];
-      } else if (Array.isArray(response)) {
-        return response;
+        return response.items;
       } else {
-        throw new Error('Invalid cart response format');
+        console.log('ℹ️ Сервер вернул пустую корзину или неожиданный формат');
+        return [];
       }
     } catch (error) {
-      console.error('Error getting cart:', error);
+      console.error('❌ Ошибка загрузки корзины:', error);
       
-      // Пробуем найти кэш при ошибке
-      const allKeys = Object.keys(localStorage);
-      const cartKeys = allKeys.filter(k => k.includes('cart'));
-      
-      for (const key of cartKeys) {
-        const cachedCart = localStorage.getItem(key);
-        if (cachedCart) {
-          console.log(`🔄 Используем кэш из ${key} после ошибки`);
-          return JSON.parse(cachedCart);
+      // Fallback на кеш при ошибке
+      try {
+        const fallbackUserId = userId || getUserId();
+        if (fallbackUserId) {
+          const cacheKey = `cart_cache_${fallbackUserId}`;
+          const cachedCart = localStorage.getItem(cacheKey);
+          if (cachedCart) {
+            console.log(`🔄 Используем кэш после ошибки`);
+            return JSON.parse(cachedCart);
+          }
         }
+      } catch (cacheError) {
+        console.error('❌ Ошибка чтения кэша:', cacheError);
       }
       
       return [];
@@ -79,10 +78,12 @@ export const cartService = {
     try {
       const actualUserId = userId || getUserId();
       
-      if (actualUserId <= 0) {
-        // Для неавторизованных пользователей сохраняем в localStorage
+      if (!actualUserId || actualUserId <= 0) {
+        console.log('👤 Гость, добавляем в локальную корзину');
         return cartService.addToLocalCart(productId, quantity);
       }
+      
+      console.log('🛒 Добавление в корзину:', { actualUserId, productId, quantity });
       
       const result = await apiService.post('/cart.php', {
         action: 'add',
@@ -90,10 +91,17 @@ export const cartService = {
         product_id: productId,
         quantity: quantity
       });
+      
+      console.log('✅ Результат добавления:', result);
+      
+      // КРИТИЧЕСКО ВАЖНО: Очищаем кеш после изменения
+      localStorage.removeItem(`cart_cache_${actualUserId}`);
+      localStorage.removeItem(`cart_cache_${actualUserId}_timestamp`);
+      console.log('🗑️ Кеш корзины очищен');
+      
       return result;
     } catch (error) {
-      console.error('Error in addToCart:', error);
-      // Fallback на localStorage при ошибке
+      console.error('❌ Ошибка в addToCart:', error);
       return cartService.addToLocalCart(productId, quantity);
     }
   },
@@ -135,20 +143,9 @@ export const cartService = {
     try {
       const actualUserId = userId || getUserId();
       
-      console.log(`🔧 updateCartItem:`, {
-        cartItemId,
-        quantity,
-        actualUserId,
-        method: 'POST /cart.php'
-      });
-      
-      if (actualUserId <= 0) {
-        console.log('👤 Гость, обновляем локально');
+      if (!actualUserId || actualUserId <= 0) {
         return cartService.updateLocalCartItem(cartItemId, quantity);
       }
-      
-      // Проверьте, что actualUserId правильный
-      console.log(`📡 Отправка на сервер для userId: ${actualUserId}`);
       
       const result = await apiService.post('/cart.php', {
         action: 'update',
@@ -157,9 +154,13 @@ export const cartService = {
         user_id: actualUserId
       });
       
-      console.log('✅ Ответ сервера:', result);
-      return result;
+      // Очищаем кеш после обновления
+      if (result.success) {
+        localStorage.removeItem(`cart_cache_${actualUserId}`);
+        localStorage.removeItem(`cart_cache_${actualUserId}_timestamp`);
+      }
       
+      return result;
     } catch (error) {
       console.error('❌ Ошибка updateCartItem:', error);
       return cartService.updateLocalCartItem(cartItemId, quantity);
@@ -197,25 +198,24 @@ export const cartService = {
   removeFromCart: async (cartItemId, userId = null) => {
     try {
       const actualUserId = userId || getUserId();
+      
       if (actualUserId <= 0) {
         return cartService.removeFromLocalCart(cartItemId);
       }
-      const cacheKey = `cart_cache_${actualUserId}`;
-      const cachedCart = localStorage.getItem(cacheKey);
-      if (cachedCart) {
-        const cart = JSON.parse(cachedCart);
-        const updatedCart = cart.filter(item => item.id != cartItemId);
-        localStorage.setItem(cacheKey, JSON.stringify(updatedCart));
-        console.log('💾 Товар удален из локального кэша');
-      }
+      
+      // Очищаем кеш ПЕРЕД запросом (или после)
+      localStorage.removeItem(`cart_cache_${actualUserId}`);
+      localStorage.removeItem(`cart_cache_${actualUserId}_timestamp`);
+      
       const result = await apiService.post('/cart.php', {
         action: 'remove',
         id: cartItemId,
         user_id: actualUserId
       });
+      
       return result;
     } catch (error) {
-      console.error('Error in removeFromCart:', error);
+      console.error('❌ Ошибка в removeFromCart:', error);
       return cartService.removeFromLocalCart(cartItemId);
     }
   },

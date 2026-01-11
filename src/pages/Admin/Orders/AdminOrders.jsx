@@ -865,7 +865,7 @@ const AdminOrders = () => {
               
               {/* Товары */}
               <Typography variant="h6" gutterBottom color="primary.dark" sx={{ mb: 2 }}>
-                Товары ({selectedOrder.order_items?.length || 0})
+                Товары ({selectedOrder.items?.length || 0})
               </Typography>
               <TableContainer component={Paper} variant="outlined">
                 <Table size="small">
@@ -878,9 +878,11 @@ const AdminOrders = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {selectedOrder.order_items?.map((item, index) => (
+                    {selectedOrder.items?.map((item, index) => (
                       <TableRow key={index}>
-                        <TableCell>{item.name}</TableCell>
+                        <TableCell>
+                          {item.product_name || item.name || `Товар #${item.product_id || index + 1}`}
+                        </TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell sx={{ textAlign: 'right' }}>
                           {item.price ? item.price.toLocaleString('ru-RU') : 0} ₽

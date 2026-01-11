@@ -244,11 +244,11 @@ const OrderDetailPage = () => {
               gap: 2
             }}>
               <Inventory sx={{ color: 'primary.main' }} />
-              Состав заказа
+              Состав заказа ({order.items?.length || 0})
             </Typography>
 
             <Box sx={{ mb: 4 }}>
-              {order.order_items?.map((item, index) => (
+              {order.items?.map((item, index) => (
                 <Card 
                   key={index} 
                   elevation={0}
@@ -263,7 +263,7 @@ const OrderDetailPage = () => {
                 >
                   <CardContent>
                     <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                      {item.name || item.products?.name}
+                      {item.product_name || item.name || `Товар #${item.product_id}`}
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Typography variant="body2" color="text.secondary">

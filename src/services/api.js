@@ -1,3 +1,5 @@
+import { getUserId } from "../utils/authUtils";
+
 const getApiBase = () => {
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
@@ -346,23 +348,28 @@ export const apiService = {
 
   // Cart specific methods (для обратной совместимости)
   getCart: (userId = null) => {
-    const actualUserId = userId || localStorage.getItem('userId');
-    if (!actualUserId || actualUserId === '0') {
-      console.log('⚠ No user ID, returning empty cart');
-      return Promise.resolve({ success: true, items: [] });
-    }
-    
-    // Убедитесь, что userId не дублируется
-    const url = `/cart.php?userId=${actualUserId}`;
-    console.log('🔧 getCart URL:', url);
-    
-    // Используйте простой fetch без fetchWithAuth
-    return fetch(`${API_BASE}${url}`)
-      .then(response => handleResponse(response, url))
-      .catch(error => {
-        console.error('Cart fetch error:', error);
-        return { success: true, items: [] };
-      });
+      try {
+          const actualUserId = userId || localStorage.getItem('userId');
+          if (!actualUserId || actualUserId === '0') {
+              console.log('⚠ No user ID, returning empty cart');
+              return Promise.resolve({ success: true, items: [] });
+          }
+          
+          // Убедитесь, что userId не дублируется
+          const url = `/cart.php?userId=${actualUserId}`;
+          console.log('🔧 getCart URL:', url);
+          
+          // Используйте простой fetch без fetchWithAuth
+          return fetch(`${API_BASE}${url}`)
+              .then(response => handleResponse(response, url))
+              .catch(error => {
+                  console.error('Cart fetch error:', error);
+                  return { success: true, items: [] };
+              });
+      } catch (error) {
+          console.error('Error in getCart:', error);
+          return Promise.resolve({ success: true, items: [] });
+      }
   },
 
   // Wishlist specific methods

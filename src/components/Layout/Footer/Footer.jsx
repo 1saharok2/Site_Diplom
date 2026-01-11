@@ -31,7 +31,7 @@ const Footer = () => {
           {/* Информация о компании */}
           <Grid size={{ xs: 12, md: 4 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
-              🛍️ Электроник
+              🛍️ Гитон
             </Typography>
             <Typography variant="body2" sx={{ mb: 2, opacity: 0.8 }}>
               Ваш надежный партнер в мире электроники и техники. 
@@ -134,7 +134,7 @@ const Footer = () => {
         {/* Нижняя часть футера */}
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
           <Typography variant="body2" sx={{ opacity: 0.7 }}>
-            © 2025 Электроник. Все права защищены.
+            © 2025 Гитон. Все права защищены.
           </Typography>
           
           <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', mt: 2 }}>

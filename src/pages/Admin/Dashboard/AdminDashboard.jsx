@@ -130,11 +130,6 @@ const AdminDashboard = () => {
 
   const quickActions = [
     { 
-      label: 'Добавить товар', 
-      icon: '➕', 
-      onClick: () => navigate('/admin/products/new') 
-    },
-    { 
       label: 'Просмотреть заказы', 
       icon: '📦', 
       onClick: () => navigate('/admin/orders') 
