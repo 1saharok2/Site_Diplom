@@ -99,7 +99,7 @@ const ContactsPage = () => {
                   <div className="detail-icon">📧</div>
                   <div className="detail-content">
                     <strong>Email</strong>
-                    <p>info@magazin.ru</p>
+                    <p>info@electronik.ru</p>
                   </div>
                 </div>
                 

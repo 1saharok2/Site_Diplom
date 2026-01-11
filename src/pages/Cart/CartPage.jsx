@@ -619,32 +619,6 @@ const CartPage = () => {
                       onRefreshCart={handleRefreshCart}
                     />
                   </Box>
-
-                  {/* Дополнительная информация */}
-                  <Box sx={{ 
-                    p: { xs: 2, sm: 3 }, 
-                    background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
-                    borderRadius: { xs: 2, sm: 3 },
-                    border: '1px solid rgba(226, 232, 240, 0.8)'
-                  }}>
-                    <Typography variant="h6" sx={{ 
-                      fontWeight: 600, 
-                      mb: 2, 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 1,
-                      fontSize: { xs: '0.9rem', sm: '1rem' }
-                    }}>
-                      <Discount sx={{ color: 'primary.main', fontSize: { xs: 20, sm: 24 } }} />
-                      Специальные предложения
-                    </Typography>
-                    <Typography variant="body2" sx={{ 
-                      color: 'text.secondary',
-                      fontSize: { xs: '0.8rem', sm: '0.9rem' }
-                    }}>
-                      Добавьте еще 2 000 ₽ к заказу для бесплатной доставки
-                    </Typography>
-                  </Box>
                 </Paper>
               </Grid>
 
@@ -695,11 +669,6 @@ const CartPage = () => {
                     
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1, sm: 2 } }}>
                       {[
-                        {
-                          icon: <LocalShipping sx={{ color: '#10b981' }} />,
-                          title: 'Бесплатная доставка',
-                          desc: 'При заказе от 5 000 ₽'
-                        },
                         {
                           icon: <AssignmentReturn sx={{ color: '#f59e0b' }} />,
                           title: 'Возврат 14 дней',

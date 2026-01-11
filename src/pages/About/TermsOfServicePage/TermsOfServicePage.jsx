@@ -97,10 +97,7 @@ const TermsOfServicePage = () => {
               5.1. Магазин осуществляет доставку товаров по всей территории России.
             </Typography>
             <Typography variant="body1" paragraph>
-              5.2. Стоимость и сроки доставки зависят от выбранного способа и региона доставки.
-            </Typography>
-            <Typography variant="body1" paragraph>
-              5.3. При получении товара Пользователь обязан проверить его целостность и комплектность.
+              5.2. При получении товара Пользователь обязан проверить его целостность и комплектность.
             </Typography>
           </section>
 
@@ -187,7 +184,7 @@ const TermsOfServicePage = () => {
                 <strong>Юридический адрес:</strong> г. Курск, ул. Белгородская, д. 14
               </Typography>
               <Typography variant="body1" sx={{ mt: 1 }}>
-                <strong>Электронная почта:</strong> info@electronic.tw1.ru
+                <strong>Электронная почта:</strong> info@electronic.ru
               </Typography>
               <Typography variant="body1" sx={{ mt: 1 }}>
                 <strong>Телефон:</strong> +7 (999) 123-45-67

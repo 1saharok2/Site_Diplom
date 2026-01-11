@@ -396,24 +396,6 @@ const AdminUsers = () => {
               <MenuItem value="customer">Покупатель</MenuItem>
             </TextField>
           </Grid>
-          <Grid item xs={6} md={4}>
-            <TextField
-              fullWidth
-              select
-              label="Статус"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2
-                }
-              }}
-            >
-              <MenuItem value="all">Все статусы</MenuItem>
-              <MenuItem value="active">Активные</MenuItem>
-              <MenuItem value="inactive">Неактивные</MenuItem>
-            </TextField>
-          </Grid>
         </Grid>
       </Paper>
 
@@ -442,7 +424,6 @@ const AdminUsers = () => {
                   <TableCell sx={{ fontWeight: 'bold' }}>Пользователь</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Роль</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Статус</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>Дата регистрации</TableCell>
                   <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Действия</TableCell>
                 </TableRow>
@@ -804,8 +785,6 @@ const UserManagementDialog = ({ open, onClose, formData, setFormData, onSave, is
                       renderValue: (selected) => {
                         const roles = {
                           'customer': '👤 Покупатель',
-                          'moderator': '🛡️ Модератор',
-                          'manager': '📊 Менеджер',
                           'admin': '⚙️ Администратор'
                         };
                         return roles[selected] || selected;
@@ -813,45 +792,11 @@ const UserManagementDialog = ({ open, onClose, formData, setFormData, onSave, is
                     }}
                   >
                     <MenuItem value="customer">👤 Покупатель</MenuItem>
-                    <MenuItem value="moderator">🛡️ Модератор</MenuItem>
-                    <MenuItem value="manager">📊 Менеджер</MenuItem>
                     <MenuItem value="admin">⚙️ Администратор</MenuItem>
                   </TextField>
                 </Grid>
                 
                 <Grid item xs={12}>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between',
-                    p: 1,
-                    borderRadius: 1,
-                    backgroundColor: 'white'
-                  }}>
-                    <Box>
-                      <Typography variant="body2" fontWeight="500">
-                        Статус аккаунта
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {(isViewMode ? user.is_active : formData?.is_active) 
-                            ? 'Активен • Может войти в систему' 
-                            : 'Неактивен • Доступ заблокирован'}
-                      </Typography>
-                    </Box>
-                    {isViewMode ? ( // 🔥 В режиме просмотра показываем только чип
-                        <Chip
-                            label={(isViewMode ? user.is_active : formData?.is_active) ? 'Активен' : 'Неактивен'}
-                            color={(isViewMode ? user.is_active : formData?.is_active) ? 'success' : 'error'}
-                            icon={<Lock fontSize="small" />}
-                        />
-                    ) : (
-                        <Switch
-                            checked={formData?.is_active || false}
-                            onChange={(e) => handleChange('is_active', e.target.checked)}
-                            color="success"
-                        />
-                    )}
-                  </Box>
                 </Grid>
               </Grid>
             </Box>

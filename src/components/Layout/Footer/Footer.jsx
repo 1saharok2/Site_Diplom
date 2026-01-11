@@ -86,15 +86,7 @@ const Footer = () => {
               </MuiLink>
               <MuiLink
                 component={Link}
-                to="/catalog/accessories"
-                color="inherit"
-                sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
-              >
-                Аксессуары
-              </MuiLink>
-              <MuiLink
-                component={Link}
-                to="/catalog/audio"
+                to="/catalog/headphones"
                 color="inherit"
                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
               >

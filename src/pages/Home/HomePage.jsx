@@ -158,12 +158,6 @@ const HomePage = () => {
 
   const features = [
     {
-      icon: <LocalShipping sx={{ fontSize: 40 }} />,
-      title: "Бесплатная доставка",
-      description: "При заказе от 3000 рублей",
-      gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    },
-    {
       icon: <Security sx={{ fontSize: 40 }} />,
       title: "Гарантия качества",
       description: "14 дней на возврат товара",

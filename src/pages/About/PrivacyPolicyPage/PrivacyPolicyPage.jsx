@@ -20,7 +20,7 @@ const PrivacyPolicyPage = () => {
               1. Общие положения
             </Typography>
             <Typography variant="body1" paragraph>
-              Настоящая Политика конфиденциальности (далее — Политика) действует в отношении всей информации, которую интернет-магазин «ElectroShop» (далее — Магазин), расположенный на доменном имени https://electronic.tw1.ru, может получить о Пользователе во время использования сайта Магазина, его услуг, программ и продуктов.
+              Настоящая Политика конфиденциальности (далее — Политика) действует в отношении всей информации, которую интернет-магазин «Гитон», расположенный на доменном имени https://electronic.tw1.ru, может получить о Пользователе во время использования сайта Магазина, его услуг, программ и продуктов.
             </Typography>
           </section>
 
@@ -146,7 +146,7 @@ const PrivacyPolicyPage = () => {
             </Typography>
             <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
               <Typography variant="body1">
-                <strong>Электронная почта:</strong> privacy@electronic.tw1.ru
+                <strong>Электронная почта:</strong> privacy@electronic.ru
               </Typography>
               <Typography variant="body1" sx={{ mt: 1 }}>
                 <strong>Телефон:</strong> +7 (999) 123-45-67

@@ -78,13 +78,6 @@ const CartSummary = ({ cartItems, onClearCart, onRefreshCart }) => {
             {totalAmount.toLocaleString('ru-RU')} ₽
           </Box>
         </Typography>
-
-        <Typography variant="body1" gutterBottom>
-          <strong>Доставка</strong>
-          <Box component="span" sx={{ float: 'right', color: 'success.main' }}>
-            Бесплатно
-          </Box>
-        </Typography>
       </Box>
 
       <Divider sx={{ my: 2 }} />
@@ -143,7 +136,7 @@ const CartSummary = ({ cartItems, onClearCart, onRefreshCart }) => {
           fontSize: '0.9rem'
         }}
       >
-        Бесплатная доставка • 14 дней на возврат • Защита покупателя
+        Быстрый ответ • 14 дней на возврат • Защита покупателя
       </Typography>
 
       <Snackbar
