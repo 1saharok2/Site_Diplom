@@ -28,6 +28,7 @@ import {
   WarningAmber
 } from '@mui/icons-material';
 import { orderService } from '../../services/orderService';
+import { adminService } from '../../services/adminService';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -70,13 +71,28 @@ const OrdersPage = () => {
     
     setCancelling(true);
     try {
-      await orderService.updateOrderStatus(orderToCancel.id, 'cancelled');
+      // Используем adminService.updateOrderStatus
+      await adminService.updateOrderStatus(orderToCancel.id, 'cancelled');
+      
       setSuccessMessage('Заказ успешно отменен');
       setCancelDialogOpen(false);
       fetchOrders(); // Обновляем список заказов
+      
     } catch (error) {
       console.error('Ошибка отмены заказа:', error);
-      setError('Не удалось отменить заказ');
+      
+      // Проверяем тип ошибки
+      let errorMessage = 'Не удалось отменить заказ';
+      
+      if (error.message.includes('Токен не найден')) {
+        errorMessage = 'Ошибка авторизации. Пожалуйста, войдите заново.';
+      } else if (error.message.includes('Недостаточно данных')) {
+        errorMessage = 'Ошибка в данных заказа';
+      } else if (error.message.includes('403') || error.message.includes('Доступ запрещен')) {
+        errorMessage = 'У вас нет прав для отмены заказа';
+      }
+      
+      setError(errorMessage);
     } finally {
       setCancelling(false);
       setOrderToCancel(null);
@@ -399,32 +415,6 @@ const OrdersPage = () => {
                       </Button>
                     </Box>
                   </Box>
-
-                  <Divider sx={{ my: 3 }} />
-
-                  {/* Товары */}
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-                      Состав заказа:
-                    </Typography>
-                    {order.order_items?.map((item, index) => (
-                      <Box key={index} sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        mb: 1
-                      }}>
-                        <Typography variant="body2">
-                          {item.name || item.products?.name || 'Товар'} × {item.quantity}
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {((item.price || item.products?.price || 0) * item.quantity).toLocaleString('ru-RU')} ₽
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-
-                  <Divider sx={{ my: 3 }} />
 
                   {/* Итого и действия */}
                   <Box sx={{ 

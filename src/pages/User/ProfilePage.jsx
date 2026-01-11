@@ -264,7 +264,6 @@ const ProfilePage = () => {
             activities.push({
               type: 'order',
               title: `Заказ #${order.order_number || order.id} ${getOrderStatusText(order.status)}`,
-              description: order.order_items?.[0]?.name || 'Товары',
               date: formatRelativeTime(order.created_at),
               amount: `${order.total_amount ? order.total_amount.toLocaleString('ru-RU') : 0} ₽`,
               icon: getOrderStatusIcon(order.status),
@@ -285,7 +284,6 @@ const ProfilePage = () => {
             activities.push({
               type: 'favorite',
               title: 'Добавлен в избранное',
-              description: fav.product?.name || fav.name || 'Товар',
               date: formatRelativeTime(fav.created_at || fav.added_at),
               icon: <Favorite />,
               color: theme.palette.error.main,
@@ -305,7 +303,6 @@ const ProfilePage = () => {
             activities.push({
               type: 'review',
               title: 'Оставлен отзыв',
-              description: review.product?.name || 'Товар',
               date: formatRelativeTime(review.created_at),
               rating: review.rating,
               icon: <RateReview />,
@@ -525,12 +522,6 @@ const ProfilePage = () => {
       color: theme.palette.warning.main,
       count: stats.writtenReviews
     },
-  ];
-
-  const statsData = [
-    { label: 'Всего заказов', value: stats.totalOrders, color: 'primary', icon: <ShoppingBag /> },
-    { label: 'Избранные товары', value: stats.favoriteItems, color: 'error', icon: <Favorite /> },
-    { label: 'Написано отзывов', value: stats.writtenReviews, color: 'warning', icon: <RateReview /> },
   ];
 
   if (!currentUser) {

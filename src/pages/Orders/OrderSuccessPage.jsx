@@ -102,7 +102,7 @@ const OrderSuccessPage = () => {
   };
 
   const handleViewOrders = () => {
-    navigate('/profile/orders');
+    navigate('/orders');
   };
 
   if (loading) {
