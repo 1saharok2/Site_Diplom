@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, Form, Badge, Button } from 'react-bootstrap';
 
 const FiltersCard = ({ 
@@ -17,8 +17,6 @@ const FiltersCard = ({
   activeFiltersCount = 0,
   getSpecificationCount = () => 0,
   maxPrice = 500000,
-  showFilters = false,
-  setShowFilters = () => {},
   minRating = null,
   setMinRating = () => {},
   reliableModels = false,
@@ -27,45 +25,26 @@ const FiltersCard = ({
   setHasReview = () => {},
   getBrandCount = () => 0
 }) => {
-  // Определяем мобильное устройство
-  const [isMobile, setIsMobile] = useState(false);
-  
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 992);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  // Состояния сворачивания секций
+  const [openSections, setOpenSections] = useState({
+    availability: false,
+    price: false,
+    brands: false,
+    rating: false,
+    memory: false,
+    screen: false,
+    cameras: false,
+    processor: false,
+    battery: false,
+    techSpecs: false,
+    other: false
+  });
 
-  // Состояния сворачивания секций фильтров - на мобильных изначально свернуты
-  const [isExtraOpen, setIsExtraOpen] = useState(!isMobile);
-  const [isStockOpen, setIsStockOpen] = useState(!isMobile);
-  const [isPriceOpen, setIsPriceOpen] = useState(!isMobile);
-  const [isBrandsOpen, setIsBrandsOpen] = useState(!isMobile);
-  const [isTechSpecsOpen, setIsTechSpecsOpen] = useState(!isMobile);
-  const [isMemoryOpen, setIsMemoryOpen] = useState(!isMobile);
-  const [isScreenOpen, setIsScreenOpen] = useState(!isMobile);
-  const [isCamerasOpen, setIsCamerasOpen] = useState(!isMobile);
-  const [isCpuOpen, setIsCpuOpen] = useState(!isMobile);
-  const [isBatteryOpen, setIsBatteryOpen] = useState(!isMobile);
-  const [isExtraSpecsOpen, setIsExtraSpecsOpen] = useState(!isMobile);
-
-  // Функция для разворачивания/сворачивания всех секций
-  const toggleAllSections = (open) => {
-    setIsExtraOpen(open);
-    setIsStockOpen(open);
-    setIsPriceOpen(open);
-    setIsBrandsOpen(open);
-    setIsTechSpecsOpen(open);
-    setIsMemoryOpen(open);
-    setIsScreenOpen(open);
-    setIsCamerasOpen(open);
-    setIsCpuOpen(open);
-    setIsBatteryOpen(open);
-    setIsExtraSpecsOpen(open);
+  const toggleSection = (section) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
 
   const handlePriceRangeChange = (index, value) => {
@@ -109,25 +88,25 @@ const FiltersCard = ({
     const values = Array.isArray(specifications[key]) ? specifications[key] : [];
     if (values.length === 0) return null;
     return (
-      <div className="mb-2">
-        <div className="fw-semibold mb-1 filter-subtitle">{getDisplayName(key)}</div>
+      <div className="mb-3">
+        <div className="fw-semibold mb-2 filter-subtitle">{getDisplayName(key)}</div>
         {values.map(value => {
           const count = getSpecificationCount(key, value);
           if (!count || count <= 0) return null;
           const fid = `${sanitizeId(key)}-${sanitizeId(value)}`;
           const checked = Array.isArray(filters[key]) && filters[key].includes(value);
           return (
-            <div key={fid} className="specification-item-simple">
+            <div key={fid} className="dns-filter-item">
               <Form.Check
                 type="checkbox"
                 id={fid}
                 checked={checked}
                 onChange={() => handleSpecificationToggle(key, value)}
-                className="spec-checkbox-simple mb-0"
+                className="dns-checkbox mb-0"
               />
-              <label htmlFor={fid} className="spec-label-simple">
-                <span className="spec-text">{value}</span>
-                <span className="spec-count">{count}</span>
+              <label htmlFor={fid} className="dns-filter-label">
+                <span className="dns-filter-text">{value}</span>
+                <span className="dns-filter-count">{count}</span>
               </label>
             </div>
           );
@@ -136,7 +115,7 @@ const FiltersCard = ({
     );
   };
 
-  // Пресеты цен
+  // Пресеты цен как в DNS
   const pricePresets = [
     [0, 10000],
     [10001, 30000],
@@ -145,391 +124,628 @@ const FiltersCard = ({
     [150001, 500000]
   ];
 
+  // Определение групп характеристик
+  const techSpecsKeys = ['nfc', 'supports_5g', 'waterproof', 'wireless_charge_support'];
+  const memoryKeys = ['ram', 'storage'];
+  const screenKeys = ['screen_size_range', 'display', 'refresh_rate', 'resolution_class'];
+  const cameraKeys = ['camera_count_bucket', 'video_recording'];
+  const processorKeys = ['cpu_cores', 'processor_company'];
+  const batteryKeys = ['battery_capacity_bucket'];
+  const otherKeys = ['release_year', 'os', 'material_basic'];
+
+  // Проверка наличия характеристик в группах
+  const hasTechSpecs = techSpecsKeys.some(k => specifications[k]?.length > 0);
+  const hasMemory = memoryKeys.some(k => specifications[k]?.length > 0);
+  const hasScreen = screenKeys.some(k => specifications[k]?.length > 0);
+  const hasCameras = cameraKeys.some(k => specifications[k]?.length > 0);
+  const hasProcessor = processorKeys.some(k => specifications[k]?.length > 0);
+  const hasBattery = batteryKeys.some(k => specifications[k]?.length > 0);
+  const hasOther = otherKeys.some(k => specifications[k]?.length > 0);
+
   return (
-    <Card className="filters-card">
-      <Card.Header className="filters-card-header">
+    <Card className="dns-filters-card">
+      <Card.Header className="dns-filters-header">
         <div className="d-flex justify-content-between align-items-center">
-          <h5 className="mb-0 filters-title">
+          <h5 className="mb-0 dns-filters-title">
             Фильтры
             {activeFiltersCount > 0 && (
-              <Badge bg="primary" className="active-filters-badge">
+              <Badge bg="primary" className="dns-active-badge">
                 {activeFiltersCount}
               </Badge>
             )}
           </h5>
-          <div className="d-flex align-items-center gap-2">
-            {isMobile && (
-              <Button 
-                variant="outline-secondary" 
-                size="sm" 
-                onClick={() => toggleAllSections(true)}
-                className="expand-all-btn"
-              >
-                Развернуть
-              </Button>
-            )}
-            <Button 
-              variant="link" 
-              size="sm" 
-              onClick={clearAllFilters}
-              className="clear-filters-btn"
-              disabled={activeFiltersCount === 0}
-            >
-              Сбросить
-            </Button>
-          </div>
+          <Button 
+            variant="link" 
+            size="sm" 
+            onClick={clearAllFilters}
+            className="dns-clear-btn"
+            disabled={activeFiltersCount === 0}
+          >
+            Сбросить всё
+          </Button>
         </div>
       </Card.Header>
 
-      <Card.Body className="filters-card-body">
-        {/* Modern CSS styles */}
+      <Card.Body className="dns-filters-body">
+        {/* Встроенные стили */}
         <style>{`
-          .filter-caret {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            margin-right: 8px;
-            border-right: 2px solid currentColor;
-            border-bottom: 2px solid currentColor;
-            transform: rotate(-45deg);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            vertical-align: middle;
-            transform-origin: center;
-          }
-          .filter-caret[data-open="true"] {
-            transform: rotate(45deg);
-          }
-          .collapsible {
-            overflow: hidden;
-            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          .dns-filters-card {
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            box-shadow: none;
+            margin-bottom: 20px;
           }
           
-          /* Mobile optimizations */
-          @media (max-width: 991.98px) {
-            .filters-card {
-              border-radius: 12px;
-              margin-bottom: 16px;
-            }
-            .filters-card-header {
-              padding: 16px;
-            }
-            .filters-card-body {
-              padding: 0 16px 16px;
-              max-height: 60vh;
-              overflow-y: auto;
-            }
-            .filter-group {
-              margin-bottom: 20px;
-              padding-bottom: 16px;
-            }
-            .filter-toggle-item,
-            .specification-item-simple,
-            .brand-item {
-              min-height: 48px;
-              padding: 12px 0;
-            }
+          .dns-filters-header {
+            background: #fff;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 16px 20px;
+          }
+          
+          .dns-filters-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+          
+          .dns-active-badge {
+            background: #0066ff !important;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+          }
+          
+          .dns-clear-btn {
+            color: #0066ff;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            padding: 4px 8px;
+          }
+          
+          .dns-clear-btn:hover {
+            color: #0052cc;
+            text-decoration: underline;
+          }
+          
+          .dns-clear-btn:disabled {
+            color: #999;
+            cursor: not-allowed;
+            text-decoration: none;
+          }
+          
+          .dns-filters-body {
+            padding: 0;
+          }
+          
+          .dns-filter-section {
+            border-bottom: 1px solid #e5e5e5;
+            padding: 16px 20px;
+          }
+          
+          .dns-filter-section:last-child {
+            border-bottom: none;
+          }
+          
+          .dns-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            margin-bottom: 0;
+            user-select: none;
+          }
+          
+          .dns-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+          }
+          
+          .dns-section-icon {
+            color: #666;
+            transition: transform 0.2s;
+            font-size: 12px;
+          }
+          
+          .dns-section-open .dns-section-icon {
+            transform: rotate(180deg);
+          }
+          
+          .dns-section-content {
+            margin-top: 12px;
+            display: ${(props) => props.open ? 'block' : 'none'};
+          }
+          
+          /* Переключатель наличия */
+          .dns-availability-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 8px 0;
+          }
+          
+          .dns-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+          }
+          
+          .dns-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+          }
+          
+          .dns-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            border-radius: 24px;
+            transition: .4s;
+          }
+          
+          .dns-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .4s;
+          }
+          
+          input:checked + .dns-slider {
+            background-color: #0066ff;
+          }
+          
+          input:checked + .dns-slider:before {
+            transform: translateX(20px);
+          }
+          
+          .dns-switch-label {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+          }
+          
+          /* Цена */
+          .dns-price-inputs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+          }
+          
+          .dns-price-input-group {
+            flex: 1;
+          }
+          
+          .dns-price-label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+          }
+          
+          .dns-price-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+          }
+          
+          .dns-price-input:focus {
+            border-color: #0066ff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,102,255,0.1);
+          }
+          
+          .dns-price-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+          }
+          
+          .dns-price-preset-btn {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+          
+          .dns-price-preset-btn:hover {
+            border-color: #0066ff;
+            color: #0066ff;
+          }
+          
+          /* Бренды и характеристики */
+          .dns-filter-list {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 4px;
+          }
+          
+          .dns-filter-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+          }
+          
+          .dns-checkbox {
+            margin-right: 10px;
+          }
+          
+          .dns-checkbox .form-check-input {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+          }
+          
+          .dns-checkbox .form-check-input:checked {
+            background-color: #0066ff;
+            border-color: #0066ff;
+          }
+          
+          .dns-filter-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex: 1;
+            cursor: pointer;
+            font-size: 14px;
+          }
+          
+          .dns-filter-text {
+            color: #333;
+          }
+          
+          .dns-filter-count {
+            color: #666;
+            font-size: 12px;
+            background: #f5f5f5;
+            padding: 2px 8px;
+            border-radius: 10px;
+          }
+          
+          /* Доп фильтры */
+          .dns-extra-filter {
+            padding: 8px 0;
+          }
+          
+          .dns-extra-filter .form-check-input {
+            width: 18px;
+            height: 18px;
+          }
+          
+          .dns-extra-filter .form-check-label {
+            font-size: 14px;
+            color: #333;
+            margin-left: 8px;
+          }
+          
+          /* Стили для прокрутки */
+          .dns-filter-list::-webkit-scrollbar {
+            width: 4px;
+          }
+          
+          .dns-filter-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+          }
+          
+          .dns-filter-list::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 2px;
+          }
+          
+          .dns-filter-list::-webkit-scrollbar-thumb:hover {
+            background: #999;
           }
         `}</style>
-        
-        <div className="filters-content">
-          {/* Доп. фильтры */}
-          <div className="filter-group">
-            <div className="filter-header" role="button" onClick={() => setIsExtraOpen(v => !v)}>
-              <span className="filter-caret" data-open={isExtraOpen}></span>
-              <h6 className="filter-title">Доп. фильтры</h6>
-            </div>
-            <div className="collapsible" style={{maxHeight: isExtraOpen ? 1000 : 0}}>
-              <div className="filter-toggle-group">
-                <div className="filter-toggle-item">
-                  <Form.Check
-                    type="checkbox"
-                    id="rating-4"
-                    label="Рейтинг 4 и выше"
-                    checked={minRating === 4}
-                    onChange={handleRatingFilterChange}
-                  />
-                </div>
-                <div className="filter-toggle-item">
-                  <Form.Check
-                    type="checkbox"
-                    id="has-review"
-                    label="Есть отзывы"
-                    checked={hasReview}
-                    onChange={handleHasReviewChange}
-                  />
-                </div>
-                <div className="filter-toggle-item">
-                  <Form.Check
-                    type="checkbox"
-                    id="reliable-models"
-                    label="Новые модели"
-                    checked={reliableModels}
-                    onChange={handleReliableModelsChange}
-                  />
-                </div>
-              </div>
-            </div>
+
+        {/* 1. Наличие */}
+        <div className="dns-filter-section">
+          <div 
+            className={`dns-section-header ${openSections.availability ? 'dns-section-open' : ''}`}
+            onClick={() => toggleSection('availability')}
+          >
+            <h6 className="dns-section-title">Наличие</h6>
+            <span className="dns-section-icon">▼</span>
           </div>
-
-          <hr className="filter-divider" />
-
-          {/* Только в наличии */}
-          <div className="filter-group">
-            <div className="filter-header" role="button" onClick={() => setIsStockOpen(v => !v)}>
-              <span className="filter-caret" data-open={isStockOpen}></span>
-              <h6 className="filter-title">Наличие</h6>
-            </div>
-            <div className="collapsible" style={{maxHeight: isStockOpen ? 200 : 0}}>
-              <div className="switch-container">
-                <label className="switch">
+          {openSections.availability && (
+            <div className="dns-section-content">
+              <div className="dns-availability-switch">
+                <div className="dns-switch">
                   <input
                     type="checkbox"
                     id="stock-filter"
-                    checked={Boolean(filterInStock)}
-                    onChange={(e) => setFilterInStock(Boolean(e.target.checked))}
+                    checked={filterInStock}
+                    onChange={(e) => setFilterInStock(e.target.checked)}
                   />
-                  <span className="slider"></span>
+                  <span className="dns-slider"></span>
+                </div>
+                <label htmlFor="stock-filter" className="dns-switch-label">
+                  Только в наличии
                 </label>
-                <span className="switch-label">Только в наличии</span>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* 2. Цена */}
+        <div className="dns-filter-section">
+          <div 
+            className={`dns-section-header ${openSections.price ? 'dns-section-open' : ''}`}
+            onClick={() => toggleSection('price')}
+          >
+            <h6 className="dns-section-title">Цена, ₽</h6>
+            <span className="dns-section-icon">▼</span>
           </div>
-
-          {/* Цена */}
-          <div className="filter-group">
-            <div className="filter-header" role="button" onClick={() => setIsPriceOpen(v => !v)}>
-              <span className="filter-caret" data-open={isPriceOpen}></span>
-              <h6 className="filter-title">Цена, ₽</h6>
-              <span className="price-range-value">
-                {Number(priceRange[0]).toLocaleString('ru-RU')} - {Number(priceRange[1]).toLocaleString('ru-RU')}
-              </span>
-            </div>
-            <div className="collapsible" style={{maxHeight: isPriceOpen ? 500 : 0}}>
-              <div className="price-inputs-container">
-                <div className="price-inputs">
-                  <div className="price-input-group">
-                    <label htmlFor="price-min" className="price-label">От</label>
-                    <Form.Control
-                      type="number"
-                      id="price-min"
-                      placeholder="0"
-                      value={priceRange[0]}
-                      onChange={(e) => handlePriceRangeChange(0, e.target.value)}
-                      min="0"
-                      max={maxPrice}
-                      className="price-input"
-                    />
-                  </div>
-                  <div className="price-input-group">
-                    <label htmlFor="price-max" className="price-label">До</label>
-                    <Form.Control
-                      type="number"
-                      id="price-max"
-                      placeholder={maxPrice.toLocaleString('ru-RU')}
-                      value={priceRange[1]}
-                      onChange={(e) => handlePriceRangeChange(1, e.target.value)}
-                      min="0"
-                      max={maxPrice}
-                      className="price-input"
-                    />
-                  </div>
+          {openSections.price && (
+            <div className="dns-section-content">
+              <div className="dns-price-inputs">
+                <div className="dns-price-input-group">
+                  <label className="dns-price-label">от</label>
+                  <input
+                    type="number"
+                    className="dns-price-input"
+                    value={priceRange[0]}
+                    onChange={(e) => handlePriceRangeChange(0, e.target.value)}
+                    min="0"
+                    max={maxPrice}
+                    placeholder="0"
+                  />
                 </div>
-
-                <div className="price-presets">
-                  {pricePresets.map((preset, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      className="price-preset-btn"
-                      onClick={() => setPriceRange(preset)}
-                    >
-                      {preset[0].toLocaleString('ru-RU')} - {preset[1].toLocaleString('ru-RU')}
-                    </button>
-                  ))}
+                <div className="dns-price-input-group">
+                  <label className="dns-price-label">до</label>
+                  <input
+                    type="number"
+                    className="dns-price-input"
+                    value={priceRange[1]}
+                    onChange={(e) => handlePriceRangeChange(1, e.target.value)}
+                    min="0"
+                    max={maxPrice}
+                    placeholder={maxPrice.toLocaleString('ru-RU')}
+                  />
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Бренды */}
-          {brands && brands.length > 0 && (
-            <div className="filter-group">
-              <div className="filter-header" role="button" onClick={() => setIsBrandsOpen(v => !v)}>
-                <span className="filter-caret" data-open={isBrandsOpen}></span>
-                <h6 className="filter-title">Бренды</h6>
+              <div className="dns-price-presets">
+                {pricePresets.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className="dns-price-preset-btn"
+                    onClick={() => setPriceRange(preset)}
+                  >
+                    {preset[0].toLocaleString('ru-RU')} - {preset[1].toLocaleString('ru-RU')}
+                  </button>
+                ))}
               </div>
-              <div className="collapsible" style={{maxHeight: isBrandsOpen ? 800 : 0}}>
-                <div className="brands-list">
+            </div>
+          )}
+        </div>
+
+        {/* 3. Бренды */}
+        {brands.length > 0 && (
+          <div className="dns-filter-section">
+            <div 
+              className={`dns-section-header ${openSections.brands ? 'dns-section-open' : ''}`}
+              onClick={() => toggleSection('brands')}
+            >
+              <h6 className="dns-section-title">Бренды</h6>
+              <span className="dns-section-icon">▼</span>
+            </div>
+            {openSections.brands && (
+              <div className="dns-section-content">
+                <div className="dns-filter-list">
                   {brands.map((brand) => {
-                    const brandCount = getBrandCount ? getBrandCount(brand) : 0;
+                    const brandCount = getBrandCount(brand);
                     const id = `brand-${sanitizeId(brand)}`;
                     return (
-                      <div key={brand} className="brand-item">
+                      <div key={brand} className="dns-filter-item">
                         <Form.Check
                           type="checkbox"
                           id={id}
-                          label={
-                            <div className="brand-label">
-                              <span className="brand-name">{brand}</span>
-                              <span className="brand-count">{brandCount}</span>
-                            </div>
-                          }
+                          className="dns-checkbox mb-0"
                           checked={selectedBrands.includes(brand)}
                           onChange={() => handleBrandToggle(brand)}
                         />
+                        <label htmlFor={id} className="dns-filter-label">
+                          <span className="dns-filter-text">{brand}</span>
+                          <span className="dns-filter-count">{brandCount}</span>
+                        </label>
                       </div>
                     );
                   })}
                 </div>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* 4. Рейтинг и отзывы */}
+        <div className="dns-filter-section">
+          <div 
+            className={`dns-section-header ${openSections.rating ? 'dns-section-open' : ''}`}
+            onClick={() => toggleSection('rating')}
+          >
+            <h6 className="dns-section-title">Рейтинг и отзывы</h6>
+            <span className="dns-section-icon">▼</span>
+          </div>
+          {openSections.rating && (
+            <div className="dns-section-content">
+              <div className="dns-extra-filter">
+                <Form.Check
+                  type="checkbox"
+                  id="rating-4"
+                  label="Рейтинг 4 и выше"
+                  checked={minRating === 4}
+                  onChange={handleRatingFilterChange}
+                />
+              </div>
+              <div className="dns-extra-filter">
+                <Form.Check
+                  type="checkbox"
+                  id="has-review"
+                  label="Есть отзывы"
+                  checked={hasReview}
+                  onChange={handleHasReviewChange}
+                />
+              </div>
+              <div className="dns-extra-filter">
+                <Form.Check
+                  type="checkbox"
+                  id="reliable-models"
+                  label="Новые модели"
+                  checked={reliableModels}
+                  onChange={handleReliableModelsChange}
+                />
+              </div>
             </div>
           )}
-
-          {/* Отдельные группы характеристик */}
-          {specifications && Object.keys(specifications).length > 0 && (
-            <>
-              {/* Технические характеристики */}
-              {(() => {
-                const keys = ['nfc','supports_5g','waterproof','wireless_charge_support'];
-                const available = keys.some(k => Array.isArray(specifications[k]) && specifications[k].length > 0);
-                if (!available) return null;
-                return (
-                  <div className="filter-group">
-                    <div className="filter-header" role="button" onClick={() => setIsTechSpecsOpen(v => !v)}>
-                      <span className="filter-caret" data-open={isTechSpecsOpen}></span>
-                      <h6 className="filter-title">Технические характеристики</h6>
-                    </div>
-                    <div className="collapsible" style={{maxHeight: isTechSpecsOpen ? 1000 : 0}}>
-                      <div className="specifications-list-simple">
-                        {keys.map(k => renderKeySection(k))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Память */}
-              {(() => {
-                const keys = ['ram','storage'];
-                const available = keys.some(k => Array.isArray(specifications[k]) && specifications[k].length > 0);
-                if (!available) return null;
-                return (
-                  <div className="filter-group">
-                    <div className="filter-header" role="button" onClick={() => setIsMemoryOpen(v => !v)}>
-                      <span className="filter-caret" data-open={isMemoryOpen}></span>
-                      <h6 className="filter-title">Память</h6>
-                    </div>
-                    <div className="collapsible" style={{maxHeight: isMemoryOpen ? 800 : 0}}>
-                      <div className="specifications-list-simple">
-                        {keys.map(k => renderKeySection(k))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Экран */}
-              {(() => {
-                const keys = ['screen_size_range','display','refresh_rate','resolution_class'];
-                const available = keys.some(k => Array.isArray(specifications[k]) && specifications[k].length > 0);
-                if (!available) return null;
-                return (
-                  <div className="filter-group">
-                    <div className="filter-header" role="button" onClick={() => setIsScreenOpen(v => !v)}>
-                      <span className="filter-caret" data-open={isScreenOpen}></span>
-                      <h6 className="filter-title">Экран</h6>
-                    </div>
-                    <div className="collapsible" style={{maxHeight: isScreenOpen ? 1000 : 0}}>
-                      <div className="specifications-list-simple">
-                        {keys.map(k => renderKeySection(k))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Камеры */}
-              {(() => {
-                const keys = ['camera_count_bucket','video_recording'];
-                const available = keys.some(k => Array.isArray(specifications[k]) && specifications[k].length > 0);
-                if (!available) return null;
-                return (
-                  <div className="filter-group">
-                    <div className="filter-header" role="button" onClick={() => setIsCamerasOpen(v => !v)}>
-                      <span className="filter-caret" data-open={isCamerasOpen}></span>
-                      <h6 className="filter-title">Камеры</h6>
-                    </div>
-                    <div className="collapsible" style={{maxHeight: isCamerasOpen ? 800 : 0}}>
-                      <div className="specifications-list-simple">
-                        {keys.map(k => renderKeySection(k))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Процессор */}
-              {(() => {
-                const keys = ['cpu_cores','processor_manufacturer'];
-                const available = keys.some(k => Array.isArray(specifications[k]) && specifications[k].length > 0);
-                if (!available) return null;
-                return (
-                  <div className="filter-group">
-                    <div className="filter-header" role="button" onClick={() => setIsCpuOpen(v => !v)}>
-                      <span className="filter-caret" data-open={isCpuOpen}></span>
-                      <h6 className="filter-title">Процессор</h6>
-                    </div>
-                    <div className="collapsible" style={{maxHeight: isCpuOpen ? 600 : 0}}>
-                      <div className="specifications-list-simple">
-                        {keys.map(k => renderKeySection(k))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Аккумулятор */}
-              {(() => {
-                const keys = ['battery_capacity_bucket'];
-                const available = keys.some(k => Array.isArray(specifications[k]) && specifications[k].length > 0);
-                if (!available) return null;
-                return (
-                  <div className="filter-group">
-                    <div className="filter-header" role="button" onClick={() => setIsBatteryOpen(v => !v)}>
-                      <span className="filter-caret" data-open={isBatteryOpen}></span>
-                      <h6 className="filter-title">Аккумулятор</h6>
-                    </div>
-                    <div className="collapsible" style={{maxHeight: isBatteryOpen ? 800 : 0}}>
-                      <div className="specifications-list-simple">
-                        {keys.map(k => renderKeySection(k))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Дополнительно */}
-              {(() => {
-                const keys = ['release_year','os','material_basic'];
-                const available = keys.some(k => Array.isArray(specifications[k]) && specifications[k].length > 0);
-                if (!available) return null;
-                return (
-                  <div className="filter-group">
-                    <div className="filter-header" role="button" onClick={() => setIsExtraSpecsOpen(v => !v)}>
-                      <span className="filter-caret" data-open={isExtraSpecsOpen}></span>
-                      <h6 className="filter-title">Дополнительно</h6>
-                    </div>
-                    <div className="collapsible" style={{maxHeight: isExtraSpecsOpen ? 800 : 0}}>
-                      <div className="specifications-list-simple">
-                        {keys.map(k => renderKeySection(k))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-            </>
-          )}
         </div>
+
+        {/* 5. Технические характеристики */}
+        {hasTechSpecs && (
+          <div className="dns-filter-section">
+            <div 
+              className={`dns-section-header ${openSections.techSpecs ? 'dns-section-open' : ''}`}
+              onClick={() => toggleSection('techSpecs')}
+            >
+              <h6 className="dns-section-title">Технические характеристики</h6>
+              <span className="dns-section-icon">▼</span>
+            </div>
+            {openSections.techSpecs && (
+              <div className="dns-section-content">
+                {techSpecsKeys.map(key => renderKeySection(key))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 6. Память */}
+        {hasMemory && (
+          <div className="dns-filter-section">
+            <div 
+              className={`dns-section-header ${openSections.memory ? 'dns-section-open' : ''}`}
+              onClick={() => toggleSection('memory')}
+            >
+              <h6 className="dns-section-title">Память</h6>
+              <span className="dns-section-icon">▼</span>
+            </div>
+            {openSections.memory && (
+              <div className="dns-section-content">
+                {memoryKeys.map(key => renderKeySection(key))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 7. Экран */}
+        {hasScreen && (
+          <div className="dns-filter-section">
+            <div 
+              className={`dns-section-header ${openSections.screen ? 'dns-section-open' : ''}`}
+              onClick={() => toggleSection('screen')}
+            >
+              <h6 className="dns-section-title">Экран</h6>
+              <span className="dns-section-icon">▼</span>
+            </div>
+            {openSections.screen && (
+              <div className="dns-section-content">
+                {screenKeys.map(key => renderKeySection(key))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 8. Камеры */}
+        {hasCameras && (
+          <div className="dns-filter-section">
+            <div 
+              className={`dns-section-header ${openSections.cameras ? 'dns-section-open' : ''}`}
+              onClick={() => toggleSection('cameras')}
+            >
+              <h6 className="dns-section-title">Камеры</h6>
+              <span className="dns-section-icon">▼</span>
+            </div>
+            {openSections.cameras && (
+              <div className="dns-section-content">
+                {cameraKeys.map(key => renderKeySection(key))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 9. Процессор */}
+        {hasProcessor && (
+          <div className="dns-filter-section">
+            <div 
+              className={`dns-section-header ${openSections.processor ? 'dns-section-open' : ''}`}
+              onClick={() => toggleSection('processor')}
+            >
+              <h6 className="dns-section-title">Процессор</h6>
+              <span className="dns-section-icon">▼</span>
+            </div>
+            {openSections.processor && (
+              <div className="dns-section-content">
+                {processorKeys.map(key => renderKeySection(key))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 10. Аккумулятор */}
+        {hasBattery && (
+          <div className="dns-filter-section">
+            <div 
+              className={`dns-section-header ${openSections.battery ? 'dns-section-open' : ''}`}
+              onClick={() => toggleSection('battery')}
+            >
+              <h6 className="dns-section-title">Аккумулятор</h6>
+              <span className="dns-section-icon">▼</span>
+            </div>
+            {openSections.battery && (
+              <div className="dns-section-content">
+                {batteryKeys.map(key => renderKeySection(key))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 11. Дополнительно */}
+        {hasOther && (
+          <div className="dns-filter-section">
+            <div 
+              className={`dns-section-header ${openSections.other ? 'dns-section-open' : ''}`}
+              onClick={() => toggleSection('other')}
+            >
+              <h6 className="dns-section-title">Дополнительно</h6>
+              <span className="dns-section-icon">▼</span>
+            </div>
+            {openSections.other && (
+              <div className="dns-section-content">
+                {otherKeys.map(key => renderKeySection(key))}
+              </div>
+            )}
+          </div>
+        )}
       </Card.Body>
     </Card>
   );
