@@ -9,6 +9,7 @@ import {
   Col
 } from 'react-bootstrap';
 import { categoryService } from '../../../services/categoryService';
+import { aggregateSpecifications, productMatchesFacetFilters } from '../../../services/filterService';
 import ProductCard from '../../../components/Products/ProductCard/ProductCard';
 import SortingCard from './SortingCard';
 import FiltersCard from './FiltersCard';
@@ -78,159 +79,10 @@ const CategoryPage = () => {
     });
   }, [products]);
 
-  // Мемоизированные функции обработки
-  const toYesNo = useCallback((v) => {
-    if (typeof v === 'boolean') return v ? 'Да' : 'Нет';
-    if (v === 'true' || v === 'True') return 'Да';
-    if (v === 'false' || v === 'False') return 'Нет';
-    return v;
-  }, []);
-
-  const getResolutionClass = useCallback((res) => {
-    if (!res) return null;
-    const m = String(res).match(/(\d+)x(\d+)/);
-    if (!m) return null;
-    const w = parseInt(m[1], 10);
-    const h = parseInt(m[2], 10);
-    const maxSide = Math.max(w, h);
-    if (maxSide >= 3000) return 'Quad HD+';
-    if (maxSide >= 2300) return 'Full HD+';
-    return 'HD+';
-  }, []);
-
-  const getScreenSizeRange = useCallback((sizeStr) => {
-    if (!sizeStr) return null;
-    const num = parseFloat(String(sizeStr).replace(/[^0-9.]/g, ''));
-    if (!num) return null;
-    if (num < 6.0) return 'до 6.0"';
-    if (num <= 6.5) return '6.1-6.5"';
-    if (num <= 6.9) return '6.6-6.9"';
-    return '7.0+"';
-  }, []);
-
-  const getBatteryCapacityBucket = useCallback((capStr) => {
-    if (!capStr) return null;
-    const num = parseInt(String(capStr).replace(/[^0-9]/g, ''), 10);
-    if (!num) return null;
-    if (num < 2000) return '<2000 мАч';
-    if (num < 3000) return '2000–3000 мАч';
-    if (num < 4000) return '3000–4000 мАч';
-    if (num < 5000) return '4000–5000 мАч';
-    if (num < 6000) return '5000–6000 мАч';
-    return '6000+ мАч';
-  }, []);
-
-  const getFastChargeRange = useCallback((wattStr) => {
-    if (!wattStr) return null;
-    const num = parseInt(String(wattStr).replace(/[^0-9]/g, ''), 10);
-    if (!num) return 'Нет';
-    if (num < 30) return '15-30 Вт';
-    if (num <= 65) return '30-65 Вт';
-    return '65+ Вт';
-  }, []);
-
-  const getCameraCountBucket = useCallback((cameraStr) => {
-    if (!cameraStr) return null;
-    const plusCount = (String(cameraStr).match(/\+/g) || []).length + 1;
-    if (plusCount <= 2) return '2';
-    if (plusCount === 3) return '3';
-    if (plusCount === 4) return '4';
-    return '5+';
-  }, []);
-
-  const getProcessorCompany = useCallback((proc) => {
-    const s = String(proc || '').toLowerCase();
-    if (s.includes('qualcomm') || s.includes('snapdragon')) return 'Qualcomm';
-    if (s.includes('mediatek')) return 'MediaTek';
-    if (s.includes('exynos')) return 'Samsung';
-    if (s.includes('apple') || s.includes('a18') || s.includes('a17') || s.includes('a-series')) return 'Apple';
-    if (s.includes('google') || s.includes('tensor')) return 'Google';
-    return null;
-  }, []);
-
-  const getCpuCores = useCallback((processor, chip) => {
-    const texts = [String(processor || ''), String(chip || '')];
-    for (const t of texts) {
-      // English patterns: 12-core, 8 core CPU
-      const mEn = t.match(/(\d+)\s*-?\s*core/i);
-      if (mEn && mEn[1]) return `${parseInt(mEn[1], 10)} ядер`;
-      // Russian patterns: 6-ядерн, 8 ядерный, 8-ядерный CPU
-      const mRu = t.match(/(\d+)\s*-?\s*ядер/i);
-      if (mRu && mRu[1]) return `${parseInt(mRu[1], 10)} ядер`;
-      const mRu2 = t.match(/(\d+)\s*-?\s*ядерн/i);
-      if (mRu2 && mRu2[1]) return `${parseInt(mRu2[1], 10)} ядер`;
-      // Sometimes like "6-ядерным CPU"
-      const mCpu = t.match(/(\d+)\s*-?\s*ядерн.*CPU/i);
-      if (mCpu && mCpu[1]) return `${parseInt(mCpu[1], 10)} ядер`;
-    }
-    return null;
-  }, []);
-
-  // Мемоизированное получение спецификаций
-  const specifications = useMemo(() => {
-    const specs = {};
-
-    const addValue = (key, value) => {
-      if (value === null || value === undefined || value === '') return;
-      if (!specs[key]) specs[key] = new Set();
-      specs[key].add(String(value));
-    };
-
-    processedProducts.forEach(product => {
-      const { parsedSpecs } = product;
-
-      // Сырые значения в справочник
-      Object.entries(parsedSpecs).forEach(([key, value]) => {
-        addValue(key, toYesNo(value));
-      });
-
-      // Вычисляемые признаки
-      const network = parsedSpecs.network || '';
-      const supports5g = /(^|\b)5G(\b|,)/i.test(String(network));
-      addValue('supports_5g', supports5g ? 'Да' : 'Нет');
-
-      const wireless = parsedSpecs.wireless_charge;
-      const hasWireless = (typeof wireless === 'boolean') ? wireless : (wireless && String(wireless).toLowerCase() !== 'false');
-      addValue('wireless_charge_support', hasWireless ? 'Да' : 'Нет');
-
-      // Диапазоны
-      addValue('screen_size_range', getScreenSizeRange(parsedSpecs.screen_size));
-      addValue('battery_capacity_bucket', getBatteryCapacityBucket(parsedSpecs.battery));
-      addValue('fast_charge_range', getFastChargeRange(parsedSpecs.fast_charge));
-
-      // Камеры
-      addValue('camera_count_bucket', getCameraCountBucket(parsedSpecs.camera));
-
-      // Видео
-      const video = String(parsedSpecs.video || '');
-      if (/8k/i.test(video)) addValue('video_recording', '8K');
-      if (/4k/i.test(video)) addValue('video_recording', '4K');
-
-      // Разрешение класс
-      addValue('resolution_class', getResolutionClass(parsedSpecs.resolution));
-
-      // Производитель процессора (компания)
-      addValue('processor_company', getProcessorCompany(parsedSpecs.processor));
-
-      // Количество ядер
-      addValue('cpu_cores', getCpuCores(parsedSpecs.processor, parsedSpecs.chip));
-
-      // Нормализация материала корпуса: стекло/металл/пластик
-      const materialRaw = String(parsedSpecs.material || '').toLowerCase();
-      let materialBasic = null;
-      if (/стекл|glass/.test(materialRaw)) materialBasic = 'Стекло';
-      if (/алюм|металл|metal|steel/.test(materialRaw)) materialBasic = 'Металл';
-      if (/пласт|plastic/.test(materialRaw)) materialBasic = 'Пластик';
-      addValue('material_basic', materialBasic);
-    });
-
-    const result = {};
-    Object.keys(specs).forEach(key => {
-      result[key] = Array.from(specs[key]).filter(Boolean).sort();
-    });
-
-    return result;
-  }, [processedProducts, toYesNo, getResolutionClass, getScreenSizeRange, getBatteryCapacityBucket, getFastChargeRange, getCameraCountBucket, getProcessorCompany, getCpuCores]);
+  // Facets used by FiltersCard + consistent matching.
+  const { specifications, specificationsCountMap } = useMemo(() => {
+    return aggregateSpecifications(processedProducts);
+  }, [processedProducts]);
   // Мемоизированные вычисления
   const brands = useMemo(() => 
     [...new Set(products.map(p => p.brand).filter(Boolean))].sort(), 
@@ -271,18 +123,9 @@ const CategoryPage = () => {
     // Фильтр по новым моделям
     if (reliableModels && !product.isNew) return false;
 
-    // Фильтр по характеристикам - используем предобработанные данные
+    // Фильтр по характеристикам - единая нормализация + derived ключи
     if (Object.keys(filters).length > 0) {
-      const { parsedSpecs } = product;
-      
-      for (const [key, values] of Object.entries(filters)) {
-        if (values.length > 0) {
-          const productValue = parsedSpecs[key];
-          if (!productValue || !values.includes(productValue.toString())) {
-            return false;
-          }
-        }
-      }
+      if (!productMatchesFacetFilters(product, filters)) return false;
     }
 
     return true;
@@ -352,58 +195,6 @@ const CategoryPage = () => {
     };
     return nameMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
-
-  // Мемоизированная карта подсчета спецификаций
-  const specificationsCountMap = useMemo(() => {
-    const countMap = new Map();
-    
-    processedProducts.forEach(product => {
-      const { parsedSpecs } = product;
-      
-      // Функция для добавления в карту
-      const addToMap = (key, value) => {
-        if (!value) return;
-        const mapKey = `${key}-${value}`;
-        countMap.set(mapKey, (countMap.get(mapKey) || 0) + 1);
-      };
-
-      // Сырые значения
-      Object.entries(parsedSpecs).forEach(([key, val]) => {
-        addToMap(key, toYesNo(val));
-      });
-
-      // Вычисляемые значения
-      const network = parsedSpecs.network || '';
-      const supports5g = /(^|\b)5G(\b|,)/i.test(String(network));
-      addToMap('supports_5g', supports5g ? 'Да' : 'Нет');
-
-      const wireless = parsedSpecs.wireless_charge;
-      const hasWireless = (typeof wireless === 'boolean') ? wireless : (wireless && String(wireless).toLowerCase() !== 'false');
-      addToMap('wireless_charge_support', hasWireless ? 'Да' : 'Нет');
-
-      addToMap('screen_size_range', getScreenSizeRange(parsedSpecs.screen_size));
-      addToMap('battery_capacity_bucket', getBatteryCapacityBucket(parsedSpecs.battery));
-      addToMap('fast_charge_range', getFastChargeRange(parsedSpecs.fast_charge));
-      addToMap('camera_count_bucket', getCameraCountBucket(parsedSpecs.camera));
-
-      const video = String(parsedSpecs.video || '');
-      if (/8k/i.test(video)) addToMap('video_recording', '8K');
-      if (/4k/i.test(video)) addToMap('video_recording', '4K');
-
-      addToMap('resolution_class', getResolutionClass(parsedSpecs.resolution));
-      addToMap('processor_company', getProcessorCompany(parsedSpecs.processor));
-      addToMap('cpu_cores', getCpuCores(parsedSpecs.processor, parsedSpecs.chip));
-
-      const materialRaw = String(parsedSpecs.material || '').toLowerCase();
-      let materialBasic = null;
-      if (/стекл|glass/.test(materialRaw)) materialBasic = 'Стекло';
-      if (/алюм|металл|metal|steel/.test(materialRaw)) materialBasic = 'Металл';
-      if (/пласт|plastic/.test(materialRaw)) materialBasic = 'Пластик';
-      addToMap('material_basic', materialBasic);
-    });
-
-    return countMap;
-  }, [processedProducts, toYesNo, getScreenSizeRange, getBatteryCapacityBucket, getFastChargeRange, getCameraCountBucket, getResolutionClass, getProcessorCompany, getCpuCores]);
 
   // Оптимизированная функция подсчета
   const getSpecificationCount = useCallback((key, value) => {

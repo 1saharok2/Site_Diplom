@@ -31,12 +31,10 @@ const FiltersCard = ({
     price: false,
     brands: false,
     rating: false,
-    memory: false,
+    techSpecs: false,
     screen: false,
     cameras: false,
-    processor: false,
     battery: false,
-    techSpecs: false,
     other: false
   });
 
@@ -87,6 +85,7 @@ const FiltersCard = ({
   const renderKeySection = (key) => {
     const values = Array.isArray(specifications[key]) ? specifications[key] : [];
     if (values.length === 0) return null;
+
     return (
       <div className="mb-3">
         <div className="fw-semibold mb-2 filter-subtitle">{getDisplayName(key)}</div>
@@ -124,21 +123,24 @@ const FiltersCard = ({
     [150001, 500000]
   ];
 
-  // Определение групп характеристик
+  // ✅ ИСПРАВЛЕНО: Только рабочие группы фильтров
   const techSpecsKeys = ['nfc', 'supports_5g', 'waterproof', 'wireless_charge_support'];
-  const memoryKeys = ['ram', 'storage'];
   const screenKeys = ['screen_size_range', 'display', 'refresh_rate', 'resolution_class'];
   const cameraKeys = ['camera_count_bucket', 'video_recording'];
-  const processorKeys = ['cpu_cores', 'processor_company'];
   const batteryKeys = ['battery_capacity_bucket'];
-  const otherKeys = ['release_year', 'os', 'material_basic'];
+  const otherKeys = ['os', 'material_basic'];
 
-  // Проверка наличия характеристик в группах
-  const hasTechSpecs = techSpecsKeys.some(k => specifications[k]?.length > 0);
-  const hasMemory = memoryKeys.some(k => specifications[k]?.length > 0);
+  // ✅ ИСПРАВЛЕНО: Правильная проверка наличия данных
+  const hasTechSpecs = techSpecsKeys.some(k => {
+    const hasData = specifications[k] && Array.isArray(specifications[k]) && specifications[k].length > 0;
+    if (hasData) {
+      console.log(`✅ Группа ${k} имеет данные:`, specifications[k]);
+    }
+    return hasData;
+  });
+  
   const hasScreen = screenKeys.some(k => specifications[k]?.length > 0);
   const hasCameras = cameraKeys.some(k => specifications[k]?.length > 0);
-  const hasProcessor = processorKeys.some(k => specifications[k]?.length > 0);
   const hasBattery = batteryKeys.some(k => specifications[k]?.length > 0);
   const hasOther = otherKeys.some(k => specifications[k]?.length > 0);
 
@@ -258,7 +260,7 @@ const FiltersCard = ({
           
           .dns-section-content {
             margin-top: 12px;
-            display: ${(props) => props.open ? 'block' : 'none'};
+            display: block;
           }
           
           /* Переключатель наличия */
@@ -633,31 +635,16 @@ const FiltersCard = ({
             </div>
             {openSections.techSpecs && (
               <div className="dns-section-content">
-                {techSpecsKeys.map(key => renderKeySection(key))}
+                {techSpecsKeys.map(key => {
+                  console.log(`🔑 Рендер тех характеристики ${key}:`, specifications[key]);
+                  return renderKeySection(key);
+                })}
               </div>
             )}
           </div>
         )}
 
-        {/* 6. Память */}
-        {hasMemory && (
-          <div className="dns-filter-section">
-            <div 
-              className={`dns-section-header ${openSections.memory ? 'dns-section-open' : ''}`}
-              onClick={() => toggleSection('memory')}
-            >
-              <h6 className="dns-section-title">Память</h6>
-              <span className="dns-section-icon">▼</span>
-            </div>
-            {openSections.memory && (
-              <div className="dns-section-content">
-                {memoryKeys.map(key => renderKeySection(key))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* 7. Экран */}
+        {/* 6. Экран */}
         {hasScreen && (
           <div className="dns-filter-section">
             <div 
@@ -675,7 +662,7 @@ const FiltersCard = ({
           </div>
         )}
 
-        {/* 8. Камеры */}
+        {/* 7. Камеры */}
         {hasCameras && (
           <div className="dns-filter-section">
             <div 
@@ -693,25 +680,7 @@ const FiltersCard = ({
           </div>
         )}
 
-        {/* 9. Процессор */}
-        {hasProcessor && (
-          <div className="dns-filter-section">
-            <div 
-              className={`dns-section-header ${openSections.processor ? 'dns-section-open' : ''}`}
-              onClick={() => toggleSection('processor')}
-            >
-              <h6 className="dns-section-title">Процессор</h6>
-              <span className="dns-section-icon">▼</span>
-            </div>
-            {openSections.processor && (
-              <div className="dns-section-content">
-                {processorKeys.map(key => renderKeySection(key))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* 10. Аккумулятор */}
+        {/* 8. Аккумулятор */}
         {hasBattery && (
           <div className="dns-filter-section">
             <div 
@@ -729,7 +698,7 @@ const FiltersCard = ({
           </div>
         )}
 
-        {/* 11. Дополнительно */}
+        {/* 9. Дополнительно */}
         {hasOther && (
           <div className="dns-filter-section">
             <div 

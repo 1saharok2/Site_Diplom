@@ -1,4 +1,4 @@
-const pool = require('../config/database');
+const supabase = require('../config/supabase');
 
 const saveProductImages = async (productId, images) => {
   try {
@@ -6,7 +6,10 @@ const saveProductImages = async (productId, images) => {
       return [];
     }
 
-    await pool.query('DELETE FROM product_images WHERE product_id = ?', [productId]);
+    await supabase
+      .from('product_images')
+      .delete()
+      .eq('product_id', productId);
 
     const imageRecords = images.map((imageUrl, index) => ({
       product_id: productId,
@@ -15,14 +18,13 @@ const saveProductImages = async (productId, images) => {
       sort_order: index
     }));
 
-    const placeholders = imageRecords.map(() => '(?, ?, ?, ?)').join(',');
-    const values = imageRecords.flatMap(r => [r.product_id, r.image_url, r.is_main ? 1 : 0, r.sort_order]);
-    await pool.query(
-      `INSERT INTO product_images (product_id, image_url, is_main, sort_order) VALUES ${placeholders}`,
-      values
-    );
-    const [rows] = await pool.query('SELECT * FROM product_images WHERE product_id = ? ORDER BY sort_order ASC', [productId]);
-    return rows;
+    const { data, error } = await supabase
+      .from('product_images')
+      .insert(imageRecords)
+      .select('*');
+
+    if (error) throw error;
+    return data;
 
   } catch (error) {
     console.error('Error saving product images:', error);
@@ -32,8 +34,14 @@ const saveProductImages = async (productId, images) => {
 
 const getProductImages = async (productId) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM product_images WHERE product_id = ? ORDER BY sort_order ASC', [productId]);
-    return rows || [];
+    const { data, error } = await supabase
+      .from('product_images')
+      .select('*')
+      .eq('product_id', productId)
+      .order('sort_order', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
 
   } catch (error) {
     console.error('Error getting product images:', error);
@@ -43,7 +51,12 @@ const getProductImages = async (productId) => {
 
 const deleteProductImages = async (productId) => {
   try {
-    await pool.query('DELETE FROM product_images WHERE product_id = ?', [productId]);
+    const { error } = await supabase
+      .from('product_images')
+      .delete()
+      .eq('product_id', productId);
+
+    if (error) throw error;
     
   } catch (error) {
     console.error('Error deleting product images:', error);

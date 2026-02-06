@@ -1,0 +1,59 @@
+RewriteEngine On
+RewriteBase /api/
+
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# если это не реальный файл/папка — переписываем на PHP
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_METHOD} POST
+RewriteRule ^orders/?$ orders.php [QSA,L]
+RewriteCond %{REQUEST_METHOD} GET
+RewriteRule ^orders/?$ orders.php [QSA,L]
+RewriteRule ^uploads/(.*)$ uploads/$1 [L]
+
+# auth
+RewriteRule ^auth/login$ auth/login.php [L]
+RewriteRule ^auth/register$ auth/register.php [L]
+
+# пользовательские данные
+RewriteRule ^cart/([^/]+)/?$ cart.php?userId=$1 [QSA,L]
+RewriteRule ^cart/add/?$ cart.php [QSA,L]
+RewriteRule ^wishlist/([^/]+)/?$ wishlist.php?userId=$1 [QSA,L]
+RewriteRule ^wishlist/add/?$ wishlist.php [QSA,L]
+RewriteRule ^orders/user/(.*)$ orders_user.php?userId=$1 [L,QSA]
+RewriteRule ^reviews/user/([^/]+)/?$ reviews.php?userId=$1 [QSA,L]
+
+# admin панель
+RewriteRule ^admin/stats/?$ admin/stats.php [QSA,L]
+RewriteRule ^admin/users/?$ admin/users.php [QSA,L]
+RewriteRule ^admin/users/([^/]+)/?$ admin/users.php?id=$1 [QSA,L]
+RewriteRule ^admin/orders/?$ admin/orders.php [QSA,L]
+RewriteRule ^admin/reviews/?$ admin/reviews.php [QSA,L]
+RewriteRule ^admin/reviews/pending/?$ admin/reviews.php?action=pending [QSA,L]
+RewriteRule ^admin/reviews/stats/?$ admin/reviews.php?action=stats [QSA,L]
+RewriteCond %{REQUEST_METHOD} POST
+RewriteRule ^admin/products/?$ admin/products.php [QSA,L]
+RewriteCond %{REQUEST_METHOD} PUT
+RewriteRule ^admin/products/([0-9]+)/?$ admin/products.php?id=$1 [QSA,L]
+RewriteCond %{REQUEST_METHOD} DELETE
+RewriteRule ^admin/products/([0-9]+)/?$ admin/products.php?id=$1 [QSA,L]
+
+# остальные правила...
+RewriteRule ^categories/?$ categories.php [QSA,L]
+RewriteRule ^categories/([^/]+)/?$ categories.php?slug=$1 [QSA,L]
+RewriteRule ^products/?$ products.php [QSA,L]
+RewriteRule ^products/([0-9]+)/?$ products.php?id=$1 [QSA,L]
+RewriteRule ^products/category/([^/]+)/?$ products.php?category=$1 [QSA,L]
+RewriteRule ^reviews/product/([0-9]+)/?$ reviews.php?product_id=$1 [QSA,L]
+RewriteRule ^health/?$ health/index.php [QSA,L]
+
+# Защита файла подключения к БД
+<Files "db.php">
+    Require all denied
+</Files>
+
+<Limit GET POST PUT DELETE OPTIONS>
+  Require all granted
+</Limit>
