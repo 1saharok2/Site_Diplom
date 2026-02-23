@@ -122,6 +122,18 @@ export const reviewService = {
     }
   },
 
+  // Удалить отзыв (админ)
+  deleteReview: async (reviewId, reason) => {
+    try {
+      return await apiService.delete(`/admin/reviews/${reviewId}`, {
+        deletion_reason: reason
+      });
+    } catch (error) {
+      console.error('❌ Ошибка в deleteReview:', error);
+      throw error;
+    }
+  },
+
   // Получить статистику отзывов
   getReviewStats: async () => {
     try {

@@ -137,6 +137,11 @@ export const apiService = {
     return apiService.get(`/categories/${slug}`);
   },
 
+  // Category filters (server-side aggregation)
+  getCategoryFilters: (categorySlug) => {
+    return apiService.get(`/filters.php?category=${encodeURIComponent(categorySlug)}`);
+  },
+
   // Auth - исправленные методы
   login: async (credentials) => {
     try {

@@ -94,6 +94,10 @@ const ProductInfo = ({ product, onVariantChange }) => {
   const [exactMatch, setExactMatch] = useState(null);
   const [wishlistLoading, setWishlistLoading] = useState(false);
 
+  // Состояния для рейтинга, вычисленного из отзывов
+  const [averageRating, setAverageRating] = useState(0);
+  const [reviewsCount, setReviewsCount] = useState(0);
+
   const userId = useMemo(() => {
     if (currentUser?.id) return currentUser.id;
     if (currentUser?.user_id) return currentUser.user_id;
@@ -339,6 +343,35 @@ const ProductInfo = ({ product, onVariantChange }) => {
     return product;
   }, [hasVariants, exactMatch, selectedVariant, product]);
 
+  // Загрузка отзывов для вычисления реального рейтинга
+  useEffect(() => {
+    if (!targetProduct?.id) return;
+
+    const fetchReviews = async () => {
+      try {
+        const response = await fetch(`https://electronic.tw1.ru/api/reviews/product/${targetProduct.id}`);
+        if (response.ok) {
+          const reviews = await response.json(); // уже отфильтрованы по статусу approved
+          const count = reviews.length;
+          const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+          const avg = count > 0 ? sum / count : 0;
+          setAverageRating(avg);
+          setReviewsCount(count);
+        } else {
+          console.error('Не удалось загрузить отзывы, используем данные из товара');
+          setAverageRating(targetProduct.rating || 0);
+          setReviewsCount(targetProduct.reviews_count || 0);
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке отзывов:', error);
+        setAverageRating(targetProduct.rating || 0);
+        setReviewsCount(targetProduct.reviews_count || 0);
+      }
+    };
+
+    fetchReviews();
+  }, [targetProduct?.id, targetProduct.rating, targetProduct.reviews_count]);
+
   const handleAddToCart = useCallback(async () => {
     if (!targetProduct || targetProduct.stock <= 0) return;
     if (!userId) {
@@ -395,6 +428,7 @@ const ProductInfo = ({ product, onVariantChange }) => {
       setWishlistLoading(false);
     }
   }, [userId, targetProductId, isInWishlistState, addToWishlist, removeFromWishlistByProduct]);
+
   const canAddToCart = targetProduct ? targetProduct.stock > 0 : false;
   const displayVariant = targetProduct || selectedVariant;
   const hasDiscount = displayVariant?.old_price && displayVariant?.price && 
@@ -430,14 +464,14 @@ const ProductInfo = ({ product, onVariantChange }) => {
               {[...Array(5)].map((_, index) => (
                 <FaStar 
                   key={index}
-                  color={index < Math.floor(displayVariant?.rating || 0) ? '#ffc107' : '#e4e5e9'}
+                  color={index < Math.floor(averageRating) ? '#ffc107' : '#e4e5e9'}
                   size={16}
                 />
               ))}
             </div>
-            <span className="rating-value">{displayVariant?.rating || 0}</span>
+            <span className="rating-value">{averageRating.toFixed(1)}</span>
           </div>
-          <span className="reviews-count">({displayVariant?.reviews_count || 0} отзывов)</span>
+          <span className="reviews-count">({reviewsCount} отзывов)</span>
         </div>
 
         <div className="price-section">

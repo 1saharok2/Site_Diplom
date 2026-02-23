@@ -271,3 +271,14 @@ export const getCategories = categoryService.getAllCategories;
 export const getCategoryBySlug = categoryService.getCategoryBySlug;
 export const getProductsByCategory = categoryService.getProductsByCategory;
 export const getProductById = categoryService.getProductById;
+
+// Дополнительный экспорт для фильтров категории
+export const getCategoryFilters = async (categorySlug) => {
+  try {
+    const data = await apiService.getCategoryFilters(categorySlug);
+    return data;
+  } catch (error) {
+    console.error(`❌ Error fetching filters for category ${categorySlug}:`, error);
+    return null;
+  }
+};

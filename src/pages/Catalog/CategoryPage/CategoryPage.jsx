@@ -8,7 +8,7 @@ import {
   Row,
   Col
 } from 'react-bootstrap';
-import { categoryService } from '../../../services/categoryService';
+import { categoryService, getCategoryFilters } from '../../../services/categoryService';
 import { aggregateSpecifications, productMatchesFacetFilters } from '../../../services/filterService';
 import ProductCard from '../../../components/Products/ProductCard/ProductCard';
 import SortingCard from './SortingCard';
@@ -36,6 +36,10 @@ const CategoryPage = () => {
   const [reliableModels, setReliableModels] = useState(false);
   const [hasReview, setHasReview] = useState(false);
 
+  // Серверные фасеты (если доступны)
+  const [serverSpecifications, setServerSpecifications] = useState(null);
+  const [serverSpecificationsCountMap, setServerSpecificationsCountMap] = useState(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -50,6 +54,22 @@ const CategoryPage = () => {
         if (productsData.length > 0) {
           const maxPrice = Math.max(...productsData.map(p => p.price));
           setPriceRange([0, maxPrice]);
+        }
+
+        // Пытаемся получить предрасчёт фильтров с сервера (не критично при ошибке)
+        try {
+          const filtersData = await getCategoryFilters(slug);
+          if (filtersData && filtersData.specifications && filtersData.counts) {
+            setServerSpecifications(filtersData.specifications);
+            setServerSpecificationsCountMap(filtersData.counts);
+          } else {
+            setServerSpecifications(null);
+            setServerSpecificationsCountMap(null);
+          }
+        } catch (e) {
+          console.error('Error fetching category filters:', e);
+          setServerSpecifications(null);
+          setServerSpecificationsCountMap(null);
         }
       } catch (err) {
         setError('Ошибка загрузки данных категории');
@@ -81,8 +101,20 @@ const CategoryPage = () => {
 
   // Facets used by FiltersCard + consistent matching.
   const { specifications, specificationsCountMap } = useMemo(() => {
+    // Если сервер отдал готовые данные - используем их
+    if (serverSpecifications && serverSpecificationsCountMap) {
+      const map = new Map();
+      Object.entries(serverSpecificationsCountMap).forEach(([key, count]) => {
+        map.set(key, count);
+      });
+      return {
+        specifications: serverSpecifications,
+        specificationsCountMap: map
+      };
+    }
+    // Иначе считаем на фронтенде
     return aggregateSpecifications(processedProducts);
-  }, [processedProducts]);
+  }, [processedProducts, serverSpecifications, serverSpecificationsCountMap]);
   // Мемоизированные вычисления
   const brands = useMemo(() => 
     [...new Set(products.map(p => p.brand).filter(Boolean))].sort(), 

@@ -33,6 +33,9 @@ RewriteRule ^admin/orders/?$ admin/orders.php [QSA,L]
 RewriteRule ^admin/reviews/?$ admin/reviews.php [QSA,L]
 RewriteRule ^admin/reviews/pending/?$ admin/reviews.php?action=pending [QSA,L]
 RewriteRule ^admin/reviews/stats/?$ admin/reviews.php?action=stats [QSA,L]
+RewriteRule ^admin/reviews/([0-9]+)/approve/?$ admin/reviews.php?action=approve&id=$1 [QSA,L]
+RewriteRule ^admin/reviews/([0-9]+)/reject/?$ admin/reviews.php?action=reject&id=$1 [QSA,L]
+RewriteRule ^admin/reviews/([0-9]+)/?$ admin/reviews.php?id=$1 [QSA,L]
 RewriteCond %{REQUEST_METHOD} POST
 RewriteRule ^admin/products/?$ admin/products.php [QSA,L]
 RewriteCond %{REQUEST_METHOD} PUT
@@ -46,6 +49,7 @@ RewriteRule ^categories/([^/]+)/?$ categories.php?slug=$1 [QSA,L]
 RewriteRule ^products/?$ products.php [QSA,L]
 RewriteRule ^products/([0-9]+)/?$ products.php?id=$1 [QSA,L]
 RewriteRule ^products/category/([^/]+)/?$ products.php?category=$1 [QSA,L]
+RewriteRule ^reviews/?$ reviews.php [QSA,L]
 RewriteRule ^reviews/product/([0-9]+)/?$ reviews.php?product_id=$1 [QSA,L]
 RewriteRule ^health/?$ health/index.php [QSA,L]
 

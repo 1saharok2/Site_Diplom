@@ -131,6 +131,19 @@ export const ReviewProvider = ({ children }) => {
     }
   }, [loadModerationReviews]);
 
+  // Удалить отзыв (админ)
+  const deleteReview = useCallback(async (reviewId, reason) => {
+    try {
+      const deleted = await reviewService.deleteReview(reviewId, reason);
+      setModerationReviews(prev => prev.filter(review => review.id !== reviewId));
+      await loadModerationReviews();
+      return deleted;
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      throw error;
+    }
+  }, [loadModerationReviews]);
+
   // Получить статистику отзывов
   const getReviewStats = useCallback(async () => {
     try {
@@ -152,6 +165,7 @@ export const ReviewProvider = ({ children }) => {
     createReview,
     approveReview,
     rejectReview,
+    deleteReview,
     getReviewStats
   };
 

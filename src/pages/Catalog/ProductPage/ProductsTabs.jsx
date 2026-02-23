@@ -301,7 +301,7 @@ const ProductTabs = ({
               </Alert>
             )}
             
-            {/* Кнопка написания отзыва */}
+            {/* Кнопка написания отзыва + подсказка */}
             <div className="d-flex justify-content-between align-items-center mb-4">
               <div>
                 <strong>Рейтинг: </strong>
@@ -316,13 +316,25 @@ const ProductTabs = ({
                 )}
               </div>
               
-              {isAuthenticated && !hasUserReviewed && (
-                <button 
-                  className="btn btn-primary"
-                  onClick={handleOpenReviewForm}
-                >
-                  Написать отзыв
-                </button>
+              {!hasUserReviewed && (
+                <div className="d-flex flex-column align-items-end">
+                  <button 
+                    className="btn btn-primary"
+                    onClick={handleOpenReviewForm}
+                  >
+                    Написать отзыв
+                  </button>
+                  {!isAuthenticated && (
+                    <small className="text-muted mt-1">
+                      Чтобы оставить отзыв, войдите в аккаунт
+                    </small>
+                  )}
+                </div>
+              )}
+              {hasUserReviewed && (
+                <small className="text-muted">
+                  Вы уже оставили отзыв об этом товаре.
+                </small>
               )}
             </div>
 

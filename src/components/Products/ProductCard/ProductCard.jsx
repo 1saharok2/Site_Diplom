@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Card, Button, Badge } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Card, Button, Badge, Spinner } from 'react-bootstrap';
 import { FaHeart, FaShoppingCart, FaStar } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
@@ -14,19 +14,53 @@ const ProductCard = ({ product }) => {
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { currentUser } = useAuth();
 
+  // Состояния для рейтинга из отзывов
+  const [averageRating, setAverageRating] = useState(0);
+  const [reviewsCount, setReviewsCount] = useState(0);
+  const [ratingLoading, setRatingLoading] = useState(false);
+
   const {
     name,
     price,
     oldPrice,
     images,
-    rating,
-    reviewsCount,
     discount,
     inStock,
     id: productId
   } = product;
 
   const isInWishlistState = isInWishlist(productId);
+
+  // Загрузка рейтинга из отзывов
+  useEffect(() => {
+    const fetchProductRating = async () => {
+      if (!productId) return;
+      setRatingLoading(true);
+      try {
+        const response = await fetch(`https://electronic.tw1.ru/api/reviews/product/${productId}`);
+        if (response.ok) {
+          const reviews = await response.json(); // только approved отзывы
+          const count = reviews.length;
+          const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+          const avg = count > 0 ? sum / count : 0;
+          setAverageRating(avg);
+          setReviewsCount(count);
+        } else {
+          // fallback на данные из пропса (если они есть)
+          setAverageRating(product.rating || 0);
+          setReviewsCount(product.reviewsCount || 0);
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки рейтинга для товара', productId, error);
+        setAverageRating(product.rating || 0);
+        setReviewsCount(product.reviewsCount || 0);
+      } finally {
+        setRatingLoading(false);
+      }
+    };
+
+    fetchProductRating();
+  }, [productId, product.rating, product.reviewsCount]);
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
@@ -96,16 +130,22 @@ const ProductCard = ({ product }) => {
 
             {/* Рейтинг */}
             <div className="product-rating">
-              <div className="rating-stars">
-                {[...Array(5)].map((_, index) => (
-                  <FaStar 
-                    key={index} 
-                    size={14}
-                    color={index < Math.floor(rating || 0) ? '#ffc107' : '#e4e5e9'} 
-                  />
-                ))}
-              </div>
-              <span className="rating-count">({reviewsCount || 0})</span>
+              {ratingLoading ? (
+                <Spinner animation="border" size="sm" variant="secondary" />
+              ) : (
+                <>
+                  <div className="rating-stars">
+                    {[...Array(5)].map((_, index) => (
+                      <FaStar 
+                        key={index} 
+                        size={14}
+                        color={index < Math.floor(averageRating) ? '#ffc107' : '#e4e5e9'} 
+                      />
+                    ))}
+                  </div>
+                  <span className="rating-count">({reviewsCount})</span>
+                </>
+              )}
             </div>
 
             {/* Цены */}

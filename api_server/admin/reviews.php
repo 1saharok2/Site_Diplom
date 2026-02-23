@@ -16,11 +16,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 ob_start();
 
 try {
+    require_once __DIR__ . '/_guard.php';
     include_once '../config/database.php';
     $database = new Database();
     $db = $database->getConnection();
     
     $action = $_GET['action'] ?? '';
+    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
     
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         switch ($action) {
@@ -89,28 +91,63 @@ try {
         }
     }
     
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $input = file_get_contents("php://input");
-        $data = json_decode($input);
-        
-        if ($data && isset($data->reviewId) && isset($data->action)) {
-            $reviewId = $data->reviewId;
-            $action = $data->action;
-            
-            if ($action === 'approve') {
-                $query = "UPDATE reviews SET status = 'approved' WHERE id = ?";
-            } elseif ($action === 'reject') {
-                $query = "UPDATE reviews SET status = 'rejected' WHERE id = ?";
-            } else {
-                throw new Exception('Invalid action');
-            }
-            
-            $stmt = $db->prepare($query);
-            $stmt->execute([$reviewId]);
-            
+    if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+        if ($id <= 0) {
+            http_response_code(400);
             ob_clean();
-            echo json_encode(['message' => 'Review updated successfully']);
+            echo json_encode(['message' => 'Review id is required']);
+            exit();
         }
+
+        $input = file_get_contents("php://input");
+        $data = json_decode($input, true);
+        if (json_last_error() !== JSON_ERROR_NONE) $data = [];
+
+        if ($action === 'approve') {
+            $stmt = $db->prepare("UPDATE reviews SET status = 'approved' WHERE id = ?");
+            $stmt->execute([$id]);
+            ob_clean();
+            echo json_encode(['message' => 'Review approved', 'id' => $id]);
+            exit();
+        }
+
+        if ($action === 'reject') {
+            $reason = trim((string)($data['rejection_reason'] ?? 'Отклонено модератором'));
+
+            // Пытаемся сохранить причину, если колонка есть
+            try {
+                $stmt = $db->prepare("UPDATE reviews SET status = 'rejected', rejection_reason = ? WHERE id = ?");
+                $stmt->execute([$reason, $id]);
+            } catch (Throwable $e) {
+                $stmt = $db->prepare("UPDATE reviews SET status = 'rejected' WHERE id = ?");
+                $stmt->execute([$id]);
+            }
+
+            ob_clean();
+            echo json_encode(['message' => 'Review rejected', 'id' => $id]);
+            exit();
+        }
+
+        http_response_code(400);
+        ob_clean();
+        echo json_encode(['message' => 'Invalid action']);
+        exit();
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+        if ($id <= 0) {
+            http_response_code(400);
+            ob_clean();
+            echo json_encode(['message' => 'Review id is required']);
+            exit();
+        }
+
+        $stmt = $db->prepare("DELETE FROM reviews WHERE id = ?");
+        $stmt->execute([$id]);
+
+        ob_clean();
+        echo json_encode(['message' => 'Review deleted', 'id' => $id]);
+        exit();
     }
     
 } catch (Exception $e) {
