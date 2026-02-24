@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Row, Col, Image, Spinner } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight, FaExpand, FaImage } from 'react-icons/fa';
 import './ProductPage_css/ProductGallery.css';
@@ -6,9 +6,13 @@ import './ProductPage_css/ProductGallery.css';
 const ProductGallery = ({ product }) => {
   const [showModal, setShowModal] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [imageLoading, setImageLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
   const [images, setImages] = useState([]);
+  const [imageLoadState, setImageLoadState] = useState({
+    loading: true,
+    error: false
+  });
+
+  const imageRef = useRef(null);
 
   // Мемоизированный список изображений
   const normalizedImages = useMemo(() => {
@@ -53,11 +57,49 @@ const ProductGallery = ({ product }) => {
     console.log('🎨 ProductGallery - normalized images:', normalizedImages);
     setImages(normalizedImages);
     setCurrentIndex(0);
-    setImageLoading(true);
-    setImageError(false);
+    // Сбрасываем состояние загрузки для нового изображения
+    setImageLoadState({ loading: true, error: false });
   }, [normalizedImages]);
 
-  // Мемоизированные обработчики
+  // Сброс состояния загрузки при смене индекса
+  useEffect(() => {
+    if (images.length === 0) return;
+    setImageLoadState({ loading: true, error: false });
+  }, [currentIndex, images.length]);
+
+  // Проверка, загружено ли изображение (при монтировании или смене src)
+  useEffect(() => {
+    if (!imageRef.current || images.length === 0) return;
+
+    const img = imageRef.current;
+    
+    const handleLoad = () => {
+      setImageLoadState({ loading: false, error: false });
+    };
+    
+    const handleError = () => {
+      // Если текущее изображение не загрузилось, пробуем следующее
+      if (images.length > 1 && currentIndex < images.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+      } else {
+        setImageLoadState({ loading: false, error: true });
+      }
+    };
+
+    // Если изображение уже полностью загружено (например, из кеша)
+    if (img.complete && img.naturalHeight !== 0) {
+      setImageLoadState({ loading: false, error: false });
+    } else {
+      img.addEventListener('load', handleLoad);
+      img.addEventListener('error', handleError);
+    }
+
+    return () => {
+      img.removeEventListener('load', handleLoad);
+      img.removeEventListener('error', handleError);
+    };
+  }, [currentIndex, images]);
+
   const nextImage = useCallback(() => {
     if (images.length <= 1) return;
     const nextIndex = (currentIndex + 1) % images.length;
@@ -77,31 +119,6 @@ const ProductGallery = ({ product }) => {
 
   const openModal = useCallback(() => setShowModal(true), []);
   const closeModal = useCallback(() => setShowModal(false), []);
-
-  const handleImageLoad = useCallback(() => {
-    console.log('✅ Image loaded successfully');
-    setImageLoading(false);
-  }, []);
-
-  const handleImageError = useCallback((e) => {
-    console.log('❌ Image failed to load');
-    
-    // Пробуем загрузить следующее изображение
-    if (images.length > 1 && currentIndex < images.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      return;
-    }
-    
-    setImageLoading(false);
-    setImageError(true);
-  }, [currentIndex, images.length]);
-
-  // Сбрасываем состояния при смене изображения
-  useEffect(() => {
-    if (images.length === 0) return;
-    setImageLoading(true);
-    setImageError(false);
-  }, [currentIndex, images.length]);
 
   const hasImages = images.length > 0;
   const mainImage = hasImages ? images[currentIndex] : null;
@@ -130,29 +147,28 @@ const ProductGallery = ({ product }) => {
       {/* Главное изображение */}
       <div className="main-image-container">
         <div className="image-wrapper">
-          {imageLoading && (
+          {imageLoadState.loading && (
             <div className="image-loading">
               <Spinner animation="border" variant="primary" />
               <div>Загрузка изображения...</div>
             </div>
           )}
           
-          <Image
+          <img
+            ref={imageRef}
             src={mainImage}
             alt={product?.name || 'Изображение товара'}
-            className={`main-product-image ${imageLoading ? 'hidden' : ''}`}
-            fluid
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-            loading="lazy"
+            className={`main-product-image ${imageLoadState.loading ? 'hidden' : ''}`}
             style={{
               maxWidth: '100%',
               height: 'auto',
-              objectFit: 'contain'
+              objectFit: 'contain',
+              display: imageLoadState.loading ? 'none' : 'block'
             }}
+            fetchPriority="high"
           />
           
-          {imageError && (
+          {imageLoadState.error && (
             <div className="image-error">
               <FaImage size={48} className="mb-3" />
               <p>Ошибка загрузки изображения</p>
@@ -172,7 +188,7 @@ const ProductGallery = ({ product }) => {
           )}
           
           {/* Кнопка полноэкранного режима */}
-          {hasImages && !imageLoading && !imageError && (
+          {hasImages && !imageLoadState.loading && !imageLoadState.error && (
             <button className="expand-btn" onClick={openModal}>
               <FaExpand />
             </button>
