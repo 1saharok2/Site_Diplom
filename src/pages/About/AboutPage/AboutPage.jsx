@@ -63,27 +63,26 @@ const AboutPage = () => {
     },
   ];
 
-  // team avatars are raw URLs (as you said)
   const team = [
     {
       name: "Коробков Иван",
       position: "CEO & Основатель",
       avatar:
-        "https://sun9-27.userapi.com/s/v1/ig2/ShNjTKtflQCrq_Zw2hmhz4pDaTPPcuwlLvH0n51gN9xEmdJ0QCpmj7osgiZUYLKA8qIp7jQh_-Jhq_FKxffWJQQY.jpg?quality=95",
+        "https://electronic.tw1.ru/images/3w.jpg",
       description: "Опытный специалист с многолетним стажем в e-commerce",
     },
     {
       name: "Стариков Александр",
       position: "Технический директор",
       avatar:
-        "https://sun9-16.userapi.com/s/v1/ig2/0IVJKFRSbnfYlSUUKbup5iRSWByxpV8PsnFBGZC4Ic6X5U3TU5j7ftsszpdNRDaMElKAdYZFL6FWW1X2XfEXUdq2.jpg?quality=95",
+        "https://electronic.tw1.ru/images/2w.jpg",
       description: "Профессиональный программист и лидер технической команды",
     },
     {
       name: "Амин Гусейнли",
       position: "Менеджер по продажам",
       avatar:
-        "https://sun9-69.userapi.com/s/v1/ig2/SZzuY37sbGi3NhpwAfQidMWHFSMr1c9IV5fnt-L7gY4oUZm__Mlqtwz_H1blJ5G6AlOiWYuJ1IViHWaa4IwpaeC7.jpg?quality=95",
+        "https://electronic.tw1.ru/images/1w.jpg",
       description: "Эксперт в клиентском сервисе и управлении продажами",
     },
   ];
@@ -95,11 +94,9 @@ const AboutPage = () => {
     { icon: <AccessTime sx={{ fontSize: 32 }} />, value: "24/7", label: "Поддержка" },
   ];
 
-  // helper for avatar fallback via imgProps on Avatar
   const avatarImgProps = {
     loading: "lazy",
     onError: (e) => {
-      // fallback to placeholder in public/images
       e.currentTarget.src = `${process.env.PUBLIC_URL || ""}/images/avatar-placeholder.png`;
     },
   };
@@ -123,31 +120,73 @@ const AboutPage = () => {
         </Container>
       </Box>
       <Container maxWidth="lg" sx={{ mt: { xs: 4, md: 8 }, mb: { xs: 8, md: 12 } }}>
-        {/* History / story block */}
-        <Fade in timeout={900}>
-          <Paper className="about-history-paper" elevation={0}>
-            <Grid container spacing={6} alignItems="center">
-              <Grid item xs={12} md={6}>
-                <Typography variant="h2" className="about-section-title">
-                  Наша история
-                </Typography>
-                <Typography className="about-paragraph" paragraph>
-                  <strong>TechMarket</strong> был основан в 2020 году тремя друзьями-энтузиастами, которые верили,
-                  что онлайн-шопинг должен быть простым, безопасным и доступным для каждого.
-                </Typography>
-                <Typography className="about-paragraph" paragraph>
-                  В 2021 году мы заключили партнерские соглашения с ведущими брендами, к 2022 — расширили склад
-                  и команду. Сегодня мы обслуживаем более 10 000 клиентов по всей России.
-                </Typography>
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 2 }}>
-                  <Chip icon={<EmojiEvents />} label="Лучший магазин 2023" color="primary" variant="outlined" />
-                  <Chip icon={<TrendingUp />} label="Рост +200% в год" color="success" variant="outlined" />
-                  <Chip icon={<Group />} label="25+ сотрудников" color="secondary" variant="outlined" />
-                </Box>
-              </Grid>
+        {/* Stats */}
+        <Box sx={{ mt: { xs: 6, md: 10 } }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 4, md: 8 },
+              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+              color: 'white',
+              borderRadius: 4,
+              textAlign: 'center',
+              animation: `${gradientBackground} 8s ease infinite`,
+              backgroundSize: '400% 400%',
+            }}
+          >
+            <Typography variant="h3" gutterBottom sx={{ fontWeight: 800, mb: 6 }}>
+              Мы в цифрах
+            </Typography>
+
+            <Grid container spacing={4} justifyContent="center" alignItems="center">
+              {stats.map((stat, index) => (
+                <Grid item xs={6} md={3} key={index}>
+                  <Fade in={true} timeout={1500 + index * 200}>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Box sx={{ color: 'white', mb: 2, display: 'flex', justifyContent: 'center' }}>
+                        {stat.icon}
+                      </Box>
+                      <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
+                        {stat.value}
+                      </Typography>
+                      <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 400 }}>
+                        {stat.label}
+                      </Typography>
+                    </Box>
+                  </Fade>
+                </Grid>
+              ))}
             </Grid>
           </Paper>
-        </Fade>
+        </Box>
+
+        {/* History / story block */}
+        <Box sx={{ mt: 4 }}> {/* Добавлен отступ сверху */}
+          <Fade in timeout={900}>
+            <Paper className="about-history-paper" elevation={0}>
+              <Grid container spacing={6} alignItems="center">
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h2" className="about-section-title">
+                    Наша история
+                  </Typography>
+                  <Typography className="about-paragraph" paragraph>
+                    <strong>TechMarket</strong> был основан в 2020 году тремя друзьями-энтузиастами, которые верили,
+                    что онлайн-шопинг должен быть простым, безопасным и доступным для каждого.
+                  </Typography>
+                  <Typography className="about-paragraph" paragraph>
+                    В 2021 году мы заключили партнерские соглашения с ведущими брендами, к 2022 — расширили склад
+                    и команду. Сегодня мы обслуживаем более 10 000 клиентов по всей России.
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 2 }}>
+                    <Chip icon={<EmojiEvents />} label="Лучший магазин 2023" color="primary" variant="outlined" />
+                    <Chip icon={<TrendingUp />} label="Рост +200% в год" color="success" variant="outlined" />
+                    <Chip icon={<Group />} label="25+ сотрудников" color="secondary" variant="outlined" />
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Fade>
+        </Box>
 
         {/* Why choose us */}
         <Box sx={{ mb: 12 }}>
@@ -259,46 +298,6 @@ const AboutPage = () => {
               </Grid>
             ))}
           </Grid>
-        </Box>
-
-        {/* Stats */}
-        <Box sx={{ mt: { xs: 6, md: 10 } }}>
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 4, md: 8 },
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-              color: 'white',
-              borderRadius: 4,
-              textAlign: 'center',
-              animation: `${gradientBackground} 8s ease infinite`,
-              backgroundSize: '400% 400%',
-            }}
-          >
-            <Typography variant="h3" gutterBottom sx={{ fontWeight: 800, mb: 6 }}>
-              Мы в цифрах
-            </Typography>
-
-            <Grid container spacing={4} justifyContent="center" alignItems="center">
-              {stats.map((stat, index) => (
-                <Grid item xs={6} md={3} key={index}>
-                  <Fade in={true} timeout={1500 + index * 200}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Box sx={{ color: 'white', mb: 2, display: 'flex', justifyContent: 'center' }}>
-                        {stat.icon}
-                      </Box>
-                      <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
-                        {stat.value}
-                      </Typography>
-                      <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 400 }}>
-                        {stat.label}
-                      </Typography>
-                    </Box>
-                  </Fade>
-                </Grid>
-              ))}
-            </Grid>
-          </Paper>
         </Box>
       </Container>
     </Box>

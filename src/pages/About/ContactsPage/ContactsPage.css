@@ -107,7 +107,7 @@
 }
 
 .map-wrapper {
-  height: 100%;
+  height: 600px;
   width: 100%;
 }
 
@@ -245,12 +245,10 @@
   color: var(--gray);
 }
 
-/* Remove old hours section styles since it's now in the sidebar */
 .hours-section {
   display: none;
 }
 
-/* Update contact cards section to have less margin since hours are moved */
 .contacts-section {
   padding: 40px 0;
 }
@@ -290,26 +288,6 @@
 .cta-button:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-lg);
-}
-
-/* === ANIMATIONS === */
-.fade-in {
-  opacity: 0;
-  animation: fadeInUp 0.6s forwards;
-}
-
-.stagger > * {
-  opacity: 0;
-  animation: fadeInUp 0.6s forwards;
-}
-
-.stagger > *:nth-child(1) { animation-delay: 0.1s; }
-.stagger > *:nth-child(2) { animation-delay: 0.2s; }
-.stagger > *:nth-child(3) { animation-delay: 0.3s; }
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(25px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* === ADAPTIVE === */
@@ -367,8 +345,6 @@
     min-height: 350px;
   }
 }
-
-/* Добавьте в конец ContactsPage.css */
 
 /* === SUPPORT FORM === */
 .support-form-section {

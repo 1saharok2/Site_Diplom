@@ -94,23 +94,13 @@
 }
 
 .login-btn {
-  color: #5a67d8;
+  color: #ffffff;
   border: 2px solid #5a67d8;
 }
 
 .login-btn:hover {
-  background: #5a67d8;
+  background: #bbbbbb;
   color: #fff;
-  transform: translateY(-2px);
-}
-
-.register-btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-}
-
-.register-btn:hover {
-  background: linear-gradient(135deg, #5a67d8, #6b46c1);
   transform: translateY(-2px);
 }
 

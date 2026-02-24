@@ -320,20 +320,6 @@ const Header = () => {
                   >
                     Войти
                   </Button>
-                  <Button 
-                    component={Link} 
-                    to="/register" 
-                    variant="contained" 
-                    color="error"
-                    size="small"
-                    sx={{ 
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                      padding: { xs: '4px 8px', sm: '6px 16px' },
-                      minWidth: { xs: '80px', sm: 'auto' }
-                    }}
-                  >
-                    Регистрация
-                  </Button>
                 </Box>
               )}
 
@@ -588,7 +574,7 @@ const Header = () => {
                     <Box sx={{ mr: 2 }}>
                       <Dashboard />
                     </Box>
-                    <ListItemText primary="Админка" />
+                    <ListItemText primary="Админ-панель" />
                   </ListItem>
                 )}
 
@@ -618,23 +604,20 @@ const Header = () => {
                 <Button 
                   component={Link} 
                   to="/login" 
-                  variant="outlined" 
-                  fullWidth
-                  onClick={handleDrawerToggle}
-                  sx={{ borderRadius: 2 }}
+                  variant="contained"  
+                  size="small"
+                  sx={{ 
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    padding: { xs: '4px 8px', sm: '6px 16px' },
+                    minWidth: { xs: '60px', sm: 'auto' },
+                    backgroundColor: '#ffffff',  
+                    color: 'primary.main',       
+                    '&:hover': {
+                      backgroundColor: '#f5f5f5', 
+                    }
+                  }}
                 >
                   Войти
-                </Button>
-                <Button 
-                  component={Link} 
-                  to="/register" 
-                  variant="contained" 
-                  color="primary"
-                  fullWidth
-                  onClick={handleDrawerToggle}
-                  sx={{ borderRadius: 2 }}
-                >
-                  Регистрация
                 </Button>
               </Box>
             )}

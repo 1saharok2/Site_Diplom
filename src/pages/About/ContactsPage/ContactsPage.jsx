@@ -60,8 +60,6 @@ const ContactsPage = () => {
 
   return (
     <div className="contacts-root">
-      {/* ... существующий код (hero секция) ... */}
-
       {/* === КАРТА С ИНФОРМАЦИЕЙ === */}
       <section className="map-section fade-in">
         <div className="container">

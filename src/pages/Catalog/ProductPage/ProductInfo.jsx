@@ -668,10 +668,6 @@ const ProductInfo = ({ product, onVariantChange }) => {
           </Button>
         </div>
       </div>
-
-      <div className="short-description">
-        <p>{displayVariant?.description || 'Описание товара отсутствует'}</p>
-      </div>
     </div>
   );
 };

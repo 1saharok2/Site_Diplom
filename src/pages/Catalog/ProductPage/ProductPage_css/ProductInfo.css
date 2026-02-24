@@ -238,18 +238,6 @@
   animation: pulse 0.4s ease;
 }
 
-.short-description {
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 10px;
-}
-
-.short-description p {
-  margin: 0;
-  color: #6c757d;
-  line-height: 1.6;
-}
-
 /* АДАПТИВНОСТЬ ДЛЯ РАЗНЫХ ЭКРАНОВ */
 
 /* Большие десктопы (1440px+) */
@@ -365,13 +353,6 @@
     font-size: 1rem;
   }
   
-  .short-description {
-    padding: 0.8rem;
-  }
-  
-  .short-description p {
-    font-size: 0.9rem;
-  }
 }
 
 /* Очень маленькие телефоны (до 375px) */
