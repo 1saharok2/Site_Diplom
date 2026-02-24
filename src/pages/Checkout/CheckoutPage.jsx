@@ -1,93 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Grid,
-  TextField,
-  Button,
-  Divider,
-  Alert,
-  MenuItem,
-  CircularProgress,
-  Avatar
+  Container,
+  Typography,
+  Box,
+  Paper,
+  Grid,
+  TextField,
+  Button,
+  Divider,
+  Alert,
+  MenuItem,
+  CircularProgress,
+  Avatar
 } from '@mui/material';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/api';
-import { orderService } from '../../services/orderService';
-import { cartService } from '../../services/cartService';
 
 const CheckoutPage = () => {
-  const { items: contextItems, getTotalPrice, clearCart } = useCart();
+  const { items: cartItems, getTotalPrice, clearCart, loading: cartLoading } = useCart();
   const { isAuthenticated: isAuthHook, currentUser: authUser } = useAuth();
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
-  // State для корзины из localStorage
-  const [cartItemsFromStorage, setCartItemsFromStorage] = useState([]);
-  
-  // Функция для получения корзины из localStorage
-  const getLatestCartFromStorage = () => {
-    const possibleKeys = [
-      'current_cart',
-      'cart',
-      'cart_cache',
-      `cart_cache_${user?.id}`,
-      `cart_cache_${user?.uuid || '4d70129c-33d0-4379-ab10-24c64a3e30a9'}`
-    ];
-    
-    for (const key of possibleKeys) {
-      const cached = localStorage.getItem(key);
-      if (cached) {
-        try {
-          const items = JSON.parse(cached);
-          console.log(`📦 Checkout: корзина из ${key}`, items.length, 'товаров');
-          return items;
-        } catch (e) {
-          console.warn(`⚠️ Ошибка парсинга ${key}:`, e);
-        }
-      }
-    }
-    
-    console.log('📦 Checkout: корзина не найдена в localStorage');
-    return [];
+
+  const [formData, setFormData] = useState({
+    firstName: authUser?.first_name || authUser?.firstName || '',
+    lastName: authUser?.last_name || authUser?.lastName || '',
+    email: authUser?.email || '',
+    phone: authUser?.phone || '',
+    address: '',
+    city: '',
+    paymentMethod: 'card'
+  });
+
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
-
-  // Загружаем корзину при монтировании
-  useEffect(() => {
-    if (user) {
-      const latestCart = getLatestCartFromStorage();
-      setCartItemsFromStorage(latestCart);
-    }
-  }, [user]);
-
-  // ⚠️ ВАЖНО: Используем cartItems (переименовали из items)
-  const cartItems = cartItemsFromStorage.length > 0 ? cartItemsFromStorage : contextItems;
-  
-  // Функция для расчета суммы
-  const calculateTotalPrice = () => {
-    return cartItems.reduce((total, item) => {
-      const price = getProductPrice(item);
-      const quantity = item.quantity || 1;
-      return total + (price * quantity);
-    }, 0);
-  };
-
-  const [formData, setFormData] = useState({
-    firstName: authUser?.first_name || authUser?.firstName || '',
-    lastName: authUser?.last_name || authUser?.lastName || '',
-    email: authUser?.email || '',
-    phone: authUser?.phone || '',
-    address: '',
-    city: '',
-    paymentMethod: 'card'
-  });
 
   const getProductName = (item) => {
     return item?.product_name || 
@@ -137,13 +91,11 @@ const CheckoutPage = () => {
               if (Array.isArray(images) && images.length > 0) {
                 return images[0];
               }
-            } catch (e) {
-            }
+            } catch (e) {}
           }
           return imageField;
         }
       }
-      
       return '';
     } catch (e) {
       console.error('Ошибка получения изображения:', e);
@@ -151,25 +103,17 @@ const CheckoutPage = () => {
     }
   };
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     if (!isAuthHook) {
-      alert('Пожалуйста, авторизуйтесь для оформления заказа.');
+      setError('Пожалуйста, авторизуйтесь для оформления заказа.');
       setLoading(false);
       return;
     }
 
-    // ⚠️ Используем cartItems
     if (!cartItems || cartItems.length === 0) {
       setError('Корзина пуста.');
       setLoading(false);
@@ -182,7 +126,7 @@ const CheckoutPage = () => {
       return;
     }
 
-    // Проверяем что у всех товаров есть ID
+    // Проверяем, что у всех товаров есть ID
     const itemsWithMissingId = cartItems.filter(item => !getProductId(item));
     if (itemsWithMissingId.length > 0) {
       console.error('Товары без ID:', itemsWithMissingId);
@@ -191,16 +135,16 @@ const CheckoutPage = () => {
       return;
     }
 
-    // Подготовка данных - используем cartItems
+    // Подготовка данных
     const orderData = {
-      userId: authUser?.id,
+      userId: authUser.id,
       first_name: formData.firstName,
       last_name: formData.lastName,
       phone: formData.phone,
       email: formData.email,
       address: formData.address,
       payment_method: formData.paymentMethod || 'card',
-      total_amount: calculateTotalPrice().toFixed(2),
+      total_amount: getTotalPrice().toFixed(2),
       items: cartItems.map(item => ({
         product_id: getProductId(item),
         quantity: item.quantity || 1,
@@ -215,17 +159,16 @@ const CheckoutPage = () => {
       console.log('✅ Ответ сервера:', response);
 
       if (response && (response.success || response.orderId || response.id)) {
-        // Очищаем корзину
+        // Очищаем корзину через контекст
         clearCart();
-        
-        // Также очищаем localStorage
-        const keysToRemove = ['current_cart', 'cart', 'cart_cache'];
-        keysToRemove.forEach(key => localStorage.removeItem(key));
+        // Также удаляем из localStorage (на всякий случай)
+        localStorage.removeItem('current_cart');
+        localStorage.removeItem('cart');
         
         navigate('/order-success', { 
           state: {
             orderNumber: response.orderNumber || response.order_number || '12345',
-            totalAmount: calculateTotalPrice(),
+            totalAmount: getTotalPrice(),
             paymentMethod: formData.paymentMethod
           }
         });
@@ -241,156 +184,64 @@ const CheckoutPage = () => {
   };
 
   const debugCheck = () => {
-    console.log('🔍 Детальная отладочная информация о корзине:');
+    console.log('🔍 Детальная отладочная информация о корзине (из контекста):');
     console.log('Всего элементов:', cartItems.length);
     console.log('Полный массив:', JSON.parse(JSON.stringify(cartItems)));
-    
-    cartItems.forEach((item, index) => {
-      console.log(`\n=== Товар ${index + 1} ===`);
-      console.log('Полный объект:', item);
-      console.log('Ключи объекта:', Object.keys(item));
-      console.log('Типы значений:', Object.entries(item).map(([key, value]) => 
-        `${key}: ${typeof value} ${Array.isArray(value) ? '(array)' : ''}`
-      ));
-      console.log('ID (getProductId):', getProductId(item), '→', item?.product_id, item?.id, item?.products?.id);
-      console.log('Имя (getProductName):', getProductName(item));
-      console.log('Цена (getProductPrice):', getProductPrice(item));
-      console.log('Количество:', item.quantity);
-      console.log('Изображение (getProductImage):', getProductImage(item));
-    });
-    
-    console.log('\nДанные формы:', formData);
     console.log('Общая сумма (getTotalPrice):', getTotalPrice());
-
-    const testOrderData = {
-      userId: authUser?.id,
-      cartItems: cartItems.map(item => ({
-        product_id: getProductId(item),
-        quantity: item.quantity || 1,
-        price: getProductPrice(item)
-      }))
-    };
-    console.log('Тестовые данные для заказа:', testOrderData);
   };
 
-  const currentUser = authUser;
+  // Показываем загрузку, пока корзина подгружается
+  if (cartLoading) {
+    return (
+      <Container sx={{ py: 8, minHeight: '60vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
 
-  if (cartItems.length === 0) {
-    return (
-      <Container sx={{ py: 8, minHeight: '60vh' }}>
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Корзина пуста
-          </Typography>
-          <Typography>
-            Добавьте товары в корзину перед оформлением заказа
-          </Typography>
-        </Alert>
-        <Button 
-          variant="contained" 
-          onClick={() => navigate('/catalog')}
-          sx={{ mt: 2 }}
-        >
-          Перейти в каталог
-        </Button>
-      </Container>
-    );
-  }
+  if (cartItems.length === 0) {
+    return (
+      <Container sx={{ py: 8, minHeight: '60vh' }}>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Корзина пуста
+          </Typography>
+          <Typography>
+            Добавьте товары в корзину перед оформлением заказа
+          </Typography>
+        </Alert>
+        <Button 
+          variant="contained" 
+          onClick={() => navigate('/catalog')}
+          sx={{ mt: 2 }}
+        >
+          Перейти в каталог
+        </Button>
+      </Container>
+    );
+  }
 
-  if (!currentUser) {
-    return (
-      <Container sx={{ py: 8, minHeight: '60vh' }}>
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Требуется авторизация
-          </Typography>
-          <Typography>
-            Для оформления заказа необходимо войти в систему
-          </Typography>
-        </Alert>
-        <Button 
-          variant="contained" 
-          onClick={() => navigate('/login')}
-          sx={{ mt: 2 }}
-        >
-          Войти
-        </Button>
-      </Container>
-    );
-  }
-
-const handleOrderSuccess = async (cartcartItems, totalAmount) => {
-    try {
-      setLoading(true);
-      
-      // 1. Подготавливаем данные заказа
-      const orderData = {
-        userId: user?.id,
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        city: formData.city,
-        payment_method: formData.paymentMethod,
-        total_amount: totalAmount,
-        cartItems: cartcartItems
-      };
-      
-      console.log('📦 Создаем заказ с данными:', orderData);
-      
-      // 2. Создаем заказ
-      const orderResult = await orderService.createOrder(orderData);
-      
-      if (orderResult.success) {
-        console.log('✅ Заказ создан! ID:', orderResult.orderId);
-        
-        // 3. Устанавливаем флаг "был заказ"
-        localStorage.setItem('last_order_time', Date.now().toString());
-        console.log('⏱️ Флаг last_order_time установлен');
-        
-        // 4. ПРИНУДИТЕЛЬНАЯ очистка
-        console.log('🗑️ Начинаем принудительную очистку корзины...');
-        
-        // Сначала удаляем ВСЕ ключи localStorage
-        const allKeys = [
-          `cart_cache_${user?.id}`,
-          `cart_cache_${user?.id}_timestamp`,
-          'guestCart',
-          'cart',
-          'cartCache',
-          'cartCacheTimestamp'
-        ];
-        
-        allKeys.forEach(key => {
-          localStorage.removeItem(key);
-          console.log(`🗑️ Удален ${key}`);
-        });
-        
-        // Затем очищаем на сервере
-        await cartService.clearCart(user?.id);
-        console.log('✅ Очистка завершена');
-        
-        // 5. Перенаправляем
-        navigate('/orders', { 
-          state: { 
-            message: `Заказ #${orderResult.order_number} успешно оформлен!`,
-            orderId: orderResult.orderId
-          } 
-        });
-        
-      } else {
-        console.error('❌ Ошибка создания заказа:', orderResult.message);
-        alert('Ошибка: ' + (orderResult.message || 'Не удалось создать заказ'));
-      }
-      
-    } catch (error) {
-      console.error('❌ Ошибка в handleOrderSuccess:', error);
-      alert('Произошла ошибка при оформлении заказа');
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!authUser) {
+    return (
+      <Container sx={{ py: 8, minHeight: '60vh' }}>
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Требуется авторизация
+          </Typography>
+          <Typography>
+            Для оформления заказа необходимо войти в систему
+          </Typography>
+        </Alert>
+        <Button 
+          variant="contained" 
+          onClick={() => navigate('/login')}
+          sx={{ mt: 2 }}
+        >
+          Войти
+        </Button>
+      </Container>
+    );
+  }
 
   return (
     <Container sx={{ py: 4 }}>
@@ -401,7 +252,7 @@ const handleOrderSuccess = async (cartcartItems, totalAmount) => {
       {/* Кнопка отладки (только в development) */}
       {process.env.NODE_ENV === 'development' && (
         <Button onClick={debugCheck} variant="outlined" sx={{ mb: 3 }}>
-          Debug Cart cartItems
+          Debug Cart Items
         </Button>
       )}
 
@@ -511,14 +362,14 @@ const handleOrderSuccess = async (cartcartItems, totalAmount) => {
                     key={index} 
                     sx={{ 
                       display: 'flex', 
-                      aligncartItems: 'center', 
+                      alignItems: 'center', 
                       justifyContent: 'space-between', 
                       mb: 1, 
                       pb: 1, 
                       borderBottom: index < cartItems.length - 1 ? '1px solid #eee' : 'none' 
                     }}
                   >
-                    <Box sx={{ display: 'flex', aligncartItems: 'center', flex: 1, mr: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, mr: 2 }}>
                       {getProductImage(item) ? (
                         <Avatar 
                           src={getProductImage(item)} 

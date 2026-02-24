@@ -1,5 +1,4 @@
-// pages/Cart/CartPage.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import {
   Container,
   Grid,
@@ -23,97 +22,30 @@ import {
   LocalShipping,
   AssignmentReturn,
   Security,
-  Discount,
   SupportAgent
 } from '@mui/icons-material';
 import CartItems from '../../components/Cart/CartItems';
 import CartSummary from '../../components/Cart/CartSummary';
-import { cartService } from '../../services/cartService';
+import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 
 const CartPage = () => {
-  const [cartItems, setCartItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { items: cartItems, loading, refreshCart, clearCart } = useCart();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
-  
-  // Медиа-запросы для адаптивности
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const fetchCartItems = useCallback(async () => {
-    try {
-      setLoading(true);
-      let items = [];
-      
-      if (isAuthenticated && user) {
-        console.log(`👤 Загружаем корзину для пользователя ${user.id}`);
-        
-        // 1. Сначала пробуем localStorage
-        const cacheKey = `cart_cache_${user.id}`;
-        const cachedCart = localStorage.getItem(cacheKey);
-        
-        if (cachedCart) {
-          console.log('📦 Используем локальный кэш');
-          items = JSON.parse(cachedCart);
-          setCartItems(items);
-        }
-        
-        // 2. Всегда загружаем с сервера для синхронизации
-        try {
-          const serverItems = await cartService.getCart(user.id);
-          console.log('📡 Сервер вернул:', serverItems?.length || 0, 'товаров');
-          
-          // Если серверные данные есть - используем их
-          if (serverItems && serverItems.length > 0) {
-            items = serverItems;
-            setCartItems(items);
-            
-            // Обновляем кэш
-            localStorage.setItem(cacheKey, JSON.stringify(items));
-          }
-        } catch (serverError) {
-          console.warn('⚠️ Ошибка сервера, оставляем локальный кэш:', serverError);
-        }
-        
-      } else {
-        // Гость
-        const localCart = localStorage.getItem('cart');
-        if (localCart) {
-          items = JSON.parse(localCart);
-          setCartItems(items);
-        }
-      }
-      
-    } catch (error) {
-      console.error('❌ Ошибка загрузки корзины:', error);
-      setCartItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [isAuthenticated, user]);
-
-  useEffect(() => {
-    if (!authLoading) {
-      fetchCartItems();
-    }
-  }, [authLoading, fetchCartItems]);
-
   const handleClearCart = () => {
-    setCartItems([]);
-    if (isAuthenticated && user) {
-      cartService.clearCart(user.id);
-    } else {
-      localStorage.removeItem('guestCart');
-    }
+    clearCart();
   };
 
   const handleRefreshCart = () => {
-    fetchCartItems();
+    refreshCart();
   };
 
   const getTotalItems = () => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0);
+    return cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
   };
 
   if (authLoading || loading) {
@@ -172,7 +104,7 @@ const CartPage = () => {
               px: { xs: 1, sm: 2 },
               py: { xs: 0.5, sm: 1 },
               fontSize: { xs: '0.8rem', sm: '0.9rem' },
-              minHeight: { xs: 40, sm: 44 }, // Touch-friendly
+              minHeight: { xs: 40, sm: 44 },
               '&:hover': {
                 bgcolor: 'action.hover',
                 transform: 'translateX(-4px)'
@@ -276,7 +208,7 @@ const CartPage = () => {
                   fontWeight: 600,
                   fontSize: { xs: '0.8rem', sm: '0.9rem' },
                   minWidth: { xs: '120px', sm: 'auto' },
-                  minHeight: { xs: 44, sm: 48 }, // Touch-friendly
+                  minHeight: { xs: 44, sm: 48 },
                   '&:hover': {
                     background: 'linear-gradient(45deg, #2563eb 0%, #1e40af 100%)',
                     transform: 'translateY(-2px)'
@@ -615,7 +547,6 @@ const CartPage = () => {
                   }}>
                     <CartItems 
                       cartItems={cartItems}
-                      onCartUpdate={setCartItems}
                       onRefreshCart={handleRefreshCart}
                     />
                   </Box>

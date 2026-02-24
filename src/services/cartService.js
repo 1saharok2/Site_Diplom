@@ -1,5 +1,6 @@
 import { apiService } from './api';
 import { getUserId } from '../utils/authUtils';
+import { getUserUuid } from '../utils/authUtils';
 
 export const cartService = {
   getCart: async (userId = null, forceRefresh = false) => {
@@ -99,6 +100,10 @@ export const cartService = {
       localStorage.removeItem(`cart_cache_${actualUserId}_timestamp`);
       console.log('🗑️ Кеш корзины очищен');
       
+      if (!result.success) {
+        throw new Error(result.message || 'Ошибка удаления на сервере');
+      }
+
       return result;
     } catch (error) {
       console.error('❌ Ошибка в addToCart:', error);
@@ -195,28 +200,35 @@ export const cartService = {
     }
   },
 
-  removeFromCart: async (cartItemId, userId = null) => {
+  removeFromCart: async (cartItemId, userUuid = null) => {
+    console.log('🗑️ removeFromCart вызван с параметрами:', { cartItemId, userUuid });
+    
     try {
-      const actualUserId = userId || getUserId();
-      
-      if (actualUserId <= 0) {
-        return cartService.removeFromLocalCart(cartItemId);
+      const actualUserId = userUuid || getUserUuid(); // важно: используем UUID, а не getUserId()
+      console.log('🆔 actualUserId (UUID):', actualUserId);
+
+      if (!actualUserId) {
+        console.error('❌ Нет UUID пользователя');
+        throw new Error('Не удалось определить UUID пользователя');
       }
-      
-      // Очищаем кеш ПЕРЕД запросом (или после)
+
+      // Очищаем кэш по UUID
       localStorage.removeItem(`cart_cache_${actualUserId}`);
       localStorage.removeItem(`cart_cache_${actualUserId}_timestamp`);
-      
+      console.log('🗑️ Кэш очищен для UUID:', actualUserId);
+
+      // Отправляем запрос на сервер
       const result = await apiService.post('/cart.php', {
         action: 'remove',
         id: cartItemId,
-        user_id: actualUserId
+        user_id: actualUserId // передаём UUID
       });
       
+      console.log('✅ Ответ сервера:', result);
       return result;
     } catch (error) {
       console.error('❌ Ошибка в removeFromCart:', error);
-      return cartService.removeFromLocalCart(cartItemId);
+      throw error;
     }
   },
 
