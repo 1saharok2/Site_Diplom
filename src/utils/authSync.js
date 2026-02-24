@@ -31,20 +31,27 @@ export const restoreUserId = () => {
     const userId = localStorage.getItem('userId');
     const userDataStr = localStorage.getItem('userData');
     
-    // Если userId=0 или отсутствует, но есть userData
+    // Если userId отсутствует или равен '0', но есть userData
     if ((!userId || userId === '0') && userDataStr) {
       const userData = JSON.parse(userDataStr);
-      if (userData && userData.id) {
-        console.log('🔧 Восстанавливаем userId из userData:', userData.id);
+      // Пытаемся получить uuid (строку) или id (число, но лучше uuid)
+      if (userData && userData.uuid) {
+        console.log('🔧 Восстанавливаем userId из userData.uuid:', userData.uuid);
+        localStorage.setItem('userId', userData.uuid);
+        return userData.uuid;
+      } else if (userData && userData.id) {
+        // Если есть только числовой id, преобразуем в строку
+        console.log('🔧 Восстанавливаем userId из userData.id:', userData.id);
         localStorage.setItem('userId', userData.id.toString());
-        return userData.id;
+        return userData.id.toString();
       }
     }
     
-    return userId ? parseInt(userId) : 0;
+    // Возвращаем userId как есть (строка или null)
+    return userId || null;
   } catch (error) {
     console.error('❌ Error restoring userId:', error);
-    return 0;
+    return null;
   }
 };
 
@@ -58,12 +65,12 @@ export const initAuth = () => {
   console.log('🚀 Auth initialized:', {
     userId: userId,
     isSynced: isSynced,
-    isAuthenticated: userId > 0
+    isAuthenticated: !!userId && userId !== '0'
   });
   
   return {
     userId: userId,
-    isAuthenticated: userId > 0,
+    isAuthenticated: !!userId && userId !== '0',
     isSynced: isSynced
   };
 };

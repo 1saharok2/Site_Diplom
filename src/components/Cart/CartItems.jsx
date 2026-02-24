@@ -15,13 +15,14 @@ import {
   Alert
 } from '@mui/material';
 import { Delete, Add, Remove, ShoppingBag, Favorite } from '@mui/icons-material';
-import { cartService } from '../../services/cartService';
+import { useCart } from '../../context/CartContext';
 import { wishlistService } from '../../services/wishlistService';
-import { useAuth } from '../../context/AuthContext'; // Добавьте этот импорт
+import { useAuth } from '../../context/AuthContext';
 
-const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
+const CartItems = () => {
   const theme = useTheme();
-  const { user } = useAuth(); // Получаем пользователя из контекста
+  const { user } = useAuth();
+  const { items: cartItems, updateQuantity, removeFromCart, loading } = useCart();
   const [updatingItems, setUpdatingItems] = useState({});
   const [snackbar, setSnackbar] = useState({ 
     open: false, 
@@ -29,119 +30,43 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
     severity: 'success' 
   });
 
-  const saveToAllCacheKeys = (itemsToSave) => { // ← itemsToSave вместо updatedItems
-    try {
-      console.log('💾 Начинаем сохранение во все ключи...');
-      
-      // Все возможные ключи для вашего пользователя
-      const possibleKeys = [
-        `cart_cache_4d70129c-33d0-4379-ab10-24c64a3e30a9`, // Ваш UUID
-        `cart_cache_4`,                                    // Числовой ID
-        'cart_cache',                                      // Общий ключ
-        'cart',                                            // Простой ключ
-        'current_cart'                                     // Единый ключ для всех
-      ];
-      
-      possibleKeys.forEach(key => {
-        try {
-          localStorage.setItem(key, JSON.stringify(itemsToSave));
-          console.log(`✅ Сохранено в ${key}`);
-        } catch (e) {
-          console.warn(`⚠️ Не удалось сохранить в ${key}:`, e.message);
-        }
-      });
-      
-      return true;
-    } catch (error) {
-      console.error('❌ Ошибка сохранения:', error);
-      return false;
-    }
-  };
-
   const handleQuantityChange = async (cartItemId, newQuantity) => {
     if (newQuantity < 1) return;
     
-    console.log(`🔄 Изменение количества: ${cartItemId} -> ${newQuantity}`);
-    
-    // Блокируем кнопку
     setUpdatingItems(prev => ({ ...prev, [cartItemId]: true }));
     
-    // Сохраняем текущее состояние для отката
-    const originalItems = [...cartItems];
-    
-    // Оптимистично обновляем UI мгновенно
-    const updatedItems = cartItems.map(item =>
-      item.id === cartItemId ? { ...item, quantity: newQuantity } : item
-    );
-    onCartUpdate(updatedItems);
-    
     try {
-      // ⚠️ ВАЖНО: Сохраняем во все возможные ключи
-      saveToAllCacheKeys(updatedItems);
-      
-      // Отправляем на сервер в фоне
-      cartService.updateCartItem(cartItemId, newQuantity)
-        .then(result => {
-          console.log('✅ Сервер обновил количество:', result);
-        })
-        .catch(error => {
-          console.error('❌ Ошибка сервера:', error);
-        });
-        
+      await updateQuantity(cartItemId, newQuantity);
     } catch (error) {
-      console.error('❌ Ошибка сохранения в localStorage:', error);
-      
-      // При ошибке возвращаем исходное состояние
-      onCartUpdate(originalItems);
-      alert('Не удалось сохранить изменения');
-      
+      console.error('Ошибка обновления количества:', error);
+      setSnackbar({
+        open: true,
+        message: 'Не удалось обновить количество',
+        severity: 'error'
+      });
     } finally {
-      // Разблокируем кнопку
       setUpdatingItems(prev => ({ ...prev, [cartItemId]: false }));
     }
   };
 
   const handleRemoveItem = async (cartItemId) => {
-    console.log(`🗑️ Удаление товара: ${cartItemId}`);
-    
-    // Оптимистичное удаление
-    const updatedItems = cartItems.filter(item => item.id !== cartItemId);
-    onCartUpdate(updatedItems);
+    setUpdatingItems(prev => ({ ...prev, [cartItemId]: true }));
     
     try {
-      // Сохраняем во все ключи
-      saveToAllCacheKeys(updatedItems);
-      
-      // Удаляем с сервера в фоне
-      cartService.removeFromCart(cartItemId)
-        .then(result => {
-          console.log('✅ Товар удален с сервера:', result);
-        })
-        .catch(error => {
-          console.error('❌ Ошибка сервера:', error);
-        });
-        
+      await removeFromCart(cartItemId);
     } catch (error) {
-      console.error('❌ Ошибка при удалении:', error);
+      console.error('Ошибка удаления товара:', error);
+      setSnackbar({
+        open: true,
+        message: 'Не удалось удалить товар',
+        severity: 'error'
+      });
+    } finally {
+      setUpdatingItems(prev => ({ ...prev, [cartItemId]: false }));
     }
-  };
-
-  const loadWishlist = async () => {
-    if (user?.id) {
-      try {
-        const items = await wishlistService.getUserWishlist(user.id);
-        return items || [];
-      } catch (error) {
-        console.error('Ошибка загрузки избранного:', error);
-        return [];
-      }
-    }
-    return [];
   };
 
   const handleAddToWishlist = async (item) => {
-    console.log('Добавить в избранное:', item);
-    
     if (!user?.id) {
       setSnackbar({
         open: true,
@@ -152,20 +77,12 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
     }
 
     try {
-      // Используем toggleWishlist - он сам проверит, есть ли уже товар
       const result = await wishlistService.toggleWishlist(user.id, item.product_id);
-      
-      console.log('Результат toggleWishlist:', result);
-      
       setSnackbar({
         open: true,
         message: result.message,
         severity: result.success ? 'success' : 'error'
       });
-      
-      // Обновляем список избранного (опционально, если нужно обновить состояние в родителе)
-      // Можно вызвать callback, если передали его через props
-      
     } catch (error) {
       console.error('Ошибка добавления в избранное:', error);
       setSnackbar({
@@ -184,7 +101,10 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
     return item[field] || item.products?.[field] || null;
   };
 
-  // Рендер компонента
+  if (cartItems.length === 0) {
+    return null; // или можно вернуть сообщение, но это уже обработано в CartPage
+  }
+
   return (
     <>
       <Paper
@@ -403,7 +323,7 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
                     </IconButton>
 
                     <IconButton
-                      onClick={() => !isUpdating && handleRemoveItem(item.id)}
+                      onClick={() => removeFromCart(item.id)}
                       disabled={isUpdating}
                       sx={{
                         color: isUpdating ? 'grey.400' : 'grey.600',
@@ -433,7 +353,6 @@ const CartItems = ({ cartItems, onCartUpdate, onRefreshCart }) => {
         </Box>
       </Paper>
 
-      {/* Snackbar для уведомлений */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}

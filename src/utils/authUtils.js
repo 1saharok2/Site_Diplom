@@ -42,6 +42,27 @@ export const getUserId = () => {
   }
 };
 
+export const getUserUuid = () => {
+  try {
+    // 1. Пробуем из userData.uuid
+    const userData = getUserData();
+    if (userData?.uuid) return userData.uuid;
+    
+    // 2. Если нет, пробуем из userData.id (если это строка)
+    if (userData?.id && typeof userData.id === 'string') return userData.id;
+    
+    // 3. Иначе пробуем отдельный ключ localStorage
+    const storedUuid = localStorage.getItem('userUuid');
+    if (storedUuid) return storedUuid;
+    
+    // 4. Если ничего нет – возвращаем null
+    return null;
+  } catch (error) {
+    console.error('❌ Error in getUserUuid:', error);
+    return null;
+  }
+};
+
 /**
  * Проверить, авторизован ли пользователь
  * @returns {boolean}

@@ -359,12 +359,10 @@ export const apiService = {
               console.log('⚠ No user ID, returning empty cart');
               return Promise.resolve({ success: true, items: [] });
           }
-          
-          // Убедитесь, что userId не дублируется
+
           const url = `/cart.php?userId=${actualUserId}`;
           console.log('🔧 getCart URL:', url);
           
-          // Используйте простой fetch без fetchWithAuth
           return fetch(`${API_BASE}${url}`)
               .then(response => handleResponse(response, url))
               .catch(error => {

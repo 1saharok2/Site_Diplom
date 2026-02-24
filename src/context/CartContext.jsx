@@ -1,6 +1,7 @@
 // context/CartContext.jsx
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { cartService } from '../services/cartService';
+import { getUserUuid } from '../utils/authUtils';
 import { useAuth } from './AuthContext';
 
 export const CartContext = createContext();
@@ -75,64 +76,32 @@ export const CartProvider = ({ children }) => {
   });
   const { currentUser } = useAuth();
 
-  // Загрузка корзины из localStorage при инициализации
-  useEffect(() => {
-    const savedCart = localStorage.getItem('cart_items');
-    if (savedCart) {
-      try {
-        const items = JSON.parse(savedCart);
-        dispatch({ type: 'SET_CART', payload: items });
-      } catch (error) {
-        console.error('Error loading cart from localStorage:', error);
-      }
-    }
-  }, []);
-
-  const loadCart = useCallback(async () => {
+  const loadCart = useCallback(async (forceRefresh = false) => {
     if (!currentUser) return;
-    
+    const userId = currentUser.uuid || currentUser.id; // UUID
+    dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      
-      const cartItems = await cartService.getCart(currentUser.id);
-      dispatch({ type: 'SET_CART', payload: cartItems || [] });
-      
-    } catch (error) {
-      console.error('Error loading cart:', error);
-      dispatch({ type: 'SET_ERROR', payload: error.message });
-    }
-  }, [currentUser]);
-
-  const addToCart = async (productId, quantity = 1) => {
-    console.log('🛒 addToCart called:', { productId, quantity, currentUser });
-
-    if (!currentUser) {
-      throw new Error('Необходимо авторизоваться');
-    }
-
-    try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-
-      const newItem = await cartService.addToCart(currentUser.id, productId, quantity);
-
-      const existingItemIndex = state.items.findIndex(
-        item => item.product_id === productId
-      );
-
-      if (existingItemIndex >= 0) {
-        dispatch({ type: 'UPDATE_ITEM', payload: newItem });
-      } else {
-        dispatch({ type: 'ADD_ITEM', payload: newItem });
-      }
-
-      return newItem;
+      const items = await cartService.getCart(userId, forceRefresh);
+      dispatch({ type: 'SET_CART', payload: items });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
-      throw error;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  };
+  }, [currentUser]);
+
+  const addToCart = useCallback(async (productId, quantity = 1) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      await cartService.addToCart(currentUser?.id, productId, quantity);
+      await loadCart(true); 
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+      await loadCart(true); 
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }, [currentUser, loadCart]);
 
   const updateQuantity = async (cartItemId, quantity) => {
     try {
@@ -145,15 +114,23 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const removeFromCart = async (cartItemId) => {
+  const removeFromCart = useCallback(async (cartItemId) => {
     try {
-      await cartService.removeFromCart(cartItemId);
+      dispatch({ type: 'SET_LOADING', payload: true });
+      
+      const userUuid = getUserUuid(); 
+      console.log('🗑️ removeFromCart в контексте:', { cartItemId, userUuid });
+      
+      await cartService.removeFromCart(cartItemId, userUuid);
       dispatch({ type: 'REMOVE_ITEM', payload: cartItemId });
+      await loadCart(true);
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
-      throw error;
+      await loadCart(true);
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
-  };
+  }, [loadCart]);
 
   const clearCart = async () => {
     if (!currentUser) return;
