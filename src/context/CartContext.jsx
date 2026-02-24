@@ -93,15 +93,17 @@ export const CartProvider = ({ children }) => {
   const addToCart = useCallback(async (productId, quantity = 1) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      await cartService.addToCart(currentUser?.id, productId, quantity);
-      await loadCart(true); 
+      const userUuid = getUserUuid();
+      await cartService.addToCart(userUuid, productId, quantity);
+      // После успешного добавления принудительно загружаем корзину с сервера
+      await loadCart(true);
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
-      await loadCart(true); 
+      await loadCart(true); // даже при ошибке загружаем, чтобы синхронизировать
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [currentUser, loadCart]);
+  }, [loadCart]);
 
   const updateQuantity = async (cartItemId, quantity) => {
     try {
