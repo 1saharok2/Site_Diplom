@@ -113,7 +113,7 @@
   z-index: 10;
 }
 
-/* Миниатюры — новые стили */
+/* Миниатюры */
 .thumbnails-wrapper {
   margin-top: 1rem;
   width: 100%;
@@ -154,7 +154,7 @@
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: #f0f0f0; /* фон на случай, если картинка не загрузится */
+  background: #f0f0f0;
 }
 
 .thumbnail-item:hover {
@@ -211,7 +211,7 @@
   color: #dee2e6;
 }
 
-/* Модальное окно (дублирует инлайн-стили, но для надёжности) */
+/* Модальное окно */
 .modal-overlay {
   position: fixed;
   top: 0;

@@ -2,8 +2,17 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import ReactDOM from 'react-dom';
 import { Spinner } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight, FaExpand, FaImage, FaTimes } from 'react-icons/fa';
-import './ProductPage_css/ProductGallery.css';
+import './ProductPage_css/ProductGallery.css'; // убедитесь, что путь правильный
 
+/**
+ * Компонент галереи товара с поддержкой нескольких изображений.
+ * Поддерживает:
+ * - Основное изображение с увеличением по клику
+ * - Миниатюры под основным для переключения
+ * - Кнопки "предыдущее/следующее"
+ * - Свайпы в модальном окне
+ * - Автоматическое переключение при ошибке загрузки
+ */
 const ProductGallery = ({ product }) => {
   const [showModal, setShowModal] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -18,45 +27,55 @@ const ProductGallery = ({ product }) => {
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
-  // Нормализация изображений
+  // Нормализация изображений – надёжное извлечение массива URL
   const normalizedImages = useMemo(() => {
     if (!product) return [];
-    
-    let imageArray = [];
-    
+
+    let rawImages = [];
+
+    // 1. Прямой массив images
     if (product.images && Array.isArray(product.images)) {
-      imageArray = product.images;
-    } else if (product.image_url) {
+      rawImages = product.images;
+    }
+    // 2. image_url может быть массивом, строкой JSON или простой строкой
+    else if (product.image_url) {
       if (Array.isArray(product.image_url)) {
-        imageArray = product.image_url;
+        rawImages = product.image_url;
       } else if (typeof product.image_url === 'string') {
         try {
+          // Пытаемся распарсить JSON
           const parsed = JSON.parse(product.image_url);
-          imageArray = Array.isArray(parsed) ? parsed : [product.image_url];
+          rawImages = Array.isArray(parsed) ? parsed : [product.image_url];
         } catch (e) {
-          imageArray = [product.image_url];
+          // Не JSON – просто строка
+          rawImages = [product.image_url];
         }
       }
-    } else if (product.image) {
-      imageArray = [product.image];
     }
-    
-    return imageArray
+    // 3. Отдельное поле image (устаревшее)
+    else if (product.image) {
+      rawImages = [product.image];
+    }
+
+    // Фильтруем пустые строки и добавляем базовый URL при необходимости
+    const baseUrl = 'https://electronic.tw1.ru'; // замените на ваш домен или оставьте пустым для относительных путей
+    return rawImages
       .filter(url => url && typeof url === 'string' && url.trim() !== '')
       .map(url => {
-        if (url.startsWith('http')) {
-          return url;
-        } else if (url.startsWith('/')) {
-          return `https://electronic.tw1.ru${url}`;
-        } else {
-          return `https://electronic.tw1.ru/images/${url}`;
+        const trimmed = url.trim();
+        if (trimmed.startsWith('http')) {
+          return trimmed; // уже полный URL
         }
+        if (trimmed.startsWith('/')) {
+          return baseUrl + trimmed; // абсолютный путь
+        }
+        return baseUrl + '/images/' + trimmed; // относительный путь
       });
   }, [product]);
 
-  // Установка изображений
+  // При изменении массива сбрасываем индекс и состояние загрузки
   useEffect(() => {
-    console.log('🎨 ProductGallery - normalized images:', normalizedImages);
+    console.log('Normalized images:', normalizedImages);
     setImages(normalizedImages);
     setCurrentIndex(0);
     setImageLoadState({ loading: true, error: false });
@@ -68,7 +87,7 @@ const ProductGallery = ({ product }) => {
     setImageLoadState({ loading: true, error: false });
   }, [currentIndex, images.length]);
 
-  // Обработка загрузки изображения
+  // Обработка загрузки главного изображения
   useEffect(() => {
     if (!imageRef.current || images.length === 0) return;
 
@@ -79,14 +98,17 @@ const ProductGallery = ({ product }) => {
     };
     
     const handleError = () => {
+      // Если есть ещё изображения, переключаемся на следующее
       if (images.length > 1 && currentIndex < images.length - 1) {
-        setCurrentIndex(currentIndex + 1);
+        setCurrentIndex(prev => prev + 1);
       } else {
+        // Иначе показываем ошибку
         setImageLoadState({ loading: false, error: true });
       }
     };
 
     if (img.complete && img.naturalHeight !== 0) {
+      // Уже загружено
       setImageLoadState({ loading: false, error: false });
     } else {
       img.addEventListener('load', handleLoad);
@@ -99,12 +121,10 @@ const ProductGallery = ({ product }) => {
     };
   }, [currentIndex, images]);
 
-  // Закрытие модального окна по Escape
+  // Закрытие по Escape
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        closeModal();
-      }
+      if (e.key === 'Escape') closeModal();
     };
     if (showModal) {
       document.addEventListener('keydown', handleKeyDown);
@@ -116,15 +136,13 @@ const ProductGallery = ({ product }) => {
     };
   }, [showModal]);
 
-  // Обработка свайпов для модального окна
+  // Обработка свайпов для модалки
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
   };
-
   const handleTouchMove = (e) => {
     touchEndX.current = e.touches[0].clientX;
   };
-
   const handleTouchEnd = () => {
     if (!touchStartX.current || !touchEndX.current) return;
     const diff = touchStartX.current - touchEndX.current;
@@ -158,8 +176,6 @@ const ProductGallery = ({ product }) => {
   const openModal = useCallback(() => {
     if (images.length > 0 && images[currentIndex]) {
       setShowModal(true);
-    } else {
-      console.warn('Не удалось открыть модальное окно: нет изображения');
     }
   }, [images, currentIndex]);
 
@@ -170,6 +186,7 @@ const ProductGallery = ({ product }) => {
   const hasImages = images.length > 0;
   const mainImage = hasImages ? images[currentIndex] : null;
 
+  // Если нет изображений
   if (!hasImages) {
     return (
       <div className="product-gallery">
@@ -178,7 +195,7 @@ const ProductGallery = ({ product }) => {
             <div className="no-image-placeholder">
               <FaImage size={48} className="mb-3" />
               <p>Нет изображений для этого товара</p>
-              <small className="text-muted">{product?.name || 'Неизвестный товар'}</small>
+              <small className="text-muted">{product?.name || ''}</small>
             </div>
           </div>
         </div>
@@ -188,20 +205,20 @@ const ProductGallery = ({ product }) => {
 
   return (
     <div className="product-gallery">
-      {/* Главное изображение */}
+      {/* Основное изображение */}
       <div className="main-image-container">
         <div className="image-wrapper">
           {imageLoadState.loading && (
             <div className="image-loading">
               <Spinner animation="border" variant="primary" />
-              <div>Загрузка изображения...</div>
+              <div>Загрузка...</div>
             </div>
           )}
           
           <img
             ref={imageRef}
             src={mainImage}
-            alt={product?.name || 'Изображение товара'}
+            alt={product?.name || 'Товар'}
             className={`main-product-image ${imageLoadState.loading ? 'hidden' : ''}`}
             style={{
               maxWidth: '100%',
@@ -215,11 +232,12 @@ const ProductGallery = ({ product }) => {
           {imageLoadState.error && (
             <div className="image-error">
               <FaImage size={48} className="mb-3" />
-              <p>Ошибка загрузки изображения</p>
+              <p>Ошибка загрузки</p>
             </div>
           )}
           
-          {images.length > 1 && (
+          {/* Кнопки навигации (если несколько изображений) */}
+          {images.length > 1 && !imageLoadState.error && (
             <>
               <button className="nav-btn prev-btn" onClick={prevImage} aria-label="Предыдущее">
                 <FaChevronLeft />
@@ -230,7 +248,8 @@ const ProductGallery = ({ product }) => {
             </>
           )}
           
-          {hasImages && !imageLoadState.loading && !imageLoadState.error && (
+          {/* Кнопка увеличения (если есть изображение) */}
+          {!imageLoadState.loading && !imageLoadState.error && (
             <button className="expand-btn" onClick={openModal} aria-label="Увеличить">
               <FaExpand />
             </button>
@@ -244,23 +263,24 @@ const ProductGallery = ({ product }) => {
         )}
       </div>
 
-      {/* Миниатюры — упрощённая вёрстка без Bootstrap */}
+      {/* Миниатюры – отображаются только если несколько изображений */}
       {images.length > 1 && (
         <div className="thumbnails-wrapper">
           <div className="thumbnails-container">
-            {images.map((imageUrl, index) => (
+            {images.map((imgUrl, idx) => (
               <div
-                key={index}
-                className={`thumbnail-item ${index === currentIndex ? 'active' : ''}`}
-                onClick={() => selectImage(index)}
+                key={idx}
+                className={`thumbnail-item ${idx === currentIndex ? 'active' : ''}`}
+                onClick={() => selectImage(idx)}
               >
                 <img
-                  src={imageUrl}
-                  alt={`${product?.name || 'Товар'} - изображение ${index + 1}`}
+                  src={imgUrl}
+                  alt={`Миниатюра ${idx + 1}`}
                   className="thumbnail-image"
                   loading="lazy"
                   onError={(e) => {
-                    e.target.src = '/images/placeholder.jpg';
+                    e.target.onerror = null;
+                    e.target.src = 'https://electronic.tw1.ru/images/placeholder.jpg'; // заглушка
                   }}
                 />
               </div>
@@ -269,10 +289,10 @@ const ProductGallery = ({ product }) => {
         </div>
       )}
 
-      {/* Модальное окно через портал */}
+      {/* Модальное окно */}
       {showModal && ReactDOM.createPortal(
-        <div 
-          className="modal-overlay" 
+        <div
+          className="modal-overlay"
           onClick={closeModal}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -291,8 +311,8 @@ const ProductGallery = ({ product }) => {
             cursor: 'pointer'
           }}
         >
-          <div 
-            className="modal-content" 
+          <div
+            className="modal-content"
             ref={modalContentRef}
             onClick={(e) => e.stopPropagation()}
             style={{
@@ -304,8 +324,8 @@ const ProductGallery = ({ product }) => {
               justifyContent: 'center'
             }}
           >
-            <button 
-              className="modal-close" 
+            <button
+              className="modal-close"
               onClick={closeModal}
               aria-label="Закрыть"
               style={{
@@ -327,12 +347,12 @@ const ProductGallery = ({ product }) => {
             >
               <FaTimes />
             </button>
-            
+
             {mainImage ? (
               <>
                 <img
                   src={mainImage}
-                  alt={product?.name || 'Изображение товара'}
+                  alt={product?.name || 'Товар'}
                   className="modal-image"
                   style={{
                     maxWidth: '100%',
@@ -341,11 +361,11 @@ const ProductGallery = ({ product }) => {
                     borderRadius: '4px'
                   }}
                 />
-                
+
                 {images.length > 1 && (
                   <>
-                    <button 
-                      className="modal-nav-btn modal-prev" 
+                    <button
+                      className="modal-nav-btn modal-prev"
                       onClick={(e) => { e.stopPropagation(); prevImage(); }}
                       aria-label="Предыдущее"
                       style={{
@@ -373,9 +393,9 @@ const ProductGallery = ({ product }) => {
                     >
                       <FaChevronLeft />
                     </button>
-                    
-                    <button 
-                      className="modal-nav-btn modal-next" 
+
+                    <button
+                      className="modal-nav-btn modal-next"
                       onClick={(e) => { e.stopPropagation(); nextImage(); }}
                       aria-label="Следующее"
                       style={{
@@ -403,8 +423,8 @@ const ProductGallery = ({ product }) => {
                     >
                       <FaChevronRight />
                     </button>
-                    
-                    <div 
+
+                    <div
                       className="modal-counter"
                       style={{
                         position: 'absolute',
@@ -427,7 +447,7 @@ const ProductGallery = ({ product }) => {
             ) : (
               <div className="modal-error" style={{ color: 'white', textAlign: 'center' }}>
                 <FaImage size={48} />
-                <p>Изображение временно недоступно</p>
+                <p>Изображение недоступно</p>
               </div>
             )}
           </div>
