@@ -218,11 +218,11 @@ const HomePage = () => {
           onSlideChange={handleSlideChange}
           style={{
             width: "100%",
-            height: "auto", // Меняем фиксированную высоту на auto
-            minHeight: isMobile ? "60vh" : "85vh", // Добавляем минимальную высоту
+            height: "auto", 
+            minHeight: isMobile ? "60vh" : "85vh", 
             position: "relative",
             zIndex: 1,
-            overflow: "hidden", // Важно: скрываем переполнение
+            overflow: "hidden", 
           }}
           slidesOffsetBefore={16}
           slidesOffsetAfter={16}
