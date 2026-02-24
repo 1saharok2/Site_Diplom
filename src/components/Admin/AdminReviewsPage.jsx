@@ -22,7 +22,9 @@ import {
   Snackbar,
   Avatar,
   Rating,
-  MenuItem
+  MenuItem,
+  Tab,
+  Tabs
 } from '@mui/material';
 import {
   Search,
@@ -35,14 +37,20 @@ import {
   Comment,
   Refresh,
   Delete,
-  Warning
+  Warning,
+  AllInbox,
+  Pending,
+  CheckCircleOutline,
+  CancelOutlined
 } from '@mui/icons-material';
 import { useReviews } from '../../context/ReviewContext';
 
 const AdminReviewsPage = () => {
   const {
+    reviews = [], // ДОБАВЛЕНО: все отзывы
     moderationReviews = [],
     loading = false,
+    loadAllReviews, // ДОБАВЛЕНО: функция загрузки всех отзывов
     loadModerationReviews,
     approveReview,
     rejectReview,
@@ -50,9 +58,9 @@ const AdminReviewsPage = () => {
     getReviewStats
   } = useReviews();
 
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'pending', 'approved', 'rejected'
   const [filteredReviews, setFilteredReviews] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [selectedReview, setSelectedReview] = useState(null);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -62,34 +70,69 @@ const AdminReviewsPage = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const theme = useTheme();
 
+  // Загрузка всех данных
   const loadData = useCallback(async () => {
     try {
-      if (loadModerationReviews) {
-        await loadModerationReviews();
-      }
+      // Загружаем статистику всегда
       if (getReviewStats) {
         const statsData = await getReviewStats();
         setStats(statsData || { total: 0, pending: 0, approved: 0, rejected: 0 });
+      }
+      
+      // Загружаем отзывы в зависимости от активной вкладки
+      if (activeTab === 'all' && loadAllReviews) {
+        await loadAllReviews();
+      } else if (activeTab === 'pending' && loadModerationReviews) {
+        await loadModerationReviews();
+      } else if (activeTab === 'approved' && loadAllReviews) {
+        // Можно либо загрузить все и отфильтровать, либо сделать отдельный эндпоинт
+        await loadAllReviews();
+      } else if (activeTab === 'rejected' && loadAllReviews) {
+        await loadAllReviews();
       }
     } catch (error) {
       console.error('❌ Ошибка загрузки данных:', error);
       showSnackbar('Ошибка загрузки данных', 'error');
     }
-  }, [loadModerationReviews, getReviewStats]);
+  }, [activeTab, loadAllReviews, loadModerationReviews, getReviewStats]);
 
+  useEffect(() => {
+    loadData();
+  }, [activeTab, loadData]);
+
+  // Фильтрация отзывов
   const filterReviews = useCallback(() => {
-    let filtered = moderationReviews.filter(review =>
-      review.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      review.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      review.comment?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(review => review.status === statusFilter);
+    // Определяем источник данных в зависимости от активной вкладки
+    let sourceReviews = [];
+    
+    if (activeTab === 'all') {
+      sourceReviews = reviews.length > 0 ? reviews : moderationReviews;
+    } else if (activeTab === 'pending') {
+      sourceReviews = moderationReviews; // На модерации
+    } else {
+      // Для одобренных и отклоненных фильтруем из всех отзывов
+      sourceReviews = reviews.filter(r => r.status === activeTab);
     }
 
+    // Применяем поиск
+    let filtered = sourceReviews.filter(review => {
+      if (!searchTerm) return true;
+      
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        review.user?.name?.toLowerCase().includes(searchLower) ||
+        review.user?.email?.toLowerCase().includes(searchLower) ||
+        review.product?.name?.toLowerCase().includes(searchLower) ||
+        review.comment?.toLowerCase().includes(searchLower) ||
+        review.id?.toString().includes(searchLower)
+      );
+    });
+
+    // Сортируем по дате (сначала новые)
+    filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
     setFilteredReviews(filtered);
-  }, [moderationReviews, searchTerm, statusFilter]);
+  }, [reviews, moderationReviews, searchTerm, activeTab]);
 
   useEffect(() => {
     loadData();
@@ -99,6 +142,7 @@ const AdminReviewsPage = () => {
     filterReviews();
   }, [filterReviews]);
 
+  // Обработчики действий
   const handleApprove = async (reviewId) => {
     try {
       await approveReview(reviewId);
@@ -152,6 +196,10 @@ const AdminReviewsPage = () => {
     }
   };
 
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
   const showSnackbar = (message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
   };
@@ -172,9 +220,9 @@ const AdminReviewsPage = () => {
 
   const getStatusConfig = (status) => {
     const configs = {
-      pending: { color: 'warning', label: 'На модерации', icon: <FilterList /> },
-      approved: { color: 'success', label: 'Одобрено', icon: <CheckCircle /> },
-      rejected: { color: 'error', label: 'Отклонено', icon: <Cancel /> }
+      pending: { color: 'warning', label: 'На модерации', icon: <Pending /> },
+      approved: { color: 'success', label: 'Одобрено', icon: <CheckCircleOutline /> },
+      rejected: { color: 'error', label: 'Отклонено', icon: <CancelOutlined /> }
     };
     return configs[status] || configs.pending;
   };
@@ -198,7 +246,7 @@ const AdminReviewsPage = () => {
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
-          Модерация отзывов
+          Управление отзывами
         </Typography>
         <Button
           variant="outlined"
@@ -221,9 +269,16 @@ const AdminReviewsPage = () => {
           <Card sx={{ 
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
-            borderRadius: 2
-          }}>
+            borderRadius: 2,
+            cursor: 'pointer',
+            transform: activeTab === 'all' ? 'scale(1.02)' : 'scale(1)',
+            transition: 'transform 0.2s',
+            '&:hover': {
+              transform: 'scale(1.02)'
+            }
+          }} onClick={() => setActiveTab('all')}>
             <CardContent sx={{ textAlign: 'center', p: 2 }}>
+              <AllInbox sx={{ fontSize: 32, mb: 1 }} />
               <Typography variant="h5" gutterBottom>
                 {stats.total}
               </Typography>
@@ -235,9 +290,16 @@ const AdminReviewsPage = () => {
           <Card sx={{ 
             background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
             color: 'white',
-            borderRadius: 2
-          }}>
+            borderRadius: 2,
+            cursor: 'pointer',
+            transform: activeTab === 'pending' ? 'scale(1.02)' : 'scale(1)',
+            transition: 'transform 0.2s',
+            '&:hover': {
+              transform: 'scale(1.02)'
+            }
+          }} onClick={() => setActiveTab('pending')}>
             <CardContent sx={{ textAlign: 'center', p: 2 }}>
+              <Pending sx={{ fontSize: 32, mb: 1 }} />
               <Typography variant="h5" gutterBottom>
                 {stats.pending}
               </Typography>
@@ -249,9 +311,16 @@ const AdminReviewsPage = () => {
           <Card sx={{ 
             background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
             color: 'white',
-            borderRadius: 2
-          }}>
+            borderRadius: 2,
+            cursor: 'pointer',
+            transform: activeTab === 'approved' ? 'scale(1.02)' : 'scale(1)',
+            transition: 'transform 0.2s',
+            '&:hover': {
+              transform: 'scale(1.02)'
+            }
+          }} onClick={() => setActiveTab('approved')}>
             <CardContent sx={{ textAlign: 'center', p: 2 }}>
+              <CheckCircle sx={{ fontSize: 32, mb: 1 }} />
               <Typography variant="h5" gutterBottom>
                 {stats.approved}
               </Typography>
@@ -263,9 +332,16 @@ const AdminReviewsPage = () => {
           <Card sx={{ 
             background: 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)',
             color: 'white',
-            borderRadius: 2
-          }}>
+            borderRadius: 2,
+            cursor: 'pointer',
+            transform: activeTab === 'rejected' ? 'scale(1.02)' : 'scale(1)',
+            transition: 'transform 0.2s',
+            '&:hover': {
+              transform: 'scale(1.02)'
+            }
+          }} onClick={() => setActiveTab('rejected')}>
             <CardContent sx={{ textAlign: 'center', p: 2 }}>
+              <Cancel sx={{ fontSize: 32, mb: 1 }} />
               <Typography variant="h5" gutterBottom>
                 {stats.rejected}
               </Typography>
@@ -275,19 +351,67 @@ const AdminReviewsPage = () => {
         </Grid>
       </Grid>
 
-      {/* Панель поиска и фильтров */}
+      {/* Табы для быстрого переключения */}
+      <Paper sx={{ mb: 2, borderRadius: 2 }}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{
+            '& .MuiTab-root': {
+              minWidth: 120,
+              fontWeight: 'bold'
+            }
+          }}
+        >
+          <Tab 
+            icon={<AllInbox />} 
+            label={`Все (${stats.total})`} 
+            value="all"
+            iconPosition="start"
+          />
+          <Tab 
+            icon={<Pending />} 
+            label={`На модерации (${stats.pending})`} 
+            value="pending"
+            iconPosition="start"
+          />
+          <Tab 
+            icon={<CheckCircle />} 
+            label={`Одобренные (${stats.approved})`} 
+            value="approved"
+            iconPosition="start"
+          />
+          <Tab 
+            icon={<Cancel />} 
+            label={`Отклоненные (${stats.rejected})`} 
+            value="rejected"
+            iconPosition="start"
+          />
+        </Tabs>
+      </Paper>
+
+      {/* Панель поиска */}
       <Paper sx={{ p: 2, mb: 2, borderRadius: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
             <TextField
               fullWidth
-              placeholder="Поиск по пользователям, товарам или тексту..."
+              placeholder="Поиск по пользователям, товарам, тексту или ID отзыва..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
                     <Search />
+                  </InputAdornment>
+                ),
+                endAdornment: filteredReviews.length > 0 && (
+                  <InputAdornment position="end">
+                    <Typography variant="caption" color="text.secondary">
+                      Найдено: {filteredReviews.length}
+                    </Typography>
                   </InputAdornment>
                 )
               }}
@@ -298,50 +422,7 @@ const AdminReviewsPage = () => {
               }}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              select
-              label="Статус отзыва"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2
-                }
-              }}
-            >
-              <MenuItem value="all">Все статусы</MenuItem>
-              <MenuItem value="pending">На модерации</MenuItem>
-              <MenuItem value="approved">Одобренные</MenuItem>
-              <MenuItem value="rejected">Отклоненные</MenuItem>
-            </TextField>
-          </Grid>
         </Grid>
-
-        {/* Чипсы для быстрой фильтрации */}
-        <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <Chip
-            icon={<FilterList />}
-            label="Быстрый фильтр:"
-            variant="outlined"
-            sx={{ fontWeight: 'bold' }}
-          />
-          <Chip
-            label={`Все (${moderationReviews.length})`}
-            onClick={() => setStatusFilter('all')}
-            variant={statusFilter === 'all' ? 'filled' : 'outlined'}
-            color={statusFilter === 'all' ? 'primary' : 'default'}
-            clickable
-          />
-          <Chip
-            label={`На модерации (${stats.pending})`}
-            onClick={() => setStatusFilter('pending')}
-            variant={statusFilter === 'pending' ? 'filled' : 'outlined'}
-            color={statusFilter === 'pending' ? 'warning' : 'default'}
-            clickable
-          />
-        </Box>
       </Paper>
 
       {/* Список отзывов */}
@@ -357,23 +438,27 @@ const AdminReviewsPage = () => {
               Отзывы не найдены
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {moderationReviews.length === 0 ? 'Нет отзывов для модерации' : 'Попробуйте изменить параметры фильтрации'}
+              {searchTerm 
+                ? 'Попробуйте изменить параметры поиска' 
+                : activeTab === 'all' 
+                  ? 'Нет отзывов в системе'
+                  : `Нет ${activeTab === 'pending' ? 'ожидающих' : activeTab === 'approved' ? 'одобренных' : 'отклоненных'} отзывов`}
             </Typography>
           </Box>
         ) : (
           <Box sx={{ overflowX: 'auto' }}>
-            <Box sx={{ minWidth: 900 }}>
+            <Box sx={{ minWidth: 1000 }}>
               {/* Заголовок таблицы */}
               <Box sx={{ 
                 display: 'grid',
                 gridTemplateColumns: '80px minmax(250px, 1fr) 120px 100px 150px 200px',
-                gap: 3.5,
+                gap: 2,
                 p: 2,
                 backgroundColor: alpha(theme.palette.primary.main, 0.05),
                 borderBottom: `1px solid ${theme.palette.divider}`,
                 alignItems: 'center'
               }}>
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ minWidth: 100 }}>
+                <Typography variant="subtitle2" fontWeight="bold" sx={{ minWidth: 80 }}>
                   Пользователь
                 </Typography>
                 <Typography variant="subtitle2" fontWeight="bold" sx={{ minWidth: 250 }}>
@@ -415,20 +500,26 @@ const AdminReviewsPage = () => {
                     {/* Аватар пользователя */}
                     <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 80 }}>
                       <Avatar
+                        src={review.user?.avatar}
                         sx={{
                           width: 40,
                           height: 40,
                           bgcolor: theme.palette.primary.main
                         }}
                       >
-                        <Person />
+                        {review.user?.name ? review.user.name[0] : <Person />}
                       </Avatar>
                     </Box>
 
                     {/* Информация о товаре и отзыве */}
                     <Box sx={{ minWidth: 250 }}>
                       <Typography variant="subtitle2" fontWeight="medium" gutterBottom noWrap>
-                        {review.product?.name || 'Товар не найден'}
+                        {review.product?.name || 'Товар не найден'} 
+                        {review.product?.id && (
+                          <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                            (ID: {review.product.id})
+                          </Typography>
+                        )}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ 
                         display: '-webkit-box',
@@ -439,21 +530,22 @@ const AdminReviewsPage = () => {
                         {review.comment}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {review.user?.name || 'Аноним'}
+                        {review.user?.name || 'Аноним'} • ID: {review.user?.id || 'Н/Д'}
                       </Typography>
                     </Box>
 
                     {/* Оценка */}
                     <Box sx={{ 
                       display: 'flex', 
+                      flexDirection: 'column',
                       alignItems: 'center', 
-                      gap: 1, 
+                      gap: 0.5, 
                       justifyContent: 'center',
                       minWidth: 120 
                     }}>
                       <Rating value={review.rating} readOnly size="small" />
                       <Typography variant="body2" fontWeight="bold">
-                        {review.rating}.0
+                        {review.rating}.0 / 5.0
                       </Typography>
                     </Box>
 
@@ -464,7 +556,7 @@ const AdminReviewsPage = () => {
                         label={statusConfig.label}
                         color={statusConfig.color}
                         size="small"
-                        variant="outlined"
+                        variant={review.status === 'pending' ? 'filled' : 'outlined'}
                       />
                     </Box>
 
@@ -490,7 +582,8 @@ const AdminReviewsPage = () => {
                             onClick={() => handleApprove(review.id)}
                             sx={{
                               color: 'success.main',
-                              '&:hover': { backgroundColor: alpha(theme.palette.success.main, 0.1) }
+                              bgcolor: alpha(theme.palette.success.main, 0.1),
+                              '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.2) }
                             }}
                             title="Одобрить отзыв"
                           >
@@ -501,7 +594,8 @@ const AdminReviewsPage = () => {
                             onClick={() => handleRejectClick(review)}
                             sx={{
                               color: 'error.main',
-                              '&:hover': { backgroundColor: alpha(theme.palette.error.main, 0.1) }
+                              bgcolor: alpha(theme.palette.error.main, 0.1),
+                              '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.2) }
                             }}
                             title="Отклонить отзыв"
                           >
@@ -516,8 +610,9 @@ const AdminReviewsPage = () => {
                         onClick={() => handleDeleteClick(review)}
                         sx={{
                           color: 'error.dark',
+                          bgcolor: alpha(theme.palette.error.main, 0.1),
                           '&:hover': { 
-                            backgroundColor: alpha(theme.palette.error.main, 0.1),
+                            bgcolor: alpha(theme.palette.error.main, 0.2),
                             color: 'error.main'
                           }
                         }}
@@ -525,13 +620,6 @@ const AdminReviewsPage = () => {
                       >
                         <Delete />
                       </IconButton>
-
-                      {(review.status === 'approved' || review.status === 'rejected') && 
-                       review.status !== 'pending' && (
-                        <Typography variant="caption" color="text.secondary">
-                          Обработан
-                        </Typography>
-                      )}
                     </Box>
                   </Box>
                 );
@@ -560,10 +648,10 @@ const AdminReviewsPage = () => {
         }}>
           Отклонить отзыв
         </DialogTitle>
-        <DialogContent sx={{ p: 2 }}>
+        <DialogContent sx={{ p: 3 }}>
           <Typography variant="body2" sx={{ mb: 2 }}>
             Укажите причину отклонения отзыва от пользователя{' '}
-            <strong>{selectedReview?.user?.name}</strong>
+            <strong>{selectedReview?.user?.name || 'Пользователь'}</strong>
           </Typography>
           <TextField
             fullWidth
@@ -573,16 +661,20 @@ const AdminReviewsPage = () => {
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder="Причина отклонения отзыва..."
             variant="outlined"
+            autoFocus
           />
           {selectedReview && (
-            <Box sx={{ mt: 2, p: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
-              <Typography variant="caption" color="text.secondary">
-                Текст отзыва: "{selectedReview.comment}"
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+              <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                <strong>Текст отзыва:</strong>
+              </Typography>
+              <Typography variant="body2">
+                "{selectedReview.comment}"
               </Typography>
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2, pt: 0 }}>
+        <DialogActions sx={{ p: 3, pt: 0 }}>
           <Button 
             onClick={() => setRejectDialogOpen(false)}
             variant="outlined"
@@ -625,14 +717,14 @@ const AdminReviewsPage = () => {
           <Warning />
           Удалить отзыв
         </DialogTitle>
-        <DialogContent sx={{ p: 2 }}>
+        <DialogContent sx={{ p: 3 }}>
           <Alert severity="warning" sx={{ mb: 2, borderRadius: 1 }}>
             Это действие нельзя отменить! Отзыв будет полностью удален из системы.
           </Alert>
           
           <Typography variant="body2" sx={{ mb: 2 }}>
             Вы уверены, что хотите удалить отзыв от пользователя{' '}
-            <strong>{selectedReview?.user?.name}</strong>?
+            <strong>{selectedReview?.user?.name || 'Пользователь'}</strong>?
           </Typography>
           
           <TextField
@@ -644,21 +736,24 @@ const AdminReviewsPage = () => {
             placeholder="Причина удаления отзыва (обязательно)..."
             variant="outlined"
             required
+            autoFocus
           />
           
           {selectedReview && (
-            <Box sx={{ mt: 2, p: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
-              <Typography variant="caption" color="text.secondary">
-                Текст отзыва: "{selectedReview.comment}"
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+              <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                <strong>Текст отзыва:</strong>
               </Typography>
-              <br />
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="body2">
+                "{selectedReview.comment}"
+              </Typography>
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
                 Статус: {getStatusConfig(selectedReview.status).label}
               </Typography>
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2, pt: 0 }}>
+        <DialogActions sx={{ p: 3, pt: 0 }}>
           <Button 
             onClick={() => setDeleteDialogOpen(false)}
             variant="outlined"

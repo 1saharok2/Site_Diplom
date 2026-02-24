@@ -156,7 +156,6 @@ const AdminUsers = () => {
         email: user.email || '',
         phone: user.phone || '',
         role: user.role || 'customer',
-        is_active: user.is_active || false
       },
       isViewMode: false, // Режим редактирования
     });
@@ -174,46 +173,24 @@ const AdminUsers = () => {
         last_name: user.last_name || '',
         email: user.email || '',
         phone: user.phone || '',
-        role: user.role || 'customer',
-        is_active: user.is_active || false
+        role: user.role || 'customer'
       },
       isViewMode: true, // Режим просмотра
     });
   };
 
-  const handleUpdateUser = async () => {
-    if (!managementDialog.user || !managementDialog.formData) {
-      setSnackbar({ 
-        open: true, 
-        message: 'Ошибка: данные пользователя не загружены', 
-        severity: 'error' 
-      });
-      return;
-    }
-
+  const handleUpdateUser = async (data) => {
     try {
-      const updatedUser = await adminService.updateUser(
-        managementDialog.user.id,
-        managementDialog.formData
-      );
-      
-      setUsers(users.map(user => 
-        user.id === managementDialog.user.id ? updatedUser : user
-      ));
-      
-      setSnackbar({ 
-        open: true, 
-        message: 'Пользователь успешно обновлен', 
-        severity: 'success' 
-      });
-      setManagementDialog({ open: false, user: null, formData: null, isViewMode: false });
+      const response = await adminService.updateUser(managementDialog.user.id, data);
+      console.log('📦 Ответ сервера:', response);
+      const updatedUser = await adminService.updateUser(managementDialog.user.id, data);
+      setUsers(users.map(user => user.id === managementDialog.user.id ? updatedUser : user));
+      setSnackbar({ open: true, message: 'Пользователь успешно обновлен', severity: 'success' });
+      setManagementDialog({ open: false, user: null, isViewMode: false });
     } catch (error) {
       console.error('Update error:', error);
-      setSnackbar({ 
-        open: true, 
-        message: error.message || 'Ошибка при обновлении пользователя', 
-        severity: 'error' 
-      });
+      setSnackbar({ open: true, message: error.message || 'Ошибка при обновлении пользователя', severity: 'error' });
+      throw error; 
     }
   };
 
@@ -233,8 +210,6 @@ const AdminUsers = () => {
   const getRoleText = (role) => {
     switch (role) {
       case 'admin': return 'Администратор';
-      case 'manager': return 'Менеджер';
-      case 'moderator': return 'Модератор';
       case 'customer': return 'Покупатель';
       default: return role;
     }
@@ -291,9 +266,7 @@ const AdminUsers = () => {
       )}
 
       {/* Статистика */}
-      {/* Оставлена без изменений */}
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        {/* ... (блоки статистики) ... */}
         <Grid item xs={6} md={3}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -353,7 +326,6 @@ const AdminUsers = () => {
       </Grid>
 
       {/* Панель поиска и фильтров */}
-      {/* Оставлена без изменений */}
       <Paper sx={{ p: 2, mb: 2, borderRadius: 2 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
@@ -391,8 +363,6 @@ const AdminUsers = () => {
             >
               <MenuItem value="all">Все роли</MenuItem>
               <MenuItem value="admin">Администратор</MenuItem>
-              <MenuItem value="manager">Менеджер</MenuItem>
-              <MenuItem value="moderator">Модератор</MenuItem>
               <MenuItem value="customer">Покупатель</MenuItem>
             </TextField>
           </Grid>
@@ -467,13 +437,6 @@ const AdminUsers = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={user?.is_active ? 'Активен' : 'Неактивен'}
-                        color={user?.is_active ? 'success' : 'error'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <CalendarToday fontSize="small" />
                         {user?.created_at ? new Date(user.created_at).toLocaleDateString('ru-RU') : 'N/A'}
@@ -483,7 +446,7 @@ const AdminUsers = () => {
                       <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
                         <IconButton
                           size="small"
-                          onClick={() => user && handleViewUser(user)} // 🔥 ИСПОЛЬЗУЕМ НОВЫЙ ОБРАБОТЧИК ДЛЯ ПРОСМОТРА
+                          onClick={() => user && handleViewUser(user)} 
                           sx={{
                             color: 'info.main',
                             '&:hover': { backgroundColor: alpha(theme.palette.info.main, 0.1) }
@@ -525,7 +488,6 @@ const AdminUsers = () => {
       </Paper>
 
       {/* Диалог подтверждения удаления */}
-      {/* Оставлен без изменений */}
       <Dialog
         open={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false, user: null })}
@@ -581,15 +543,13 @@ const AdminUsers = () => {
         </DialogActions>
       </Dialog>
 
-      {/* 🔥 ПЕРЕИМЕНОВАННЫЙ И АДАПТИРОВАННЫЙ ДИАЛОГ УПРАВЛЕНИЯ */}
+      {/* ДИАЛОГ УПРАВЛЕНИЯ */}
       <UserManagementDialog
         open={managementDialog.open}
-        onClose={() => setManagementDialog({ open: false, user: null, formData: null, isViewMode: false })}
-        formData={managementDialog.formData}
-        setFormData={(newFormData) => setManagementDialog(prev => ({ ...prev, formData: newFormData }))}
-        onSave={handleUpdateUser}
-        isViewMode={managementDialog.isViewMode} // 🔥 Передача режима
+        onClose={() => setManagementDialog({ open: false, user: null, isViewMode: false })}
         user={managementDialog.user}
+        onSave={handleUpdateUser}
+        isViewMode={managementDialog.isViewMode}
       />
 
       <Snackbar
@@ -610,255 +570,267 @@ const AdminUsers = () => {
   );
 };
 
-// 🔥 НОВЫЙ/ПЕРЕИМЕНОВАННЫЙ КОМПОНЕНТ ДИАЛОГА
-const UserManagementDialog = ({ open, onClose, formData, setFormData, onSave, isViewMode, user }) => {
+const UserManagementDialog = ({ open, onClose, user, onSave, isViewMode }) => {
+  const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    role: 'customer',
+    is_active: false
+  });
+  const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
+  const [passwordError, setPasswordError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [localSnackbar, setLocalSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  // Инициализация при открытии
+  useEffect(() => {
+    if (user && open) {
+      setFormData({
+        first_name: user.first_name || user.name || '',
+        last_name: user.last_name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        role: user.role || 'customer'
+      });
+      setPasswordData({ newPassword: '', confirmPassword: '' });
+      setPasswordError('');
+    }
+  }, [user, open]);
 
   const handleChange = (field, value) => {
-    if (isViewMode) return; // Запрет изменений в режиме просмотра
+    if (isViewMode) return;
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const getTitle = () => {
-    if (isViewMode) return '👁️ Просмотр пользователя';
-    return '✏️ Редактирование пользователя';
+  const handlePasswordChange = (field, value) => {
+    setPasswordData(prev => ({ ...prev, [field]: value }));
+    // Валидация
+    const newPass = field === 'newPassword' ? value : passwordData.newPassword;
+    const confirmPass = field === 'confirmPassword' ? value : passwordData.confirmPassword;
+    if (newPass || confirmPass) {
+      if (newPass !== confirmPass) {
+        setPasswordError('Пароли не совпадают');
+      } else if (newPass.length < 6) {
+        setPasswordError('Пароль должен быть не менее 6 символов');
+      } else {
+        setPasswordError('');
+      }
+    } else {
+      setPasswordError('');
+    }
   };
 
-  const getTitleBg = () => {
-    if (isViewMode) return 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
-    return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  const handleSave = async () => {
+    // Валидация
+    if (!formData.email || !formData.email.includes('@')) {
+      setLocalSnackbar({ open: true, message: 'Введите корректный email', severity: 'error' });
+      return;
+    }
+
+    const dataToSave = { ...formData };
+    if (passwordData.newPassword) {
+      dataToSave.password = passwordData.newPassword;
+    }
+
+    setSaving(true);
+    try {
+      await onSave(dataToSave);
+    } catch (error) {
+      setLocalSnackbar({ open: true, message: 'Ошибка при сохранении', severity: 'error' });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // 🚨 ПРЕДУПРЕЖДЕНИЕ: В режиме просмотра мы используем данные из `user` напрямую, 
-  // так как `formData` предназначена для редактирования.
+  const displayData = isViewMode ? user : formData;
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 3,
-          boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
-        }
-      }}
-    >
-      <DialogTitle sx={{ 
-        background: getTitleBg(),
-        color: 'white',
-        fontWeight: 'bold',
-        textAlign: 'center',
-        py: 2
-      }}>
-        {getTitle()}
-      </DialogTitle>
-      
-      <DialogContent sx={{ p: 0 }}>
-        {user && ( // Используем user для режима просмотра
-          <Box sx={{ p: 3, pb: 2 }}>
-            
-            {/* Основная информация */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" fontWeight="600" color="text.primary" gutterBottom>
-                Основная информация
-              </Typography>
-              
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Имя"
-                    value={isViewMode ? user.first_name || user.name || 'N/A' : formData?.first_name || ''}
-                    onChange={(e) => handleChange('first_name', e.target.value)}
-                    size="small"
-                    InputProps={{
-                      readOnly: isViewMode, // 🔥 Только для чтения
-                    }}
-                  />
+    <>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3, boxShadow: '0 10px 40px rgba(0,0,0,0.1)' } }}
+      >
+        <DialogTitle sx={{ 
+          background: isViewMode ? 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white', fontWeight: 'bold', textAlign: 'center', py: 2
+        }}>
+          {isViewMode ? '👁️ Просмотр пользователя' : '✏️ Редактирование пользователя'}
+        </DialogTitle>
+        
+        <DialogContent sx={{ p: 0 }}>
+          {displayData && (
+            <Box sx={{ p: 3, pb: 2 }}>
+              {/* Основная информация */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>Основная информация</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth label="Имя" size="small"
+                      value={isViewMode ? displayData.first_name || displayData.name || '' : formData.first_name}
+                      onChange={(e) => handleChange('first_name', e.target.value)}
+                      InputProps={{ readOnly: isViewMode }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth label="Фамилия" size="small"
+                      value={isViewMode ? displayData.last_name || '' : formData.last_name}
+                      onChange={(e) => handleChange('last_name', e.target.value)}
+                      InputProps={{ readOnly: isViewMode }}
+                    />
+                  </Grid>
                 </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Фамилия"
-                    value={isViewMode ? user.last_name || 'N/A' : formData?.last_name || ''}
-                    onChange={(e) => handleChange('last_name', e.target.value)}
-                    size="small"
-                    InputProps={{
-                      readOnly: isViewMode, // 🔥 Только для чтения
-                    }}
-                  />
-                </Grid>
-              </Grid>
-            </Box>
-
-            <Divider sx={{ mb: 3 }} />
-
-            {/* Контактная информация */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle1" fontWeight="600" color="text.primary" gutterBottom>
-                Контактная информация
-              </Typography>
-              
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Email"
-                    type="email"
-                    value={isViewMode ? user.email || 'N/A' : formData?.email || ''}
-                    onChange={(e) => handleChange('email', e.target.value)}
-                    size="small"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Email fontSize="small" color="action" />
-                        </InputAdornment>
-                      ),
-                      readOnly: isViewMode, // 🔥 Только для чтения
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Телефон"
-                    // Используем форматированный номер для отображения
-                    value={isViewMode ? formatPhoneNumber(user.phone) : formData?.phone || ''}
-                    onChange={(e) => {
-                      const input = e.target.value;
-                      if (input.length <= 15) { // Ограничиваем длину при редактировании
-                        handleChange('phone', input);
-                      }
-                    }}
-                    placeholder="+7 (999) 999-99-99"
-                    size="small"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Phone fontSize="small" color="action" />
-                        </InputAdornment>
-                      ),
-                      readOnly: isViewMode, // 🔥 Только для чтения
-                    }}
-                    // Валидация отображается только в режиме редактирования
-                    error={!isViewMode && formData?.phone?.length > 15}
-                    helperText={
-                      !isViewMode && formData?.phone?.length > 15 
-                        ? 'Превышено максимальное количество символов' 
-                        : isViewMode ? null : 'Формат: +7 (XXX) XXX-XX-XX'
-                    }
-                  />
-                </Grid>
-              </Grid>
-            </Box>
-
-            <Divider sx={{ mb: 3 }} />
-
-            {/* Настройки доступа */}
-            <Box sx={{ 
-              p: 2, 
-              backgroundColor: isViewMode ? 'primary.lightest' : 'grey.50',
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: isViewMode ? 'primary.main' : 'grey.200'
-            }}>
-              <Typography variant="subtitle1" fontWeight="600" color="text.primary" gutterBottom>
-                Настройки доступа
-              </Typography>
-              
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    select
-                    label="Роль пользователя"
-                    value={isViewMode ? user.role : formData?.role || 'customer'}
-                    onChange={(e) => handleChange('role', e.target.value)}
-                    size="small"
-                    disabled={isViewMode} // 🔥 Отключаем SELECT в режиме просмотра
-                    InputProps={{
-                        readOnly: isViewMode,
-                    }}
-                    SelectProps={{
-                      renderValue: (selected) => {
-                        const roles = {
-                          'customer': '👤 Покупатель',
-                          'admin': '⚙️ Администратор'
-                        };
-                        return roles[selected] || selected;
-                      }
-                    }}
-                  >
-                    <MenuItem value="customer">👤 Покупатель</MenuItem>
-                    <MenuItem value="admin">⚙️ Администратор</MenuItem>
-                  </TextField>
-                </Grid>
-                
-                <Grid item xs={12}>
-                </Grid>
-              </Grid>
-            </Box>
-
-            {/* Дата регистрации */}
-            {user?.created_at && (
-              <Box sx={{ mt: 2, textAlign: 'center' }}>
-                <Typography variant="caption" color="text.secondary">
-                  Дата регистрации: {new Date(user.created_at).toLocaleDateString('ru-RU')}
-                </Typography>
               </Box>
-            )}
-          </Box>
-        )}
-      </DialogContent>
 
-      <DialogActions sx={{ 
-        p: 3, 
-        pt: 0,
-        gap: 2,
-        justifyContent: 'center'
-      }}>
-        <Button 
-          onClick={onClose}
-          variant="outlined"
-          sx={{ 
-            borderRadius: 2, 
-            px: 4,
-            py: 1,
-            minWidth: 120,
-            borderColor: 'grey.300',
-            '&:hover': {
-              borderColor: 'grey.400',
-              backgroundColor: 'grey.50'
-            }
-          }}
-        >
-          {isViewMode ? 'Закрыть' : 'Отмена'}
-        </Button>
-        {!isViewMode && ( // 🔥 Скрываем кнопку "Сохранить" в режиме просмотра
-          <Button 
-            onClick={onSave}
-            variant="contained"
-            sx={{ 
-              borderRadius: 2, 
-              px: 4,
-              py: 1,
-              minWidth: 180,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              '&:hover': {
-                transform: 'translateY(-1px)',
-                boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
-                background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)'
-              },
-              transition: 'all 0.2s ease'
-            }}
-          >
-            Сохранить изменения
+              <Divider sx={{ mb: 3 }} />
+
+              {/* Контактная информация */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>Контактная информация</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth label="Email" type="email" size="small"
+                      value={isViewMode ? displayData.email : formData.email}
+                      onChange={(e) => handleChange('email', e.target.value)}
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start"><Email fontSize="small" /></InputAdornment>,
+                        readOnly: isViewMode
+                      }}
+                      error={!isViewMode && (!formData.email || !formData.email.includes('@'))}
+                      helperText={!isViewMode && (!formData.email || !formData.email.includes('@')) ? 'Введите корректный email' : ''}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth label="Телефон" size="small"
+                      value={isViewMode ? displayData.phone || '' : formData.phone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                        handleChange('phone', val);
+                      }}
+                      placeholder="+7 (999) 999-99-99"
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start"><Phone fontSize="small" /></InputAdornment>,
+                        readOnly: isViewMode
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              <Divider sx={{ mb: 3 }} />
+
+              {/* Настройки доступа */}
+              <Box sx={{ p: 2, backgroundColor: isViewMode ? 'primary.lightest' : 'grey.50', borderRadius: 2, border: '1px solid', borderColor: isViewMode ? 'primary.main' : 'grey.200' }}>
+                <Typography variant="subtitle1" fontWeight="600" gutterBottom>Настройки доступа</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth select label="Роль пользователя" size="small"
+                      value={isViewMode ? displayData.role || 'customer' : formData.role}
+                      onChange={(e) => handleChange('role', e.target.value)}
+                      disabled={isViewMode}
+                      SelectProps={{
+                        renderValue: (selected) => {
+                          const roles = { 'customer': '👤 Покупатель', 'admin': '⚙️ Администратор', 'user': '👤 Покупатель' };
+                          return roles[selected] || selected;
+                        }
+                      }}
+                    >
+                      <MenuItem value="customer">👤 Покупатель</MenuItem>
+                      <MenuItem value="admin">⚙️ Администратор</MenuItem>
+                    </TextField>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Смена пароля (только в режиме редактирования) */}
+              {!isViewMode && (
+                <>
+                  <Divider sx={{ my: 3 }} />
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle1" fontWeight="600" gutterBottom>Смена пароля</Typography>
+                    <Typography variant="caption" color="text.secondary" paragraph>
+                      Оставьте поля пустыми, если не хотите менять пароль.
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth label="Новый пароль" type="password" size="small"
+                          value={passwordData.newPassword}
+                          onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
+                          InputProps={{
+                            startAdornment: <InputAdornment position="start"><Lock fontSize="small" /></InputAdornment>
+                          }}
+                          error={!!passwordError}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth label="Подтверждение пароля" type="password" size="small"
+                          value={passwordData.confirmPassword}
+                          onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                          InputProps={{
+                            startAdornment: <InputAdornment position="start"><Lock fontSize="small" /></InputAdornment>
+                          }}
+                          error={!!passwordError}
+                          helperText={passwordError}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </>
+              )}
+
+              {displayData?.created_at && (
+                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Дата регистрации: {new Date(displayData.created_at).toLocaleDateString('ru-RU')}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+
+        <DialogActions sx={{ p: 3, pt: 0, gap: 2, justifyContent: 'center' }}>
+          <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2, px: 4, py: 1, minWidth: 120 }}>
+            {isViewMode ? 'Закрыть' : 'Отмена'}
           </Button>
-        )}
-      </DialogActions>
-    </Dialog>
+          {!isViewMode && (
+            <Button
+              onClick={handleSave}
+              variant="contained"
+              disabled={saving || !!passwordError}
+              sx={{ borderRadius: 2, px: 4, py: 1, minWidth: 180,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                '&:hover': { transform: 'translateY(-1px)', boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)' }
+              }}
+            >
+              {saving ? <CircularProgress size={24} color="inherit" /> : 'Сохранить изменения'}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={localSnackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setLocalSnackbar({ ...localSnackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert severity={localSnackbar.severity} sx={{ borderRadius: 2 }}>
+          {localSnackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 
