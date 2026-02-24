@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { reviewService } from '../services/reviewService';
+import { adminService } from '../services/adminService';
+import { fetchWithAuth } from '../services/adminService';
 import { useAuth } from './AuthContext';
 
 const ReviewContext = createContext();
@@ -57,13 +59,29 @@ export const ReviewProvider = ({ children }) => {
     try {
       console.log('🔄 Загрузка отзывов для модерации...');
       setLoading(true);
-      const reviewsData = await reviewService.getReviewsForModeration();
-      console.log('✅ Отзывы для модерации получены:', reviewsData);
-      setModerationReviews(reviewsData || []);
-      return reviewsData || [];
+      const data = await fetchWithAuth('/admin/reviews?action=pending');
+      console.log('✅ Отзывы для модерации получены:', data);
+      setModerationReviews(data || []);
+      return data || [];
     } catch (error) {
       console.error('❌ Ошибка загрузки отзывов для модерации:', error);
       setModerationReviews([]);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Загрузить все отзывы (для админки)
+  const loadAllReviews = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await fetchWithAuth('/admin/reviews'); // без action
+      setReviews(data || []);
+      return data || [];
+    } catch (error) {
+      console.error('Ошибка загрузки всех отзывов:', error);
+      setReviews([]);
       return [];
     } finally {
       setLoading(false);
@@ -102,12 +120,11 @@ export const ReviewProvider = ({ children }) => {
   // Одобрить отзыв (админ)
   const approveReview = useCallback(async (reviewId) => {
     try {
-      const approvedReview = await reviewService.approveReview(reviewId);
-      
-      // Обновляем списки
+      const approvedReview = await fetchWithAuth(`/admin/reviews/${reviewId}?action=approve`, {
+        method: 'PUT'
+      });
       setModerationReviews(prev => prev.filter(review => review.id !== reviewId));
       await loadModerationReviews();
-      
       return approvedReview;
     } catch (error) {
       console.error('Error approving review:', error);
@@ -118,12 +135,12 @@ export const ReviewProvider = ({ children }) => {
   // Отклонить отзыв (админ)
   const rejectReview = useCallback(async (reviewId, reason) => {
     try {
-      const rejectedReview = await reviewService.rejectReview(reviewId, reason);
-      
-      // Обновляем списки
+      const rejectedReview = await fetchWithAuth(`/admin/reviews/${reviewId}?action=reject`, {
+        method: 'PUT',
+        body: JSON.stringify({ rejection_reason: reason })
+      });
       setModerationReviews(prev => prev.filter(review => review.id !== reviewId));
       await loadModerationReviews();
-      
       return rejectedReview;
     } catch (error) {
       console.error('Error rejecting review:', error);
@@ -134,7 +151,9 @@ export const ReviewProvider = ({ children }) => {
   // Удалить отзыв (админ)
   const deleteReview = useCallback(async (reviewId, reason) => {
     try {
-      const deleted = await reviewService.deleteReview(reviewId, reason);
+      const deleted = await fetchWithAuth(`/admin/reviews/${reviewId}?reason=${encodeURIComponent(reason)}`, {
+        method: 'DELETE'
+      });
       setModerationReviews(prev => prev.filter(review => review.id !== reviewId));
       await loadModerationReviews();
       return deleted;
@@ -147,7 +166,7 @@ export const ReviewProvider = ({ children }) => {
   // Получить статистику отзывов
   const getReviewStats = useCallback(async () => {
     try {
-      return await reviewService.getReviewStats();
+      return await fetchWithAuth('/admin/reviews?action=stats');
     } catch (error) {
       console.error('Error getting review stats:', error);
       return { total: 0, pending: 0, approved: 0, rejected: 0 };
@@ -162,6 +181,7 @@ export const ReviewProvider = ({ children }) => {
     loadProductReviews,
     loadUserReviews,
     loadModerationReviews,
+    loadAllReviews,
     createReview,
     approveReview,
     rejectReview,
