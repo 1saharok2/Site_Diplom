@@ -10,6 +10,19 @@ import ProductInfo from './ProductInfo';
 import ProductTabs from './ProductsTabs';
 import './ProductPage_css/ProductPage.css';
 
+// Прямое соответствие slug → русское название (из вашей базы данных)
+const categoryNames = {
+  smartphones: 'Смартфоны',
+  laptops: 'Ноутбуки',
+  tvs: 'Телевизоры',
+  headphones: 'Наушники',
+  photo: 'Фототехника',
+  gaming: 'Игровые консоли',
+  appliances: 'Бытовая техника',
+  smarthouse: 'Умный дом',
+  // добавьте остальные при необходимости
+};
+
 const ProductPage = () => {
   const { id } = useParams();
   const { currentUser } = useAuth();
@@ -27,7 +40,17 @@ const ProductPage = () => {
   const [message, setMessage] = useState('');
   const [hasSubmittedReview, setHasSubmittedReview] = useState(false);
 
-  // Мемоизированные вычисления
+  // Простая функция получения русского названия категории по slug
+  const getCategoryName = useCallback((product) => {
+    if (!product) return 'Категория';
+    const slug = product.category_slug || product.category;
+    if (!slug) return 'Категория';
+    const normalized = slug.toLowerCase().trim();
+    // Возвращаем русское название или сам slug, если не найдено
+    return categoryNames[normalized] || normalized;
+  }, []);
+
+  // Остальные хуки без изменений...
   const hasUserReviewed = useMemo(() => {
     if (!currentUser) return false;
     if (hasSubmittedReview) return true;
@@ -41,7 +64,6 @@ const ProductPage = () => {
     [reviews]
   );
 
-  // Мемоизированные обработчики
   const handleVariantChange = useCallback((variant) => {
     setCurrentProduct(variant);
   }, []);
@@ -63,7 +85,6 @@ const ProductPage = () => {
       setHasSubmittedReview(true);
       setMessage('✅ Отзыв успешно отправлен на модерацию');
       setTimeout(() => setMessage(''), 4000);
-      // Обновляем список отзывов, на случай если API вернёт запись
       await loadProductReviews(reviewData.product_id);
     } catch (error) {
       const errorMessage = error?.message || 'Не удалось отправить отзыв. Попробуйте позже.';
@@ -77,7 +98,6 @@ const ProductPage = () => {
     setHasSubmittedReview(false);
   }, [id, currentUser?.id]);
 
-  // Оптимизированная загрузка данных
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -85,7 +105,6 @@ const ProductPage = () => {
         setLoading(true);
         setError('');
 
-        // Параллельная загрузка товара и отзывов
         const [productData] = await Promise.all([
           categoryService.getProductById(id),
           loadProductReviews(id)
@@ -115,7 +134,6 @@ const ProductPage = () => {
     }
   }, [id, loadProductReviews]);
 
-  // Мемоизированные значения для пропсов
   const productInfoProps = useMemo(() => ({
     product: currentProduct || product,
     onVariantChange: handleVariantChange,
@@ -171,7 +189,6 @@ const ProductPage = () => {
 
   return (
     <Container className="product-page">
-      {/* Хлебные крошки */}
       <Breadcrumb className="my-4">
         <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/" }} className="d-flex align-items-center">
           <FaHome className="me-1" size={14} />
@@ -184,7 +201,7 @@ const ProductPage = () => {
           className="d-flex align-items-center"
         >
           <FaChevronRight className="me-1 mx-1" size={10} />
-          {product.categoryName || product.category_slug || product.category || 'Каталог'}
+          {getCategoryName(product)}
         </Breadcrumb.Item>
         
         <Breadcrumb.Item active className="d-flex align-items-center">
@@ -193,7 +210,6 @@ const ProductPage = () => {
         </Breadcrumb.Item>
       </Breadcrumb>
 
-      {/* Сообщения */}
       {message && (
         <Alert 
           variant={message.includes('✅') ? 'success' : message.includes('⚠️') ? 'warning' : 'danger'} 

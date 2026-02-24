@@ -73,7 +73,7 @@ const ProductCard = ({ product }) => {
     try {
       setIsAddingToCart(true);
       await addToCart(product.id, 1);
-      setTimeout(() => setIsAddingToCart(false), 600);
+      setTimeout(() => setIsAddingToCart(false), 2000); // Увеличено до 2 секунд
     } catch (error) {
       alert('Не удалось добавить товар в корзину: ' + error.message);
       setIsAddingToCart(false);
@@ -176,7 +176,7 @@ const ProductCard = ({ product }) => {
                     disabled={isAddingToCart}
                   >
                     <FaShoppingCart className="btn-icon" />
-                    {isAddingToCart ? 'Добавление...' : 'В корзину'}
+                    {isAddingToCart ? 'В корзине' : 'В корзину'}
                   </Button>
                   <Button 
                     variant="outline-secondary" 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { Row, Col, Image, Spinner } from 'react-bootstrap';
-import { FaChevronLeft, FaChevronRight, FaExpand, FaImage } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaExpand, FaImage, FaTimes } from 'react-icons/fa';
 import './ProductPage_css/ProductGallery.css';
 
 const ProductGallery = ({ product }) => {
@@ -13,14 +14,16 @@ const ProductGallery = ({ product }) => {
   });
 
   const imageRef = useRef(null);
+  const modalContentRef = useRef(null);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
-  // Мемоизированный список изображений
+  // Нормализация изображений
   const normalizedImages = useMemo(() => {
     if (!product) return [];
     
     let imageArray = [];
     
-    // Приоритет получения изображений
     if (product.images && Array.isArray(product.images)) {
       imageArray = product.images;
     } else if (product.image_url) {
@@ -38,7 +41,6 @@ const ProductGallery = ({ product }) => {
       imageArray = [product.image];
     }
     
-    // Фильтруем и нормализуем URL
     return imageArray
       .filter(url => url && typeof url === 'string' && url.trim() !== '')
       .map(url => {
@@ -52,22 +54,21 @@ const ProductGallery = ({ product }) => {
       });
   }, [product]);
 
-  // Эффект для установки изображений
+  // Установка изображений
   useEffect(() => {
     console.log('🎨 ProductGallery - normalized images:', normalizedImages);
     setImages(normalizedImages);
     setCurrentIndex(0);
-    // Сбрасываем состояние загрузки для нового изображения
     setImageLoadState({ loading: true, error: false });
   }, [normalizedImages]);
 
-  // Сброс состояния загрузки при смене индекса
+  // Сброс загрузки при смене индекса
   useEffect(() => {
     if (images.length === 0) return;
     setImageLoadState({ loading: true, error: false });
   }, [currentIndex, images.length]);
 
-  // Проверка, загружено ли изображение (при монтировании или смене src)
+  // Обработка загрузки изображения
   useEffect(() => {
     if (!imageRef.current || images.length === 0) return;
 
@@ -78,7 +79,6 @@ const ProductGallery = ({ product }) => {
     };
     
     const handleError = () => {
-      // Если текущее изображение не загрузилось, пробуем следующее
       if (images.length > 1 && currentIndex < images.length - 1) {
         setCurrentIndex(currentIndex + 1);
       } else {
@@ -86,7 +86,6 @@ const ProductGallery = ({ product }) => {
       }
     };
 
-    // Если изображение уже полностью загружено (например, из кеша)
     if (img.complete && img.naturalHeight !== 0) {
       setImageLoadState({ loading: false, error: false });
     } else {
@@ -100,30 +99,79 @@ const ProductGallery = ({ product }) => {
     };
   }, [currentIndex, images]);
 
+  // Закрытие модального окна по Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    };
+    if (showModal) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden'; // запрет прокрутки фона
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [showModal]);
+
+  // Обработка свайпов для модального окна
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    const diff = touchStartX.current - touchEndX.current;
+    const threshold = 50; // минимальное расстояние для свайпа
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) {
+        // свайп влево → следующее
+        nextImage();
+      } else {
+        // свайп вправо → предыдущее
+        prevImage();
+      }
+    }
+    touchStartX.current = 0;
+    touchEndX.current = 0;
+  };
+
   const nextImage = useCallback(() => {
     if (images.length <= 1) return;
-    const nextIndex = (currentIndex + 1) % images.length;
-    setCurrentIndex(nextIndex);
-  }, [currentIndex, images.length]);
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  }, [images.length]);
 
   const prevImage = useCallback(() => {
     if (images.length <= 1) return;
-    const prevIndex = (currentIndex - 1 + images.length) % images.length;
-    setCurrentIndex(prevIndex);
-  }, [currentIndex, images.length]);
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  }, [images.length]);
 
   const selectImage = useCallback((index) => {
     if (index === currentIndex) return;
     setCurrentIndex(index);
   }, [currentIndex]);
 
-  const openModal = useCallback(() => setShowModal(true), []);
-  const closeModal = useCallback(() => setShowModal(false), []);
+  const openModal = useCallback(() => {
+    if (images.length > 0 && images[currentIndex]) {
+      setShowModal(true);
+    } else {
+      console.warn('Не удалось открыть модальное окно: нет изображения');
+    }
+  }, [images, currentIndex]);
+
+  const closeModal = useCallback(() => {
+    setShowModal(false);
+  }, []);
 
   const hasImages = images.length > 0;
   const mainImage = hasImages ? images[currentIndex] : null;
 
-  // Если нет картинок
   if (!hasImages) {
     return (
       <div className="product-gallery">
@@ -132,9 +180,7 @@ const ProductGallery = ({ product }) => {
             <div className="no-image-placeholder">
               <FaImage size={48} className="mb-3" />
               <p>Нет изображений для этого товара</p>
-              <small className="text-muted">
-                {product?.name || 'Неизвестный товар'}
-              </small>
+              <small className="text-muted">{product?.name || 'Неизвестный товар'}</small>
             </div>
           </div>
         </div>
@@ -175,27 +221,24 @@ const ProductGallery = ({ product }) => {
             </div>
           )}
           
-          {/* Кнопки навигации */}
           {images.length > 1 && (
             <>
-              <button className="nav-btn prev-btn" onClick={prevImage}>
+              <button className="nav-btn prev-btn" onClick={prevImage} aria-label="Предыдущее">
                 <FaChevronLeft />
               </button>
-              <button className="nav-btn next-btn" onClick={nextImage}>
+              <button className="nav-btn next-btn" onClick={nextImage} aria-label="Следующее">
                 <FaChevronRight />
               </button>
             </>
           )}
           
-          {/* Кнопка полноэкранного режима */}
           {hasImages && !imageLoadState.loading && !imageLoadState.error && (
-            <button className="expand-btn" onClick={openModal}>
+            <button className="expand-btn" onClick={openModal} aria-label="Увеличить">
               <FaExpand />
             </button>
           )}
         </div>
         
-        {/* Счетчик изображений */}
         {images.length > 1 && (
           <div className="image-counter">
             {currentIndex + 1} / {images.length}
@@ -231,32 +274,170 @@ const ProductGallery = ({ product }) => {
         </Row>
       )}
 
-      {/* Модальное окно */}
-      {showModal && hasImages && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={closeModal}>×</button>
-            <Image
-              src={mainImage}
-              alt={product?.name || 'Изображение товара'}
-              className="modal-image"
-              fluid
-            />
-            {images.length > 1 && (
-              <div className="modal-navigation">
-                <button className="modal-nav-btn" onClick={prevImage}>
-                  <FaChevronLeft />
-                </button>
-                <div className="modal-counter">
-                  {currentIndex + 1} / {images.length}
-                </div>
-                <button className="modal-nav-btn" onClick={nextImage}>
-                  <FaChevronRight />
-                </button>
+      {/* Модальное окно через портал */}
+      {showModal && ReactDOM.createPortal(
+        <div 
+          className="modal-overlay" 
+          onClick={closeModal}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.95)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999999,
+            cursor: 'pointer'
+          }}
+        >
+          <div 
+            className="modal-content" 
+            ref={modalContentRef}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'relative',
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <button 
+              className="modal-close" 
+              onClick={closeModal}
+              aria-label="Закрыть"
+              style={{
+                position: 'absolute',
+                top: '-40px',
+                right: 0,
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                fontSize: '3rem',
+                cursor: 'pointer',
+                zIndex: 1000001,
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <FaTimes />
+            </button>
+            
+            {mainImage ? (
+              <>
+                <img
+                  src={mainImage}
+                  alt={product?.name || 'Изображение товара'}
+                  className="modal-image"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '80vh',
+                    objectFit: 'contain',
+                    borderRadius: '4px'
+                  }}
+                />
+                
+                {images.length > 1 && (
+                  <>
+                    <button 
+                      className="modal-nav-btn modal-prev" 
+                      onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                      aria-label="Предыдущее"
+                      style={{
+                        position: 'absolute',
+                        left: '20px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: '50px',
+                        height: '50px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        background: 'rgba(255,255,255,0.2)',
+                        backdropFilter: 'blur(5px)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        fontSize: '1.5rem',
+                        transition: 'all 0.3s ease',
+                        zIndex: 1000001
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.4)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                    >
+                      <FaChevronLeft />
+                    </button>
+                    
+                    <button 
+                      className="modal-nav-btn modal-next" 
+                      onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                      aria-label="Следующее"
+                      style={{
+                        position: 'absolute',
+                        right: '20px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: '50px',
+                        height: '50px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        background: 'rgba(255,255,255,0.2)',
+                        backdropFilter: 'blur(5px)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        fontSize: '1.5rem',
+                        transition: 'all 0.3s ease',
+                        zIndex: 1000001
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.4)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                    >
+                      <FaChevronRight />
+                    </button>
+                    
+                    <div 
+                      className="modal-counter"
+                      style={{
+                        position: 'absolute',
+                        bottom: '20px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        color: 'white',
+                        background: 'rgba(0,0,0,0.6)',
+                        padding: '6px 16px',
+                        borderRadius: '20px',
+                        fontSize: '0.9rem',
+                        zIndex: 1000001
+                      }}
+                    >
+                      {currentIndex + 1} / {images.length}
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <div className="modal-error" style={{ color: 'white', textAlign: 'center' }}>
+                <FaImage size={48} />
+                <p>Изображение временно недоступно</p>
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

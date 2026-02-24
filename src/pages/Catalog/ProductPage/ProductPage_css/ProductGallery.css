@@ -1,7 +1,7 @@
-/* Стили только для компонента ProductGallery */
+/* ProductGallery.css */
 .product-gallery {
   position: relative;
-  isolation: isolate; /* Изолируем стили */
+  isolation: isolate;
 }
 
 .product-gallery .main-image-container {
@@ -25,7 +25,6 @@
   overflow: hidden;
 }
 
-/* Основные стили для изображений */
 .product-gallery .main-product-image {
   max-width: 100%;
   max-height: 100%;
@@ -40,15 +39,7 @@
   transform: scale(1.02);
 }
 
-/* Стили для модального окна галереи */
-.product-gallery .modal-image {
-  max-width: 100%;
-  max-height: 80vh;
-  object-fit: contain;
-  transition: opacity 0.2s ease-in-out;
-}
-
-/* Кнопки навигации галереи */
+/* Кнопки навигации */
 .product-gallery .nav-btn {
   position: absolute;
   top: 50%;
@@ -81,7 +72,6 @@
   right: 15px;
 }
 
-/* Кнопка расширения галереи */
 .product-gallery .expand-btn {
   position: absolute;
   top: 15px;
@@ -105,7 +95,6 @@
   transform: scale(1.1);
 }
 
-/* Счетчик изображений галереи */
 .product-gallery .image-counter {
   position: absolute;
   bottom: 15px;
@@ -116,9 +105,10 @@
   border-radius: 15px;
   font-size: 0.85rem;
   font-weight: 500;
+  z-index: 10;
 }
 
-/* Миниатюры галереи */
+/* Миниатюры */
 .product-gallery .thumbnails-row {
   margin: 0;
 }
@@ -167,18 +157,18 @@
   object-fit: cover;
 }
 
-/* Модальное окно галереи */
+/* МОДАЛЬНОЕ ОКНО — УСИЛЕННЫЙ Z-INDEX */
 .product-gallery .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 999999 !important; /* Максимально высокий */
   padding: 20px;
 }
 
@@ -186,6 +176,7 @@
   position: relative;
   max-width: 90vw;
   max-height: 90vh;
+  z-index: 1000000 !important; /* Ещё выше */
 }
 
 .product-gallery .modal-close {
@@ -195,11 +186,26 @@
   background: none;
   border: none;
   color: white;
-  font-size: 2rem;
+  font-size: 3rem;
   cursor: pointer;
   padding: 0;
   width: 40px;
   height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000001;
+  line-height: 1;
+}
+
+.product-gallery .modal-close:hover {
+  transform: scale(1.2);
+}
+
+.product-gallery .modal-image {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
 }
 
 .product-gallery .modal-navigation {
@@ -210,6 +216,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
+  z-index: 1000001;
 }
 
 .product-gallery .modal-nav-btn {
@@ -237,7 +244,7 @@
   font-weight: 500;
 }
 
-/* Состояния загрузки и ошибок галереи */
+/* Состояния загрузки */
 .product-gallery .image-loading {
   position: absolute;
   top: 50%;
@@ -266,17 +273,15 @@
   color: #dee2e6;
 }
 
-/* Адаптивность только для галереи */
+/* Адаптивность */
 @media (max-width: 991px) {
   .product-gallery .main-image-container {
     height: 400px;
   }
-  
   .product-gallery .thumbnail-item {
     width: 70px;
     height: 70px;
   }
-  
   .product-gallery .nav-btn {
     width: 35px;
     height: 35px;
@@ -287,12 +292,10 @@
   .product-gallery .main-image-container {
     height: 350px;
   }
-  
   .product-gallery .thumbnail-item {
     width: 60px;
     height: 60px;
   }
-  
   .product-gallery .expand-btn {
     width: 30px;
     height: 30px;
@@ -303,23 +306,32 @@
   .product-gallery .main-image-container {
     height: 300px;
   }
-  
   .product-gallery .thumbnail-item {
     width: 50px;
     height: 50px;
   }
-  
   .product-gallery .nav-btn {
     width: 30px;
     height: 30px;
   }
-  
   .product-gallery .modal-content {
     max-width: 95vw;
   }
+  .product-gallery .modal-close {
+    top: -30px;
+    font-size: 2.5rem;
+  }
+  .product-gallery .modal-navigation {
+    bottom: -50px;
+    gap: 15px;
+  }
+  .product-gallery .modal-nav-btn {
+    width: 35px;
+    height: 35px;
+  }
 }
 
-/* Убираем возможные конфликты с глобальными стилями */
+/* Убираем возможные конфликты */
 .product-gallery .row {
   margin-left: 0;
   margin-right: 0;
@@ -330,7 +342,6 @@
   padding-right: 0;
 }
 
-/* Гарантируем, что наши стили не влияют на другие компоненты */
 .product-gallery * {
   box-sizing: border-box;
 }
