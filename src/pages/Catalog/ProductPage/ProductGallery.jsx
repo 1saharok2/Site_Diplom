@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { Row, Col, Image, Spinner } from 'react-bootstrap';
+import { Spinner } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight, FaExpand, FaImage, FaTimes } from 'react-icons/fa';
 import './ProductPage_css/ProductGallery.css';
 
@@ -108,7 +108,7 @@ const ProductGallery = ({ product }) => {
     };
     if (showModal) {
       document.addEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'hidden'; // запрет прокрутки фона
+      document.body.style.overflow = 'hidden';
     }
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
@@ -128,13 +128,11 @@ const ProductGallery = ({ product }) => {
   const handleTouchEnd = () => {
     if (!touchStartX.current || !touchEndX.current) return;
     const diff = touchStartX.current - touchEndX.current;
-    const threshold = 50; // минимальное расстояние для свайпа
+    const threshold = 50;
     if (Math.abs(diff) > threshold) {
       if (diff > 0) {
-        // свайп влево → следующее
         nextImage();
       } else {
-        // свайп вправо → предыдущее
         prevImage();
       }
     }
@@ -246,32 +244,29 @@ const ProductGallery = ({ product }) => {
         )}
       </div>
 
-      {/* Миниатюры */}
+      {/* Миниатюры — упрощённая вёрстка без Bootstrap */}
       {images.length > 1 && (
-        <Row className="thumbnails-row">
-          <Col>
-            <div className="thumbnails-container">
-              {images.map((imageUrl, index) => (
-                <div
-                  key={index}
-                  className={`thumbnail-item ${index === currentIndex ? 'active' : ''}`}
-                  onClick={() => selectImage(index)}
-                >
-                  <Image
-                    src={imageUrl}
-                    alt={`${product?.name || 'Товар'} - изображение ${index + 1}`}
-                    className="thumbnail-image"
-                    fluid
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.src = '/images/placeholder.jpg';
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-          </Col>
-        </Row>
+        <div className="thumbnails-wrapper">
+          <div className="thumbnails-container">
+            {images.map((imageUrl, index) => (
+              <div
+                key={index}
+                className={`thumbnail-item ${index === currentIndex ? 'active' : ''}`}
+                onClick={() => selectImage(index)}
+              >
+                <img
+                  src={imageUrl}
+                  alt={`${product?.name || 'Товар'} - изображение ${index + 1}`}
+                  className="thumbnail-image"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.target.src = '/images/placeholder.jpg';
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Модальное окно через портал */}
