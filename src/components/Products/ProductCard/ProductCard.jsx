@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Badge, Spinner } from 'react-bootstrap';
-import { FaHeart, FaShoppingCart, FaStar } from 'react-icons/fa';
+import { FaHeart, FaShoppingCart, FaStar, FaCheck } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useCart } from '../../../context/CartContext';
