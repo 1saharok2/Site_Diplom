@@ -44,6 +44,9 @@ try {
 
     // GET: Получение корзины пользователя
     if ($method === 'GET') {
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
         $userId = $_GET['userId'] ?? 0;
         
         // Если userId не указан или равен 0, возвращаем пустую корзину
@@ -153,7 +156,7 @@ try {
         $cartItemId = $data['id'] ?? null;
         
         // Проверка авторизации
-        if ($userId <= 0) {
+        if (empty($userId)) {
             http_response_code(401);
             echo json_encode([
                 'success' => false, 

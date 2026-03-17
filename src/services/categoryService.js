@@ -1,5 +1,49 @@
 import { apiService } from './api';
 
+const getImageOrigin = () => {
+  const envOrigin = process.env.REACT_APP_IMAGE_ORIGIN;
+  if (typeof envOrigin === 'string' && envOrigin.trim() !== '') {
+    return envOrigin.replace(/\/+$/, '');
+  }
+
+  if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
+    return 'http://localhost:5000';
+  }
+
+  return 'https://electronic.tw1.ru';
+};
+
+const normalizeImageUrl = (rawUrl) => {
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
+
+  const url = rawUrl.trim().replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1');
+  if (!url) return null;
+
+  // Absolute
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+
+  // Protocol-relative
+  if (url.startsWith('//')) return `https:${url}`;
+
+  const origin = getImageOrigin();
+
+  // Root-relative
+  if (url.startsWith('/')) {
+    try {
+      return new URL(url, origin).toString();
+    } catch {
+      return `${origin}${url}`;
+    }
+  }
+
+  // Bare filename or relative path
+  try {
+    return new URL(`/images/${url}`, origin).toString();
+  } catch {
+    return `${origin}/images/${url}`;
+  }
+};
+
 const isValidUrl = (url) => {
   if (!url || typeof url !== 'string' || url.trim() === '') return false;
   
@@ -25,22 +69,32 @@ const processImageUrls = (imageData) => {
   if (!imageData) return [];
   
   if (Array.isArray(imageData)) {
-    return imageData.filter(url => url && typeof url === 'string');
+    const normalized = imageData
+      .map(normalizeImageUrl)
+      .filter(Boolean);
+    return [...new Set(normalized)];
   }
   
   if (typeof imageData === 'string') {
+    const trimmed = imageData.trim();
     try {
-      const parsed = JSON.parse(imageData);
+      const parsed = JSON.parse(trimmed);
       if (Array.isArray(parsed)) {
-        return parsed.filter(url => url && typeof url === 'string');
+        const normalized = parsed
+          .map(normalizeImageUrl)
+          .filter(Boolean);
+        return [...new Set(normalized)];
       } else if (typeof parsed === 'string') {
-        return [parsed];
+        const one = normalizeImageUrl(parsed);
+        return one ? [one] : [];
       }
     } catch (e) {
       // Если не JSON, проверяем как обычную строку
-      if (imageData.startsWith('http') || imageData.startsWith('/')) {
-        return [imageData];
-      }
+      const maybeList = trimmed.includes(',') ? trimmed.split(',') : [trimmed];
+      const normalized = maybeList
+        .map(part => normalizeImageUrl(part))
+        .filter(Boolean);
+      return [...new Set(normalized)];
     }
   }
   
@@ -57,7 +111,9 @@ export const categoryService = {
         console.log(`🖼️ Category ${category.name} raw image_url:`, category.image_url);
         console.log(`🖼️ Category ${category.name} isValidUrl:`, isValidUrl(category.image_url));
         
-        const imageUrl = isValidUrl(category.image_url) ? category.image_url : '/images/placeholder.jpg';
+        const imageUrl = isValidUrl(category.image_url)
+          ? (normalizeImageUrl(category.image_url) || normalizeImageUrl('/images/placeholder.jpg'))
+          : normalizeImageUrl('/images/placeholder.jpg');
         
         return {
           id: category.id,
@@ -82,7 +138,9 @@ export const categoryService = {
       const category = await apiService.get(`/categories/${slug}`);
       console.log(`📁 Category ${slug} from API:`, category);
       
-      const imageUrl = isValidUrl(category.image_url) ? category.image_url : '/images/placeholder.jpg';
+      const imageUrl = isValidUrl(category.image_url)
+        ? (normalizeImageUrl(category.image_url) || normalizeImageUrl('/images/placeholder.jpg'))
+        : normalizeImageUrl('/images/placeholder.jpg');
       
       return {
         id: category.id,
@@ -104,7 +162,10 @@ export const categoryService = {
       console.log(`📦 Products for category ${categorySlug}:`, products);
       
       return products.map(product => {
-        const processedImages = processImageUrls(product.image_url || product.images);
+        const rawImages = (Array.isArray(product.images) && product.images.length > 0)
+          ? product.images
+          : (product.image_url || product.images);
+        const processedImages = processImageUrls(rawImages);
         
         console.log(`🖼️ Product ${product.name} images:`, processedImages);
         
@@ -120,8 +181,7 @@ export const categoryService = {
           stock: product.stock || 0,
           isNew: product.is_new || false,
           category: product.category_slug || product.category,
-          images: processedImages.length > 0 ? processedImages : 
-                 ['/images/placeholder.jpg'],
+          images: processedImages.length > 0 ? processedImages : [normalizeImageUrl('/images/placeholder.jpg')],
           description: product.description || '',
           brand: product.brand || '',
           specifications: product.specifications || {},
@@ -139,7 +199,10 @@ export const categoryService = {
       const product = await apiService.get(`/products/${id}`);
       console.log(`📦 Product ${id} from API:`, product);
       
-      const processedImages = processImageUrls(product.image_url || product.images);
+      const rawImages = (Array.isArray(product.images) && product.images.length > 0)
+        ? product.images
+        : (product.image_url || product.images);
+      const processedImages = processImageUrls(rawImages);
       console.log(`🖼️ Processed images for product ${id}:`, processedImages);
 
       return {
@@ -201,7 +264,10 @@ export const categoryService = {
       console.log(`🔍 Product variants for ${baseName}:`, variants);
       
       return variants.map(product => {
-        const processedImages = processImageUrls(product.image_url || product.images);
+        const rawImages = (Array.isArray(product.images) && product.images.length > 0)
+          ? product.images
+          : (product.image_url || product.images);
+        const processedImages = processImageUrls(rawImages);
         
         return {
           id: product.id,
@@ -236,7 +302,10 @@ export const categoryService = {
       console.log(`📦 All products:`, products);
       
       return products.map(product => {
-        const processedImages = processImageUrls(product.image_url || product.images);
+        const rawImages = (Array.isArray(product.images) && product.images.length > 0)
+          ? product.images
+          : (product.image_url || product.images);
+        const processedImages = processImageUrls(rawImages);
         
         return {
           id: product.id,

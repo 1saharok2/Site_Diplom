@@ -33,13 +33,12 @@ try {
 
     $db = (new Database())->getConnection();
 
-    // Routes via .htaccess:
     // GET  /reviews/product/{id} -> reviews.php?product_id={id}
     // GET  /reviews/user/{id}    -> reviews.php?userId={id}
     // POST /reviews              -> reviews.php
 
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-        // 1) Product reviews: ONLY approved
+        // 1) Product reviews: only approved
         if (isset($_GET['product_id'])) {
             $productId = (int)$_GET['product_id'];
             if ($productId <= 0) {
@@ -69,9 +68,9 @@ try {
             exit;
         }
 
-        // 2) User reviews
-        $userId = isset($_GET['userId']) ? (int)$_GET['userId'] : 0;
-        if ($userId <= 0) {
+        // 2) User reviews – исправлено: userId теперь строка (UUID), не приводится к int
+        $userId = isset($_GET['userId']) ? (string)$_GET['userId'] : '';
+        if (empty($userId)) {
             ob_clean();
             echo json_encode([
                 'success' => true,
@@ -148,9 +147,9 @@ try {
             exit;
         }
 
-        // Optional: prevent duplicate review per user per product
+        // Проверка на существующий отзыв (исправлено: user_id не приводится к int)
         $stmt = $db->prepare("SELECT id, status FROM reviews WHERE user_id = ? AND product_id = ? ORDER BY created_at DESC LIMIT 1");
-        $stmt->execute([(int)$user['id'], $productId]);
+        $stmt->execute([$user['id'], $productId]);
         $existing = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($existing) {
             http_response_code(409);
@@ -163,15 +162,16 @@ try {
             exit;
         }
 
+        // Вставка отзыва (исправлено: user_id не приводится к int)
         $status = 'pending';
         $stmt = $db->prepare("INSERT INTO reviews (user_id, product_id, rating, comment, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
-        $stmt->execute([(int)$user['id'], $productId, $rating, $comment, $status]);
+        $stmt->execute([$user['id'], $productId, $rating, $comment, $status]);
         $newId = (int)$db->lastInsertId();
 
         ob_clean();
         echo json_encode([
             'id' => $newId,
-            'user_id' => (int)$user['id'],
+            'user_id' => $user['id'],        // строка, не число
             'product_id' => $productId,
             'rating' => $rating,
             'comment' => $comment,

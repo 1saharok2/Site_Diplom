@@ -88,7 +88,6 @@ const ProductTabs = ({
   currentUser
 }) => {
   const [activeTab, setActiveTab] = useState('description');
-  const [reviewFormOpen, setReviewFormOpen] = useState(false);
   const [message, setMessage] = useState('');
 
   // Мемоизированные константы
@@ -114,7 +113,6 @@ const ProductTabs = ({
       console.log('📝 Отправка отзыва:', reviewData);
       await onSubmitReview(reviewData);
       setMessage('✅ Отзыв успешно отправлен на модерацию!');
-      setReviewFormOpen(false);
 
       setTimeout(() => {
         setMessage('');
@@ -130,17 +128,7 @@ const ProductTabs = ({
     setActiveTab(tabId);
   }, []);
 
-  const handleOpenReviewForm = useCallback(() => {
-    if (!isAuthenticated) {
-      onWriteReview?.();
-      return;
-    }
-    setReviewFormOpen(true);
-  }, [isAuthenticated, onWriteReview]);
-
-  const handleCloseReviewForm = useCallback(() => {
-    setReviewFormOpen(false);
-  }, []);
+  // Форма отзыва теперь отображается сразу в табе "Отзывы"
 
   // Функция для отображения характеристик
   const renderSpecifications = useCallback(() => {
@@ -301,8 +289,8 @@ const ProductTabs = ({
               </Alert>
             )}
             
-            {/* Кнопка написания отзыва + подсказка */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            {/* Рейтинг + статус отзыва */}
+            <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
               <div>
                 <strong>Рейтинг: </strong>
                 {reviews.length > 0 ? (
@@ -316,21 +304,6 @@ const ProductTabs = ({
                 )}
               </div>
               
-              {!hasUserReviewed && (
-                <div className="d-flex flex-column align-items-end">
-                  <button 
-                    className="btn btn-primary"
-                    onClick={handleOpenReviewForm}
-                  >
-                    Написать отзыв
-                  </button>
-                  {!isAuthenticated && (
-                    <small className="text-muted mt-1">
-                      Чтобы оставить отзыв, войдите в аккаунт
-                    </small>
-                  )}
-                </div>
-              )}
               {hasUserReviewed && (
                 <small className="text-muted">
                   Вы уже оставили отзыв об этом товаре.
@@ -338,21 +311,31 @@ const ProductTabs = ({
               )}
             </div>
 
+            {/* Форма отзыва (сразу на странице) */}
+            {!hasUserReviewed && (
+              <div className="mb-4">
+                <ReviewForm
+                  open={isAuthenticated}
+                  onClose={undefined}
+                  product={product}
+                  productName={product?.name}
+                  onSubmit={handleReviewSubmit}
+                  loading={reviewsLoading}
+                />
+
+                {!isAuthenticated && (
+                  <Alert variant="info" className="mt-3 mb-0">
+                    Чтобы оставить отзыв, войдите в аккаунт.
+                  </Alert>
+                )}
+              </div>
+            )}
+
             {/* Список отзывов */}
             <ReviewList 
               reviews={reviews} 
               loading={reviewsLoading}
               currentUser={currentUser}
-            />
-
-            {/* Форма отзыва */}
-            <ReviewForm
-              open={reviewFormOpen}
-              onClose={handleCloseReviewForm}
-              product={product}
-              productName={product?.name}
-              onSubmit={handleReviewSubmit}
-              loading={reviewsLoading}
             />
           </div>
         );
@@ -389,8 +372,8 @@ const ProductTabs = ({
     }
   }, [
     activeTab, product, reviews, reviewsLoading, message, 
-    reviewFormOpen, isAuthenticated, hasUserReviewed, currentUser,
-    renderSpecifications, handleOpenReviewForm, handleCloseReviewForm, handleReviewSubmit
+    isAuthenticated, hasUserReviewed, currentUser,
+    renderSpecifications, handleReviewSubmit
   ]);
 
   return (

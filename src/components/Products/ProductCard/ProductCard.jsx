@@ -10,7 +10,7 @@ import './ProductCard.css';
 const ProductCard = ({ product }) => {
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const { addToCart } = useCart();
+  const { addToCart, items: cartItems } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { currentUser } = useAuth();
 
@@ -30,6 +30,10 @@ const ProductCard = ({ product }) => {
   } = product;
 
   const isInWishlistState = isInWishlist(productId);
+  const isInCart = Array.isArray(cartItems) && cartItems.some((item) => {
+    const itemProductId = item?.product_id ?? item?.productId ?? item?.product?.id;
+    return Number(itemProductId) === Number(productId);
+  });
 
   // Загрузка рейтинга из отзывов
   useEffect(() => {
@@ -66,6 +70,10 @@ const ProductCard = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
 
+    if (isInCart) {
+      return;
+    }
+
     if (!currentUser || !currentUser.id) {
       alert('Пожалуйста, авторизуйтесь чтобы добавить товар в корзину');
       return;
@@ -73,7 +81,7 @@ const ProductCard = ({ product }) => {
     try {
       setIsAddingToCart(true);
       await addToCart(product.id, 1);
-      setTimeout(() => setIsAddingToCart(false), 2000); // Увеличено до 2 секунд
+      setTimeout(() => setIsAddingToCart(false), 600); // короткая анимация, статус берём из cartItems
     } catch (error) {
       alert('Не удалось добавить товар в корзину: ' + error.message);
       setIsAddingToCart(false);
@@ -173,10 +181,10 @@ const ProductCard = ({ product }) => {
                     variant="primary" 
                     className={`btn-cart ${isAddingToCart ? 'adding' : ''}`}
                     onClick={handleAddToCart}
-                    disabled={isAddingToCart}
+                    disabled={isAddingToCart || isInCart}
                   >
                     <FaShoppingCart className="btn-icon" />
-                    {isAddingToCart ? 'В корзине' : 'В корзину'}
+                    {isInCart ? 'В корзине' : isAddingToCart ? 'Добавляем...' : 'В корзину'}
                   </Button>
                   <Button 
                     variant="outline-secondary" 
