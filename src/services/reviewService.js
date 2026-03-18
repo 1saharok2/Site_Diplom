@@ -31,15 +31,26 @@ export const reviewService = {
   getUserReviews: async (userId) => {
     try {
       console.log(`📥 Запрос отзывов пользователя ${userId}`);
-      
       const response = await apiService.get(`/reviews/user/${userId}`);
       console.log('✅ Ответ отзывов:', response);
-      
-      return response;
-      
+
+      // Если API возвращает { success: true, data: [...] }
+      if (response?.success && Array.isArray(response.data)) {
+        return response.data;
+      }
+      // Если просто массив
+      if (Array.isArray(response)) {
+        return response;
+      }
+      // Если есть поле data (без success)
+      if (Array.isArray(response?.data)) {
+        return response.data;
+      }
+      // В противном случае возвращаем пустой массив
+      return [];
     } catch (error) {
       console.error('❌ Ошибка загрузки отзывов:', error);
-      return { success: false, reviews: [] };
+      return [];
     }
   },
 

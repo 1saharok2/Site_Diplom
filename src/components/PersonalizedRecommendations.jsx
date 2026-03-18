@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
-import ProductCard from './ProductCard'; // ваш компонент карточки
-import './Recommendations.css';
+import ProductCard from '../components/Products/ProductCard/ProductCard'
 
 const PersonalizedRecommendations = ({ currentProductId }) => {
   const [products, setProducts] = useState([]);

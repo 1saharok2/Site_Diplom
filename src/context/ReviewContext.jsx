@@ -40,14 +40,14 @@ export const ReviewProvider = ({ children }) => {
   // Загрузить отзывы пользователя
   const loadUserReviews = useCallback(async () => {
     if (!currentUser) return [];
-
     try {
       setLoading(true);
       const reviewsData = await reviewService.getUserReviews(currentUser.id);
-      setUserReviews(reviewsData);
+      setUserReviews(Array.isArray(reviewsData) ? reviewsData : []);
       return reviewsData;
     } catch (error) {
       console.error('Error loading user reviews:', error);
+      setUserReviews([]);
       return [];
     } finally {
       setLoading(false);
@@ -148,6 +148,16 @@ export const ReviewProvider = ({ children }) => {
     }
   }, [loadModerationReviews]);
 
+  const deleteOwnReview = useCallback(async (reviewId) => {
+    try {
+      await reviewService.deleteReview(reviewId); // предполагается, что такой метод есть
+      setUserReviews(prev => prev.filter(r => r.id !== reviewId));
+    } catch (error) {
+      console.error('❌ Ошибка удаления своего отзыва:', error);
+      throw error;
+    }
+  }, []);
+
   // Удалить отзыв (админ)
   const deleteReview = useCallback(async (reviewId, reason) => {
     try {
@@ -185,6 +195,7 @@ export const ReviewProvider = ({ children }) => {
     createReview,
     approveReview,
     rejectReview,
+    deleteOwnReview,
     deleteReview,
     getReviewStats
   };

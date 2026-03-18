@@ -164,22 +164,6 @@ const CheckoutPage = () => {
         // Также удаляем из localStorage (на всякий случай)
         localStorage.removeItem('current_cart');
         localStorage.removeItem('cart');
-
-        // После clearCart() и перед navigate
-        try {
-          cartItems.forEach(item => {
-            const productId = getProductId(item);
-            if (productId && authUser?.id) {
-              apiService.post('/api/track-action.php', {
-                userId: authUser.id,
-                productId: productId,
-                action: 'purchase'
-              }).catch(err => console.error('Error tracking purchase:', err));
-            }
-          });
-        } catch (trackError) {
-          console.error('Error in purchase tracking:', trackError);
-        }
         
         navigate('/order-success', { 
           state: {
