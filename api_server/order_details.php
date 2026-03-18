@@ -1,9 +1,8 @@
 <?php
-// order_details.php - Получение деталей конкретного заказа по ID
-
+// orders.php
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *'); 
-header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -11,90 +10,151 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Метод не разрешен.'], JSON_UNESCAPED_UNICODE);
-    exit();
-}
-
 require_once 'config/database.php'; 
 $db = (new Database())->getConnection();
 
-// Получаем ID заказа из URL-параметра
-// Пример запроса: /api/order_details.php?id=84
-$orderId = $_GET['id'] ?? null;
+$input = file_get_contents('php://input');
+$data = json_decode($input, true);
 
-if (empty($orderId) || !is_numeric($orderId)) {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($data)) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Неверный или отсутствующий ID заказа.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'message' => 'Данные не получены'], JSON_UNESCAPED_UNICODE);
     exit();
 }
 
-try {
-    // 1. Получаем основную информацию о заказе
-    $orderQuery = "
-        SELECT 
-            id, order_number, total_amount, status, 
-            customer_name, customer_phone, customer_email,
-            shipping_address, payment_method, created_at, user_id
-        FROM 
-            orders 
-        WHERE 
-            id = ?
-    ";
-    
-    $orderStmt = $db->prepare($orderQuery);
-    $orderStmt->execute([$orderId]);
-    $order = $orderStmt->fetch(PDO::FETCH_ASSOC);
+// 1. Подготовка данных из запроса
+$orderNumber = 'ORDER-' . time() . '-' . rand(100, 999);
+$userId = $data['userId'] ?? null;
+$fName = $data['first_name'] ?? 'Пусто';
+$lName = $data['last_name'] ?? 'Пусто';
+$customerName = trim($fName . ' ' . $lName);
+$customerPhone = $data['phone'] ?? 'Нет телефона';
+$customerEmail = $data['email'] ?? 'Не указан';
+$city = $data['city'] ?? '';
+$address = $data['address'] ?? '';
+$shippingAddress = trim($address . ($city ? ', ' . $city : ''));
+$totalAmountFromFront = (float)($data['total_amount'] ?? 0);
+$paymentMethod = $data['payment_method'] ?? 'card';
+$items = $data['items'] ?? [];
 
-    if (!$order) {
-        http_response_code(404);
-        echo json_encode(['success' => false, 'message' => 'Заказ не найден.'], JSON_UNESCAPED_UNICODE);
-        exit();
+$db->beginTransaction();
+
+try {
+    $calculatedTotal = 0;
+    $validatedItems = [];
+    
+    // 2. Валидация товаров, проверка остатка и расчёт суммы
+    foreach ($items as $item) {
+        $productId = $item['product_id'] ?? 0;
+        $quantity = $item['quantity'] ?? 1;
+
+        if ((int)$productId <= 0) continue;
+
+        $productQuery = "SELECT name, price, stock FROM products WHERE id = ?";
+        $productStmt = $db->prepare($productQuery);
+        $productStmt->execute([$productId]);
+        $product = $productStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($product) {
+            // Проверка наличия достаточного количества
+            if ($product['stock'] < $quantity) {
+                throw new Exception("Недостаточно товара на складе: {$product['name']}. Доступно: {$product['stock']}");
+            }
+
+            $price = (float)$product['price'];
+            $calculatedTotal += $price * $quantity;
+            $validatedItems[] = [
+                'id' => $productId,
+                'name' => $product['name'],
+                'quantity' => $quantity,
+                'price' => $price
+            ];
+        }
     }
 
-    // 2. Получаем товары в заказе
-    $itemsQuery = "
-        SELECT 
-            product_id, product_name, quantity, price 
-        FROM 
-            order_items 
-        WHERE 
-            order_id = ?
-    ";
+    // Используем расчетную сумму, если она > 0, иначе ту, что пришла с фронта
+    $finalTotal = $calculatedTotal > 0 ? $calculatedTotal : $totalAmountFromFront;
+
+    // 3. Вставка в таблицу orders
+    $stmt = $db->prepare("
+        INSERT INTO orders (
+            order_number, 
+            customer_name, 
+            customer_phone, 
+            customer_email, 
+            shipping_address, 
+            total_amount, 
+            payment_method, 
+            status, 
+            user_id, 
+            created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, NOW())
+    ");
     
-    $itemsStmt = $db->prepare($itemsQuery);
-    $itemsStmt->execute([$orderId]);
-    $orderItems = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // 3. Формируем ответ
-    // Декодируем адрес из JSON (если он сохранен в таком формате)
-    $shippingAddress = json_decode($order['shipping_address'], true) ?? $order['shipping_address'];
+    $stmt->execute([
+        $orderNumber,      
+        $customerName,     
+        $customerPhone,    
+        $customerEmail,    
+        $shippingAddress,  
+        $finalTotal,       
+        $paymentMethod,    
+        $userId            
+    ]);
     
-    $response = [
-        'id' => (int)$order['id'],
-        'order_number' => $order['order_number'],
-        'total_amount' => (float)$order['total_amount'],
-        'status' => $order['status'],
-        'customer_name' => $order['customer_name'],
-        'customer_phone' => $order['customer_phone'],
-        'customer_email' => $order['customer_email'],
-        'shipping_address' => $shippingAddress,
-        'payment_method' => $order['payment_method'],
-        'created_at' => $order['created_at'],
-        'user_id' => $order['user_id'],
-        'items' => $orderItems
-    ];
+    $orderId = $db->lastInsertId();
 
-    http_response_code(200);
-    echo json_encode(['success' => true, 'data' => $response], JSON_UNESCAPED_UNICODE);
+    // 4. Вставка товаров в order_items
+    if (!empty($validatedItems)) {
+        $stmt_item = $db->prepare("
+            INSERT INTO order_items (order_id, product_id, product_name, quantity, price, name) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        
+        foreach ($validatedItems as $item) {
+            $stmt_item->execute([
+                $orderId, 
+                $item['id'], 
+                $item['name'], 
+                $item['quantity'], 
+                $item['price'],
+                $item['name']  
+            ]);
+        }
+    }
 
-} catch (PDOException $e) {
-    error_log("Database Error fetching order {$orderId}: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Ошибка базы данных.'], JSON_UNESCAPED_UNICODE);
+    // 5. Обновление остатков товаров на складе
+    foreach ($validatedItems as $item) {
+        $updateStock = $db->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+        $updateStock->execute([$item['quantity'], $item['id']]);
+    }
+
+    // 6. Очистка корзины
+    $db->prepare("DELETE FROM user_cart WHERE user_id = ?")->execute([$userId]);
+
+    $db->commit();
+    
+    echo json_encode([
+        'success' => true,
+        'orderId' => (int)$orderId,
+        'orderNumber' => $orderNumber,
+        'order_number' => $orderNumber, 
+        'message' => 'Заказ успешно создан',
+        'total_amount' => $finalTotal,
+        'items_count' => count($validatedItems)
+    ], JSON_UNESCAPED_UNICODE);
+    exit();
+
 } catch (Exception $e) {
+    if ($db->inTransaction()) $db->rollBack();
+    
+    error_log("Order creation error: " . $e->getMessage() . " Data: " . json_encode($data));
+    
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Неизвестная ошибка: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Ошибка создания заказа: ' . $e->getMessage(),
+        'debug_data' => $data // Только для отладки, удалить в продакшене
+    ], JSON_UNESCAPED_UNICODE);
 }
 ?>

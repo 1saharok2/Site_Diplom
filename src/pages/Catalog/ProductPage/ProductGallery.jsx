@@ -1,114 +1,84 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { Spinner } from 'react-bootstrap';
 import { FaChevronLeft, FaChevronRight, FaExpand, FaImage, FaTimes } from 'react-icons/fa';
-import './ProductPage_css/ProductGallery.css'; // убедитесь, что путь правильный
+import './ProductPage_css/ProductGallery.css';
 
-/**
- * Компонент галереи товара с поддержкой нескольких изображений.
- * Поддерживает:
- * - Основное изображение с увеличением по клику
- * - Миниатюры под основным для переключения
- * - Кнопки "предыдущее/следующее"
- * - Свайпы в модальном окне
- * - Автоматическое переключение при ошибке загрузки
- */
 const ProductGallery = ({ product }) => {
-  const [showModal, setShowModal] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [images, setImages] = useState([]);
-  const [imageLoadState, setImageLoadState] = useState({
-    loading: true,
-    error: false
-  });
+  const [showModal, setShowModal] = useState(false);
+  const [imageLoadState, setImageLoadState] = useState({ loading: true, error: false });
 
   const imageRef = useRef(null);
   const modalContentRef = useRef(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
-  // Нормализация изображений – надёжное извлечение массива URL
-  const normalizedImages = useMemo(() => {
+  // Вычисляем массив изображений напрямую из пропса
+  const images = useMemo(() => {
     if (!product) return [];
 
-    let rawImages = [];
+    let result = [];
 
     // 1. Прямой массив images
     if (product.images && Array.isArray(product.images)) {
-      rawImages = product.images;
+      result = product.images.filter(url => url && typeof url === 'string' && url.trim() !== '');
+      if (result.length > 0) return result;
     }
+
     // 2. image_url может быть массивом, строкой JSON или простой строкой
-    else if (product.image_url) {
+    if (product.image_url) {
       if (Array.isArray(product.image_url)) {
-        rawImages = product.image_url;
+        result = product.image_url.filter(url => url && typeof url === 'string' && url.trim() !== '');
+        if (result.length > 0) return result;
       } else if (typeof product.image_url === 'string') {
         try {
-          // Пытаемся распарсить JSON
           const parsed = JSON.parse(product.image_url);
-          rawImages = Array.isArray(parsed) ? parsed : [product.image_url];
-        } catch (e) {
-          // Не JSON – просто строка
-          rawImages = [product.image_url];
+          if (Array.isArray(parsed)) {
+            result = parsed.filter(url => url && typeof url === 'string' && url.trim() !== '');
+            if (result.length > 0) return result;
+          } else {
+            return [product.image_url];
+          }
+        } catch {
+          return [product.image_url];
         }
       }
     }
+
     // 3. Отдельное поле image (устаревшее)
-    else if (product.image) {
-      rawImages = [product.image];
+    if (product.image && typeof product.image === 'string') {
+      return [product.image];
     }
 
-    // Фильтруем пустые строки и добавляем базовый URL при необходимости
-    const baseUrl = 'https://electronic.tw1.ru'; // замените на ваш домен или оставьте пустым для относительных путей
-    return rawImages
-      .filter(url => url && typeof url === 'string' && url.trim() !== '')
-      .map(url => {
-        const trimmed = url.trim();
-        if (trimmed.startsWith('http')) {
-          return trimmed; // уже полный URL
-        }
-        if (trimmed.startsWith('/')) {
-          return baseUrl + trimmed; // абсолютный путь
-        }
-        return baseUrl + '/images/' + trimmed; // относительный путь
-      });
+    return [];
   }, [product]);
 
-  // При изменении массива сбрасываем индекс и состояние загрузки
+  // Сброс индекса при изменении массива изображений
   useEffect(() => {
-    console.log('Normalized images:', normalizedImages);
-    setImages(normalizedImages);
     setCurrentIndex(0);
     setImageLoadState({ loading: true, error: false });
-  }, [normalizedImages]);
-
-  // Сброс загрузки при смене индекса
-  useEffect(() => {
-    if (images.length === 0) return;
-    setImageLoadState({ loading: true, error: false });
-  }, [currentIndex, images.length]);
+  }, [images]);
 
   // Обработка загрузки главного изображения
   useEffect(() => {
     if (!imageRef.current || images.length === 0) return;
 
     const img = imageRef.current;
-    
+
     const handleLoad = () => {
       setImageLoadState({ loading: false, error: false });
     };
-    
+
     const handleError = () => {
-      // Если есть ещё изображения, переключаемся на следующее
       if (images.length > 1 && currentIndex < images.length - 1) {
         setCurrentIndex(prev => prev + 1);
       } else {
-        // Иначе показываем ошибку
         setImageLoadState({ loading: false, error: true });
       }
     };
 
     if (img.complete && img.naturalHeight !== 0) {
-      // Уже загружено
       setImageLoadState({ loading: false, error: false });
     } else {
       img.addEventListener('load', handleLoad);
@@ -136,6 +106,26 @@ const ProductGallery = ({ product }) => {
     };
   }, [showModal]);
 
+  const nextImage = useCallback(() => {
+    if (images.length <= 1) return;
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  }, [images.length]);
+
+  const prevImage = useCallback(() => {
+    if (images.length <= 1) return;
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  }, [images.length]);
+
+  const openModal = useCallback(() => {
+    if (images.length > 0 && images[currentIndex]) {
+      setShowModal(true);
+    }
+  }, [images, currentIndex]);
+
+  const closeModal = useCallback(() => {
+    setShowModal(false);
+  }, []);
+
   // Обработка свайпов для модалки
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
@@ -158,35 +148,9 @@ const ProductGallery = ({ product }) => {
     touchEndX.current = 0;
   };
 
-  const nextImage = useCallback(() => {
-    if (images.length <= 1) return;
-    setCurrentIndex((prev) => (prev + 1) % images.length);
-  }, [images.length]);
-
-  const prevImage = useCallback(() => {
-    if (images.length <= 1) return;
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-  }, [images.length]);
-
-  const selectImage = useCallback((index) => {
-    if (index === currentIndex) return;
-    setCurrentIndex(index);
-  }, [currentIndex]);
-
-  const openModal = useCallback(() => {
-    if (images.length > 0 && images[currentIndex]) {
-      setShowModal(true);
-    }
-  }, [images, currentIndex]);
-
-  const closeModal = useCallback(() => {
-    setShowModal(false);
-  }, []);
-
   const hasImages = images.length > 0;
   const mainImage = hasImages ? images[currentIndex] : null;
 
-  // Если нет изображений
   if (!hasImages) {
     return (
       <div className="product-gallery">
@@ -214,7 +178,7 @@ const ProductGallery = ({ product }) => {
               <div>Загрузка...</div>
             </div>
           )}
-          
+
           <img
             ref={imageRef}
             src={mainImage}
@@ -228,15 +192,14 @@ const ProductGallery = ({ product }) => {
             }}
             fetchPriority="high"
           />
-          
+
           {imageLoadState.error && (
             <div className="image-error">
               <FaImage size={48} className="mb-3" />
               <p>Ошибка загрузки</p>
             </div>
           )}
-          
-          {/* Кнопки навигации (если несколько изображений) */}
+
           {images.length > 1 && !imageLoadState.error && (
             <>
               <button className="nav-btn prev-btn" onClick={prevImage} aria-label="Предыдущее">
@@ -247,15 +210,14 @@ const ProductGallery = ({ product }) => {
               </button>
             </>
           )}
-          
-          {/* Кнопка увеличения (если есть изображение) */}
+
           {!imageLoadState.loading && !imageLoadState.error && (
             <button className="expand-btn" onClick={openModal} aria-label="Увеличить">
               <FaExpand />
             </button>
           )}
         </div>
-        
+
         {images.length > 1 && (
           <div className="image-counter">
             {currentIndex + 1} / {images.length}
@@ -271,7 +233,7 @@ const ProductGallery = ({ product }) => {
               <div
                 key={idx}
                 className={`thumbnail-item ${idx === currentIndex ? 'active' : ''}`}
-                onClick={() => selectImage(idx)}
+                onClick={() => setCurrentIndex(idx)}
               >
                 <img
                   src={imgUrl}
@@ -280,7 +242,7 @@ const ProductGallery = ({ product }) => {
                   loading="lazy"
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = 'https://electronic.tw1.ru/images/placeholder.jpg'; // заглушка
+                    e.target.src = 'https://electronic.tw1.ru/images/placeholder.jpg';
                   }}
                 />
               </div>

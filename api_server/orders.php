@@ -32,10 +32,10 @@ $customerPhone = $data['phone'] ?? 'Нет телефона';
 $customerEmail = $data['email'] ?? 'Не указан';
 $city = $data['city'] ?? '';
 $address = $data['address'] ?? '';
-$shippingAddress = trim($address . ($city ? ', ' . $city : '')); // Объединяем адрес и город
+$shippingAddress = trim($address . ($city ? ', ' . $city : ''));
 $totalAmountFromFront = (float)($data['total_amount'] ?? 0);
 $paymentMethod = $data['payment_method'] ?? 'card';
-$items = $data['items'] ?? []; // Получаем товары из запроса
+$items = $data['items'] ?? [];
 
 $db->beginTransaction();
 
@@ -43,19 +43,25 @@ try {
     $calculatedTotal = 0;
     $validatedItems = [];
     
-    // 2. Валидация товаров и расчет суммы
+    // 2. Валидация товаров, проверка остатка и расчёт суммы
     foreach ($items as $item) {
         $productId = $item['product_id'] ?? 0;
         $quantity = $item['quantity'] ?? 1;
 
         if ((int)$productId <= 0) continue;
 
-        $productQuery = "SELECT name, price FROM products WHERE id = ?";
+        // Получаем информацию о товаре, включая остаток
+        $productQuery = "SELECT name, price, stock FROM products WHERE id = ?";
         $productStmt = $db->prepare($productQuery);
         $productStmt->execute([$productId]);
         $product = $productStmt->fetch(PDO::FETCH_ASSOC);
 
         if ($product) {
+            // Проверка наличия достаточного количества
+            if ($product['stock'] < $quantity) {
+                throw new Exception("Недостаточно товара на складе: {$product['name']}. Доступно: {$product['stock']}");
+            }
+
             $price = (float)$product['price'];
             $calculatedTotal += $price * $quantity;
             $validatedItems[] = [
@@ -67,10 +73,14 @@ try {
         }
     }
 
+    if (empty($validatedItems)) {
+        throw new Exception("Нет товаров для оформления заказа");
+    }
+
     // Используем расчетную сумму, если она > 0, иначе ту, что пришла с фронта
     $finalTotal = $calculatedTotal > 0 ? $calculatedTotal : $totalAmountFromFront;
 
-    // 3. Вставка в таблицу orders (каждое поле в свою колонку)
+    // 3. Вставка заказа
     $stmt = $db->prepare("
         INSERT INTO orders (
             order_number, 
@@ -100,25 +110,29 @@ try {
     $orderId = $db->lastInsertId();
 
     // 4. Вставка товаров в order_items
-    if (!empty($validatedItems)) {
-        $stmt_item = $db->prepare("
-            INSERT INTO order_items (order_id, product_id, product_name, quantity, price, name) 
-            VALUES (?, ?, ?, ?, ?, ?)
-        ");
-        
-        foreach ($validatedItems as $item) {
-            $stmt_item->execute([
-                $orderId, 
-                $item['id'], 
-                $item['name'], // product_name
-                $item['quantity'], 
-                $item['price'],
-                $item['name']  // name (дублируем для совместимости)
-            ]);
-        }
+    $stmt_item = $db->prepare("
+        INSERT INTO order_items (order_id, product_id, product_name, quantity, price, name) 
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
+    
+    foreach ($validatedItems as $item) {
+        $stmt_item->execute([
+            $orderId, 
+            $item['id'], 
+            $item['name'], 
+            $item['quantity'], 
+            $item['price'],
+            $item['name']  
+        ]);
     }
 
-    // 5. Очистка корзины
+    // 5. ОБНОВЛЕНИЕ ОСТАТКОВ НА СКЛАДЕ
+    foreach ($validatedItems as $item) {
+        $updateStock = $db->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+        $updateStock->execute([$item['quantity'], $item['id']]);
+    }
+
+    // 6. Очистка корзины пользователя
     $db->prepare("DELETE FROM user_cart WHERE user_id = ?")->execute([$userId]);
 
     $db->commit();
@@ -137,14 +151,13 @@ try {
 } catch (Exception $e) {
     if ($db->inTransaction()) $db->rollBack();
     
-    // Логирование ошибки для отладки
     error_log("Order creation error: " . $e->getMessage() . " Data: " . json_encode($data));
     
     http_response_code(500);
     echo json_encode([
         'success' => false, 
-        'message' => 'Ошибка создания заказа: ' . $e->getMessage(),
-        'debug_data' => $data // Только для отладки, удалить в продакшене
+        'message' => 'Ошибка создания заказа: ' . $e->getMessage()
+        // В продакшене уберите 'debug_data'
     ], JSON_UNESCAPED_UNICODE);
 }
 ?>

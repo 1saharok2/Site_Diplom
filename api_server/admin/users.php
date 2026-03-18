@@ -41,11 +41,16 @@ try {
     // ======== PUT — обновление пользователя ========
     //
     if ($method === 'PUT') {
+        error_log("===== НАЧАЛО PUT ЗАПРОСА =====");
+
         // получаем ID из URL: /api/admin/users/{id}
         $uri = explode('/', trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'));
         $userId = end($uri);
 
+        error_log("PUT - ID пользователя: " . $userId);
+
         if (empty($userId)) {
+            error_log("PUT - ОШИБКА: ID пользователя не передан");
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'ID пользователя не передан']);
             exit;
@@ -55,7 +60,10 @@ try {
         $raw = file_get_contents("php://input");
         $data = json_decode($raw, true);
 
+        error_log("PUT - Получены данные: " . print_r($data, true));
+
         if (!$data) {
+            error_log("PUT - ОШИБКА: Некорректные данные JSON");
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Некорректные данные']);
             exit;
@@ -63,27 +71,31 @@ try {
 
         // ✅ Поддержка старого поля "name"
         if (isset($data['name']) && !isset($data['first_name'])) {
+            error_log("PUT - Обнаружено поле 'name', конвертируем в first_name/last_name");
             $fullName = trim($data['name']);
             $parts = preg_split('/\s+/', $fullName, 2); // разделяем по первому пробелу
             $data['first_name'] = $parts[0];
             if (count($parts) > 1 && !isset($data['last_name'])) {
                 $data['last_name'] = $parts[1];
             }
+            error_log("PUT - После конвертации: first_name='{$data['first_name']}', last_name='{$data['last_name']}'");
         }
 
         // динамическое обновление только переданных полей
         $fields = [];
         $params = [];
 
-        $allowed = ['first_name', 'last_name', 'email', 'phone', 'address', 'role'];
+        $allowed = ['first_name', 'last_name', 'email', 'phone', 'address', 'role', 'is_active'];
         foreach ($allowed as $key) {
             if (isset($data[$key])) {
                 $fields[] = "$key = ?";
                 $params[] = $data[$key];
+                error_log("PUT - Поле для обновления: $key = " . $data[$key]);
             }
         }
 
         if (empty($fields)) {
+            error_log("PUT - ОШИБКА: Нет данных для обновления");
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Нет данных для обновления']);
             exit;
@@ -91,8 +103,21 @@ try {
 
         $params[] = $userId;
         $query = "UPDATE users SET " . implode(', ', $fields) . " WHERE id = ?";
+        error_log("PUT - SQL запрос: " . $query);
+        error_log("PUT - Параметры: " . print_r($params, true));
         $stmt = $db->prepare($query);
         $stmt->execute($params);
+
+        $rowCount = $stmt->rowCount();
+        error_log("PUT - Затронуто строк: " . $rowCount);
+    
+        // Можно также получить данные пользователя после обновления для проверки
+        if ($rowCount > 0) {
+            $checkStmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+            $checkStmt->execute([$userId]);
+            $updatedUser = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            error_log("PUT - Данные пользователя после обновления: " . print_r($updatedUser, true));
+        }
 
         echo json_encode([
             'success' => true,
@@ -103,6 +128,7 @@ try {
             'updated_fields' => $fields,
             'affected_rows' => $stmt->rowCount()
         ], JSON_UNESCAPED_UNICODE);
+        error_log("===== КОНЕЦ PUT ЗАПРОСА =====\n");
         exit;
     }
 

@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ALL);
-ini_set('display_errors', 0);
+ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 
 header('Content-Type: application/json');
@@ -25,70 +25,87 @@ try {
     $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
     
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-        switch ($action) {
-            case 'pending':
-                // Получаем отзывы на модерации
-                $query = "SELECT r.*, u.email as user_email, p.name as product_name 
-                         FROM reviews r 
-                         LEFT JOIN users u ON r.user_id = u.id 
-                         LEFT JOIN products p ON r.product_id = p.id 
-                         WHERE r.status = 'pending' 
-                         ORDER BY r.created_at DESC";
-                $stmt = $db->prepare($query);
-                $stmt->execute();
-                $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                
-                ob_clean();
-                echo json_encode($reviews);
-                break;
-                
-            case 'stats':
-                // Статистика отзывов
-                $stats = [];
-                
-                // Общее количество отзывов
-                $query = "SELECT COUNT(*) as count FROM reviews";
-                $stmt = $db->prepare($query);
-                $stmt->execute();
-                $stats['total'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-                
-                // Отзывы на модерации
-                $query = "SELECT COUNT(*) as count FROM reviews WHERE status = 'pending'";
-                $stmt = $db->prepare($query);
-                $stmt->execute();
-                $stats['pending'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-                
-                // Одобренные отзывы
-                $query = "SELECT COUNT(*) as count FROM reviews WHERE status = 'approved'";
-                $stmt = $db->prepare($query);
-                $stmt->execute();
-                $stats['approved'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-                
-                // Отклоненные отзывы
-                $query = "SELECT COUNT(*) as count FROM reviews WHERE status = 'rejected'";
-                $stmt = $db->prepare($query);
-                $stmt->execute();
-                $stats['rejected'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-                
-                ob_clean();
-                echo json_encode($stats);
-                break;
-                
-            default:
-                // Получаем все отзывы
-                $query = "SELECT r.*, u.email as user_email, p.name as product_name 
-                         FROM reviews r 
-                         LEFT JOIN users u ON r.user_id = u.id 
-                         LEFT JOIN products p ON r.product_id = p.id 
-                         ORDER BY r.created_at DESC";
-                $stmt = $db->prepare($query);
-                $stmt->execute();
-                $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                
-                ob_clean();
-                echo json_encode($reviews);
-                break;
+        if ($action === 'stats') {
+            $stats = ['total' => 0, 'pending' => 0, 'approved' => 0, 'rejected' => 0];
+            $query = "SELECT status, COUNT(*) as count FROM reviews GROUP BY status";
+            $stmt = $db->prepare($query);
+            $stmt->execute();
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $stats[$row['status']] = (int)$row['count'];
+                $stats['total'] += (int)$row['count'];
+            }
+            ob_clean();
+            echo json_encode($stats);
+            exit;
         }
+
+        // Базовая часть запроса
+        $baseQuery = "SELECT 
+            r.id,
+            r.rating,
+            r.comment,
+            r.status,
+            r.created_at,
+            r.rejection_reason,
+            u.id as user_id,
+            u.email as user_email,
+            CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, '')) as user_name,
+            p.id as product_id,
+            p.name as product_name,
+            p.image_url as product_image
+        FROM reviews r
+        LEFT JOIN users u ON r.user_id = u.id
+        LEFT JOIN products p ON r.product_id = p.id";
+
+        // Добавляем WHERE в зависимости от action
+        if ($action === 'pending') {
+            $query = $baseQuery . " WHERE r.status = 'pending'";
+        } elseif ($action === 'approved') {
+            $query = $baseQuery . " WHERE r.status = 'approved'";
+        } elseif ($action === 'rejected') {
+            $query = $baseQuery . " WHERE r.status = 'rejected'";
+        } else {
+            $query = $baseQuery;
+        }
+
+        $query .= " ORDER BY r.created_at DESC";
+
+        $stmt = $db->prepare($query);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Преобразуем в формат с вложенными объектами
+        $reviews = [];
+        foreach ($rows as $row) {
+            $userName = trim($row['user_name']);
+            if (empty($userName)) {
+                $userName = $row['user_email'] ?? 'Аноним';
+            }
+
+            $reviews[] = [
+                'id' => $row['id'],
+                'rating' => (int)$row['rating'],
+                'comment' => $row['comment'],
+                'status' => $row['status'],
+                'rejection_reason' => $row['rejection_reason'],
+                'created_at' => $row['created_at'],
+                'user' => [
+                    'id' => $row['user_id'],
+                    'name' => $userName,
+                    'email' => $row['user_email'],
+                    'avatar' => null 
+                ],
+                'product' => [
+                    'id' => $row['product_id'],
+                    'name' => $row['product_name'],
+                    'image' => $row['product_image']
+                ]
+            ];
+        }
+
+        ob_clean();
+        echo json_encode($reviews, JSON_UNESCAPED_UNICODE);
+        exit;
     }
     
     if ($_SERVER['REQUEST_METHOD'] === 'PUT') {

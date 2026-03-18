@@ -93,6 +93,7 @@ const ProductInfo = ({ product, onVariantChange }) => {
   const [selectedStorage, setSelectedStorage] = useState('');
   const [exactMatch, setExactMatch] = useState(null);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [variantLoading, setVariantLoading] = useState(false);
 
   // Состояния для рейтинга, вычисленного из отзывов
   const [averageRating, setAverageRating] = useState(0);
@@ -135,6 +136,21 @@ const ProductInfo = ({ product, onVariantChange }) => {
     const specs = normalizeSpecifications(variant.specifications);
     return specs[key] || '';
   }, []);
+
+  const applyVariantChange = useCallback(async (variant) => {
+    if (!variant?.id) return;
+    setVariantLoading(true);
+    try {
+      const fullProduct = await categoryService.getProductById(variant.id);
+      setSelectedVariant(fullProduct);
+      onVariantChange?.(fullProduct);
+    } catch (e) {
+      setSelectedVariant(variant);
+      onVariantChange?.(variant);
+    } finally {
+      setVariantLoading(false);
+    }
+  }, [onVariantChange]);
 
   // Загрузка вариантов товара
   useEffect(() => {
@@ -255,15 +271,14 @@ const ProductInfo = ({ product, onVariantChange }) => {
     }
     
     if (match) {
-      setSelectedVariant(match);
-      onVariantChange?.(match);
+      applyVariantChange(match);
       
       const matchStorage = normalizeStorage(getSpecValue(match, 'storage'));
       if (matchStorage && matchStorage !== selectedStorage) {
         setSelectedStorage(matchStorage);
       }
     }
-  }, [selectedStorage, variants, getSpecValue, onVariantChange]);
+  }, [selectedStorage, variants, getSpecValue, applyVariantChange]);
 
   const handleStorageSelect = useCallback((storage) => {
     const normalizedStorage = normalizeStorage(storage);
@@ -284,15 +299,14 @@ const ProductInfo = ({ product, onVariantChange }) => {
     }
     
     if (match) {
-      setSelectedVariant(match);
-      onVariantChange?.(match);
+      applyVariantChange(match);
       
       const matchColor = normalizeColor(getSpecValue(match, 'color'));
       if (matchColor && matchColor !== selectedColor) {
         setSelectedColor(matchColor);
       }
     }
-  }, [selectedColor, variants, getSpecValue, onVariantChange]);
+  }, [selectedColor, variants, getSpecValue, applyVariantChange]);
 
   // Поиск точного совпадения
   useEffect(() => {
@@ -323,13 +337,12 @@ const ProductInfo = ({ product, onVariantChange }) => {
       setExactMatch(foundExactMatch || null);
       
       if (foundExactMatch && foundExactMatch.id !== selectedVariant.id) {
-        setSelectedVariant(foundExactMatch);
-        onVariantChange?.(foundExactMatch);
+        applyVariantChange(foundExactMatch);
       }
     } else {
       setExactMatch(null);
     }
-  }, [selectedColor, selectedStorage, variants, onVariantChange, selectedVariant.id]);
+  }, [selectedColor, selectedStorage, variants, applyVariantChange, selectedVariant.id]);
 
   // Мемоизированные значения для отображения
   const displayStorage = useCallback((storage) => {

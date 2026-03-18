@@ -1,51 +1,5 @@
 import { apiService } from './api';
 
-const isValidUrl = (url) => {
-  if (!url || typeof url !== 'string' || url.trim() === '') return false;
-  
-  // Проверяем абсолютные URL
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    try {
-      const parsedUrl = new URL(url);
-      return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  }
-  
-  // Проверяем относительные пути
-  if (url.startsWith('/')) {
-    return true;
-  }
-  
-  return false;
-};
-
-const processImageUrls = (imageData) => {
-  if (!imageData) return [];
-  
-  if (Array.isArray(imageData)) {
-    return imageData.filter(url => url && typeof url === 'string');
-  }
-  
-  if (typeof imageData === 'string') {
-    try {
-      const parsed = JSON.parse(imageData);
-      if (Array.isArray(parsed)) {
-        return parsed.filter(url => url && typeof url === 'string');
-      } else if (typeof parsed === 'string') {
-        return [parsed];
-      }
-    } catch (e) {
-      if (imageData.startsWith('http') || imageData.startsWith('/')) {
-        return [imageData];
-      }
-    }
-  }
-  
-  return [];
-};
-
 export const productService = {
   // Получить все товары
   getProducts: async () => {
@@ -53,29 +7,26 @@ export const productService = {
       const products = await apiService.get('/products');
       console.log('📦 Raw products from API:', products);
       
-      return products.map(product => {
-        const processedImages = processImageUrls(product.image_url || product.images);
-        
-        return {
-          id: product.id,
-          name: product.name,
-          slug: product.slug,
-          price: product.price || 0,
-          oldPrice: product.old_price || null,
-          discount: product.discount || 0,
-          rating: product.rating || 0,
-          reviewsCount: product.reviews_count || 0,
-          inStock: product.stock > 0,
-          stock: product.stock || 0,
-          isNew: product.is_new || false,
-          category: product.category_slug || product.category,
-          description: product.description || '',
-          brand: product.brand || '',
-          specifications: product.specifications || {},
-          image_url: processedImages,
-          images: processedImages
-        };
-      });
+      return products.map(product => ({
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price: product.price || 0,
+        oldPrice: product.old_price || null,
+        discount: product.discount || 0,
+        rating: product.rating || 0,
+        reviewsCount: product.reviews_count || 0,
+        inStock: product.stock > 0,
+        stock: product.stock || 0,
+        isNew: product.is_new || false,
+        category: product.category_slug || product.category,
+        description: product.description || '',
+        brand: product.brand || '',
+        specifications: product.specifications || {},
+        // Просто берём images как есть, если это массив
+        images: Array.isArray(product.images) ? product.images : 
+               (product.image_url ? [product.image_url] : [])
+      }));
     } catch (error) {
       console.error('❌ Error fetching products:', error);
       return [];
@@ -88,8 +39,15 @@ export const productService = {
       const product = await apiService.get(`/products/${id}`);
       console.log(`📦 Product ${id} from API:`, product);
       
-      const processedImages = processImageUrls(product.image_url || product.images);
-      console.log(`🖼️ Processed images for product ${id}:`, processedImages);
+      // Простое извлечение изображений
+      let images = [];
+      if (Array.isArray(product.images)) {
+        images = product.images;
+        console.log(`✅ Используем массив images:`, images);
+      } else if (product.image_url) {
+        images = [product.image_url];
+        console.log(`✅ Используем одиночное image_url:`, images);
+      }
 
       return {
         id: product.id,
@@ -106,8 +64,7 @@ export const productService = {
         isNew: product.is_new || false,
         category: product.category_slug || product.category,
         categoryName: product.category_slug || product.category,
-        image_url: processedImages,
-        images: processedImages,
+        images: images,  // Только images, без дублирования
         specifications: product.specifications || {},
         brand: product.brand || ''
       };
@@ -123,8 +80,12 @@ export const productService = {
       const product = await apiService.get(`/products/slug/${slug}`);
       console.log(`📦 Product ${slug} from API:`, product);
       
-      const processedImages = processImageUrls(product.image_url || product.images);
-      console.log(`🖼️ Processed images for product ${slug}:`, processedImages);
+      let images = [];
+      if (Array.isArray(product.images)) {
+        images = product.images;
+      } else if (product.image_url) {
+        images = [product.image_url];
+      }
 
       return {
         id: product.id,
@@ -141,8 +102,7 @@ export const productService = {
         isNew: product.is_new || false,
         category: product.category_slug || product.category,
         categoryName: product.category_slug || product.category,
-        image_url: processedImages,
-        images: processedImages,
+        images: images,
         specifications: product.specifications || {},
         brand: product.brand || ''
       };
@@ -159,7 +119,12 @@ export const productService = {
       console.log(`📦 Products for category ${categorySlug}:`, products);
       
       return products.map(product => {
-        const processedImages = processImageUrls(product.image_url || product.images);
+        let images = [];
+        if (Array.isArray(product.images)) {
+          images = product.images;
+        } else if (product.image_url) {
+          images = [product.image_url];
+        }
         
         return {
           id: product.id,
@@ -174,8 +139,7 @@ export const productService = {
           stock: product.stock || 0,
           isNew: product.is_new || false,
           category: product.category_slug || product.category,
-          images: processedImages.length > 0 ? processedImages : 
-                 ['/images/placeholder.jpg'],
+          images: images.length > 0 ? images : ['/images/placeholder.jpg'],
           description: product.description || '',
           brand: product.brand || '',
           specifications: product.specifications || {}
