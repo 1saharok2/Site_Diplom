@@ -8,6 +8,8 @@ import { useReviews } from '../../../context/ReviewContext';
 import ProductGallery from './ProductGallery';
 import ProductInfo from './ProductInfo';
 import ProductTabs from './ProductsTabs';
+import { apiService } from '../../../services/api';
+import PersonalizedRecommendations from '../../../components/PersonalizedRecommendations';
 import './ProductPage_css/ProductPage.css';
 
 // Прямое соответствие slug → русское название (из вашей базы данных)
@@ -164,6 +166,24 @@ const ProductPage = () => {
     currentUser
   ]);
 
+    // Трекинг просмотра товара
+  useEffect(() => {
+    if (product?.id && currentUser?.id) {
+      const trackView = async () => {
+        try {
+          await apiService.post('/api/track-action.php', {
+            userId: currentUser.id,
+            productId: product.id,
+            action: 'view'
+          });
+        } catch (error) {
+          console.error('Ошибка отправки просмотра:', error);
+        }
+      };
+      trackView();
+    }
+  }, [product?.id, currentUser?.id]); // сработает при загрузке товара или смене пользователя
+
   if (loading) {
     return (
       <Container className="text-center mt-5">
@@ -234,6 +254,8 @@ const ProductPage = () => {
           <ProductTabs {...productTabsProps} />
         </Col>
       </Row>
+
+      <PersonalizedRecommendations currentProductId={product.id} />
     </Container>
   );
 };
