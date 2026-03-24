@@ -16,7 +16,7 @@ const PersonalizedRecommendations = ({ currentProductId }) => {
         // Можно передавать текущий товар, чтобы исключить его из рекомендаций
         const params = { userId: currentUser.id };
         if (currentProductId) params.exclude = currentProductId;
-        const response = await apiService.get('/api/recommendations.php', params);
+        const response = await apiService.get('/recommendations.php', params);
         if (response.success) {
           setProducts(response.items);
         }

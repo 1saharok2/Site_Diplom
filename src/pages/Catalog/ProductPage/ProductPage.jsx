@@ -171,7 +171,7 @@ const ProductPage = () => {
     if (product?.id && currentUser?.id) {
       const trackView = async () => {
         try {
-          await apiService.post('/api/track-action.php', {
+          await apiService.post('/track-action.php', {
             userId: currentUser.id,
             productId: product.id,
             action: 'view'
