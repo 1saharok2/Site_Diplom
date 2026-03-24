@@ -7,7 +7,7 @@ export const reviewService = {
       const numericProductId = parseInt(productId, 10);
       console.log('🔄 Загрузка отзывов для товара ID:', numericProductId);
       
-      const reviews = await apiService.get(`/reviews/product/${numericProductId}`);
+      const reviews = await apiService.get(`/reviews.php?id=${numericProductId}`);
       
       console.log('📊 Данные от API:', reviews);
 

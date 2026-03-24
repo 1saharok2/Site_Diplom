@@ -137,6 +137,12 @@ export const apiService = {
     return apiService.get(`/categories/${slug}`);
   },
 
+  getCategoryFilters: (categorySlug) => {
+    const url = `/filters.php?category=${categorySlug}`;
+    console.log('🔧 getCategoryFilters URL:', url);
+    return apiService.get(url);
+  },
+
   // Auth - исправленные методы
   login: async (credentials) => {
     try {
@@ -319,24 +325,21 @@ export const apiService = {
 
   // Reviews
   getUserReviews: async (userId = null) => {
+    console.log('!!! ФУНКЦИЯ ВЫЗВАНА !!!');
     try {
-      const actualUserId = userId || localStorage.getItem('userId') || 0;
+      const actualUserId = userId || localStorage.getItem('userId');
       
-      // Если userId=0, возвращаем пустые данные
       if (!actualUserId || actualUserId === '0') {
-        console.log('⚠ No valid user ID, returning empty reviews');
-        return {
-          success: true,
-          reviews: [],
-          count: 0
-        };
+        return { success: true, reviews: [], count: 0 };
       }
       
-      const response = await apiService.get(`/reviews/user/${actualUserId}`);
-      return response;
+      // МЕНЯЕМ ПУТЬ на прямой вызов файла с параметром
+      const url = `reviews.php?user_id=${actualUserId}`;
+      console.log('🔧 getUserReviews URL:', url);
+      
+      return await apiService.get(url);
     } catch (error) {
-      console.error('Error getting user reviews:', error);
-      // В случае ошибки возвращаем пустой массив
+      console.error('❌ Error getting user reviews:', error);
       return {
         success: false,
         reviews: [],
