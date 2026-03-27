@@ -1,3 +1,25 @@
+html, body, #root {
+  height: 100%;
+  background: #ffffff;
+}
+
+/* Базовая адаптивность: медиа и переполнения */
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+table {
+  max-width: 100%;
+}
+
+.table-responsive,
+table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -7,6 +29,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  background: #ffffff;
   /* Мобильная оптимизация */
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;

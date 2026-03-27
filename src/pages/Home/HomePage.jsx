@@ -172,7 +172,7 @@ const HomePage = () => {
     {
       icon: <ShoppingBasket sx={{ fontSize: 40 }} />,
       title: "Широкий ассортимент",
-      description: `Более ${products.length} товаров`,
+      description: `Более 90 товаров`,
       gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
     },
   ];
@@ -547,7 +547,7 @@ const HomePage = () => {
       </style>
 
       {/* === КАТЕГОРИИ === */}
-      <Box sx={{ py: 8, bgcolor: "grey.50", position: 'relative' }}>
+      <Box sx={{ py: 8, bgcolor: "white", position: 'relative' }}>
         {/* Декоративный элемент */}
         <Box
           sx={{
@@ -707,7 +707,7 @@ const HomePage = () => {
               transform: 'translateX(-50%)',
               width: 100,
               height: 4,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'white',
               borderRadius: 2,
             }
           }}

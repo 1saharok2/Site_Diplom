@@ -76,17 +76,18 @@ export const CartProvider = ({ children }) => {
   });
   const { currentUser } = useAuth();
 
-  const loadCart = useCallback(async (forceRefresh = false) => {
+  const loadCart = useCallback(async (forceRefresh = false, options = {}) => {
     if (!currentUser) return;
     const userId = currentUser.uuid || currentUser.id; // UUID
-    dispatch({ type: 'SET_LOADING', payload: true });
+    const silent = options?.silent === true;
+    if (!silent) dispatch({ type: 'SET_LOADING', payload: true });
     try {
       const items = await cartService.getCart(userId, forceRefresh);
       dispatch({ type: 'SET_CART', payload: items });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      if (!silent) dispatch({ type: 'SET_LOADING', payload: false });
     }
   }, [currentUser]);
 
@@ -109,28 +110,28 @@ export const CartProvider = ({ children }) => {
     try {
       const updatedItem = await cartService.updateCartItem(cartItemId, quantity);
       dispatch({ type: 'UPDATE_ITEM', payload: updatedItem });
+      // Тихо синхронизируем с сервером, без мигания страницы
+      await loadCart(true, { silent: true });
       return updatedItem;
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
+      await loadCart(true, { silent: true });
       throw error;
     }
   };
 
   const removeFromCart = useCallback(async (cartItemId) => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      
       const userUuid = getUserUuid(); 
       console.log('🗑️ removeFromCart в контексте:', { cartItemId, userUuid });
       
       await cartService.removeFromCart(cartItemId, userUuid);
       dispatch({ type: 'REMOVE_ITEM', payload: cartItemId });
-      await loadCart(true);
+      // Тихо синхронизируем с сервером, без перерендера-лоадера на всю страницу
+      await loadCart(true, { silent: true });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
-      await loadCart(true);
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      await loadCart(true, { silent: true });
     }
   }, [loadCart]);
 

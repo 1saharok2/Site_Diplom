@@ -323,7 +323,7 @@ const CartItems = () => {
                     </IconButton>
 
                     <IconButton
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={() => !isUpdating && handleRemoveItem(item.id)}
                       disabled={isUpdating}
                       sx={{
                         color: isUpdating ? 'grey.400' : 'grey.600',

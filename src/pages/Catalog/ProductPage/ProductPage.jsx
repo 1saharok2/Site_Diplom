@@ -255,7 +255,7 @@ const ProductPage = () => {
         </Col>
       </Row>
 
-      <PersonalizedRecommendations currentProductId={product.id} />
+      <PersonalizedRecommendations currentProductId={product.id} limit={8} />
     </Container>
   );
 };

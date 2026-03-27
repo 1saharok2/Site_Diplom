@@ -23,7 +23,7 @@ RewriteRule ^cart/add/?$ cart.php [QSA,L]
 RewriteRule ^wishlist/([^/]+)/?$ wishlist.php?userId=$1 [QSA,L]
 RewriteRule ^wishlist/add/?$ wishlist.php [QSA,L]
 RewriteRule ^orders/user/(.*)$ orders_user.php?userId=$1 [L,QSA]
-RewriteRule ^reviews/user/([^/]+)/?$ reviews.php?userId=$1 [QSA,L]
+RewriteRule ^reviews/user/([^/]+)/?$ reviews.php?user_id=$1 [QSA,L]
 
 # admin панель
 RewriteRule ^admin/stats/?$ admin/stats.php [QSA,L]
@@ -50,7 +50,7 @@ RewriteRule ^products/?$ products.php [QSA,L]
 RewriteRule ^products/([0-9]+)/?$ products.php?id=$1 [QSA,L]
 RewriteRule ^products/category/([^/]+)/?$ products.php?category=$1 [QSA,L]
 RewriteRule ^reviews/?$ reviews.php [QSA,L]
-RewriteRule ^reviews/product/([0-9]+)/?$ reviews.php?product_id=$1 [QSA,L]
+RewriteRule ^reviews/product/([0-9]+)$ reviews.php?id=$1 [QSA,L]
 RewriteRule ^health/?$ health/index.php [QSA,L]
 
 # Защита файла подключения к БД

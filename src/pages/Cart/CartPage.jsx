@@ -363,17 +363,12 @@ const CartPage = () => {
             <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ maxWidth: 1000, mx: 'auto' }}>
               {[
                 {
-                  icon: <LocalShipping sx={{ fontSize: { xs: 30, sm: 35, md: 40 }, color: '#10b981' }} />,
-                  title: 'Бесплатная доставка',
-                  description: 'При заказе от 5 000 ₽'
-                },
-                {
                   icon: <AssignmentReturn sx={{ fontSize: { xs: 30, sm: 35, md: 40 }, color: '#f59e0b' }} />,
                   title: 'Легкий возврат',
                   description: '14 дней на возврат товара'
                 },
                 {
-                  icon: <Security sx={{ fontSize: { xs: 30, sm: 35, md: 40 }, color: '#ef4444' }} />,
+                  icon: <Security sx={{ fontSize: { xs: 30, sm: 35, md: 40 }, color: '#10b981' }} />,
                   title: 'Безопасность',
                   description: 'SSL шифрование данных'
                 },

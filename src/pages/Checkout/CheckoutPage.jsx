@@ -11,17 +11,24 @@ import {
   Alert,
   MenuItem,
   CircularProgress,
-  Avatar
+  Avatar,
+  Chip,
+  useMediaQuery,
+  useTheme,
+  alpha
 } from '@mui/material';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/api';
+import { ShoppingCartCheckout, LocalShipping, Lock, CreditCard } from '@mui/icons-material';
 
 const CheckoutPage = () => {
   const { items: cartItems, getTotalPrice, clearCart, loading: cartLoading } = useCart();
   const { isAuthenticated: isAuthHook, currentUser: authUser } = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -244,10 +251,67 @@ const CheckoutPage = () => {
   }
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold', mb: 4 }}>
-        Оформление заказа
-      </Typography>
+    <Box sx={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+      py: { xs: 1, sm: 2, md: 3 }
+    }}>
+      <Container maxWidth="xl" sx={{ py: { xs: 1, sm: 2, md: 3 } }}>
+        {/* Header */}
+        <Paper elevation={0} sx={{
+          p: { xs: 2, sm: 3, md: 4 },
+          mb: { xs: 2, sm: 3, md: 4 },
+          borderRadius: { xs: 2, sm: 3, md: 4 },
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          boxShadow: '0 20px 45px rgba(102, 126, 234, 0.35)',
+          overflow: 'hidden',
+          position: 'relative'
+        }}>
+          <Box sx={{
+            position: 'absolute',
+            inset: 0,
+            background: 'radial-gradient(circle at 15% 20%, rgba(255,255,255,0.18) 0%, transparent 55%)'
+          }} />
+
+          <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 } }}>
+            <Box sx={{
+              width: { xs: 44, sm: 56 },
+              height: { xs: 44, sm: 56 },
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.18)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backdropFilter: 'blur(10px)',
+              flexShrink: 0
+            }}>
+              <ShoppingCartCheckout sx={{ fontSize: { xs: 22, sm: 28 } }} />
+            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography variant="h2" sx={{
+                fontWeight: 800,
+                fontSize: { xs: '1.35rem', sm: '1.75rem', md: '2.2rem' },
+                lineHeight: 1.15
+              }}>
+                Оформление заказа
+              </Typography>
+              <Typography sx={{ opacity: 0.92, mt: 0.5, fontSize: { xs: '0.85rem', sm: '0.95rem' } }}>
+                Заполните данные доставки и подтвердите оплату
+              </Typography>
+            </Box>
+            <Chip
+              label={`${cartItems.length} ${cartItems.length === 1 ? 'товар' : 'товаров'}`}
+              sx={{
+                display: { xs: 'none', sm: 'inline-flex' },
+                background: 'rgba(255,255,255,0.18)',
+                color: 'white',
+                fontWeight: 700,
+                border: '1px solid rgba(255,255,255,0.25)'
+              }}
+            />
+          </Box>
+        </Paper>
 
       {/* Кнопка отладки (только в development) */}
       {process.env.NODE_ENV === 'development' && (
@@ -263,12 +327,69 @@ const CheckoutPage = () => {
       )}
 
       <form onSubmit={handleSubmit}>
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={8}>
-            <Paper elevation={2} sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-                Данные для доставки
-              </Typography>
+        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} alignItems="flex-start">
+          <Grid item xs={12} lg={8} order={{ xs: 2, lg: 1 }}>
+            <Paper elevation={0} sx={{
+              p: { xs: 2, sm: 3, md: 4 },
+              borderRadius: { xs: 2, sm: 3, md: 4 },
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(18px)',
+              border: '1px solid',
+              borderColor: alpha(theme.palette.primary.main, 0.10),
+              boxShadow: '0 14px 40px rgba(0, 0, 0, 0.08)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <Box sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 4,
+                background: 'linear-gradient(90deg, #667eea 0%, #764ba2 50%, #ff6b6b 100%)'
+              }} />
+
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 2,
+                mb: { xs: 2, sm: 3 }
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box sx={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: '50%',
+                    bgcolor: alpha(theme.palette.primary.main, 0.10),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'primary.main'
+                  }}>
+                    <LocalShipping />
+                  </Box>
+                  <Box>
+                    <Typography variant="h5" sx={{ fontWeight: 800, lineHeight: 1.15 }}>
+                      Доставка и контакты
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Поля со звёздочкой обязательны
+                    </Typography>
+                  </Box>
+                </Box>
+                <Chip
+                  icon={<Lock />}
+                  label="Защищённая форма"
+                  size="small"
+                  sx={{
+                    bgcolor: alpha(theme.palette.success.main, 0.10),
+                    color: theme.palette.success.dark,
+                    fontWeight: 700,
+                    border: `1px solid ${alpha(theme.palette.success.main, 0.18)}`
+                  }}
+                />
+              </Box>
 
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
@@ -280,6 +401,7 @@ const CheckoutPage = () => {
                     onChange={handleInputChange}
                     required
                     disabled={loading}
+                    size={isMobile ? 'small' : 'medium'}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -291,6 +413,7 @@ const CheckoutPage = () => {
                     onChange={handleInputChange}
                     required
                     disabled={loading}
+                    size={isMobile ? 'small' : 'medium'}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -303,6 +426,7 @@ const CheckoutPage = () => {
                     onChange={handleInputChange}
                     required
                     disabled={loading}
+                    size={isMobile ? 'small' : 'medium'}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -316,6 +440,7 @@ const CheckoutPage = () => {
                     required
                     placeholder="+7 (999) 999-99-99"
                     disabled={loading}
+                    size={isMobile ? 'small' : 'medium'}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -328,6 +453,7 @@ const CheckoutPage = () => {
                     required
                     disabled={loading}
                     placeholder="ул. Примерная, д. 1, кв. 1"
+                    size={isMobile ? 'small' : 'medium'}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -340,6 +466,7 @@ const CheckoutPage = () => {
                     onChange={handleInputChange}
                     required
                     disabled={loading}
+                    size={isMobile ? 'small' : 'medium'}
                   >
                     <MenuItem value="card">Банковская карта</MenuItem>
                     <MenuItem value="cash">Наличные при получении</MenuItem>
@@ -350,89 +477,169 @@ const CheckoutPage = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={4}>
-            <Paper elevation={2} sx={{ p: 3, position: 'sticky', top: 20 }}>
-              <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-                Ваш заказ
-              </Typography>
-
-              <Box sx={{ mb: 2, maxHeight: 200, overflow: 'auto' }}>
-                {cartItems.map((item, index) => (
-                  <Box 
-                    key={index} 
-                    sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between', 
-                      mb: 1, 
-                      pb: 1, 
-                      borderBottom: index < cartItems.length - 1 ? '1px solid #eee' : 'none' 
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, mr: 2 }}>
-                      {getProductImage(item) ? (
-                        <Avatar 
-                          src={getProductImage(item)} 
-                          alt={getProductName(item)}
-                          sx={{ width: 40, height: 40, mr: 1 }}
-                        />
-                      ) : (
-                        <Avatar sx={{ width: 40, height: 40, mr: 1, bgcolor: 'grey.300' }}>
-                          <Typography variant="caption">Т</Typography>
-                        </Avatar>
-                      )}
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.9rem' }}>
-                          {getProductName(item)}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Количество: {item.quantity || 1}
-                        </Typography>
-                      </Box>
+          <Grid item xs={12} lg={4} order={{ xs: 1, lg: 2 }}>
+            <Box sx={{ position: { lg: 'sticky' }, top: { lg: 24 } }}>
+              <Paper elevation={0} sx={{
+                p: { xs: 2, sm: 3, md: 4 },
+                borderRadius: { xs: 2, sm: 3, md: 4 },
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(18px)',
+                border: '1px solid',
+                borderColor: alpha(theme.palette.primary.main, 0.10),
+                boxShadow: '0 14px 40px rgba(0, 0, 0, 0.08)'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: '50%',
+                      bgcolor: alpha(theme.palette.secondary.main, 0.10),
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'secondary.main'
+                    }}>
+                      <CreditCard />
                     </Box>
-                    <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 60, textAlign: 'right' }}>
-                      {(getProductPrice(item) * (item.quantity || 1)).toLocaleString('ru-RU')} ₽
-                    </Typography>
+                    <Box>
+                      <Typography variant="h5" sx={{ fontWeight: 800, lineHeight: 1.15 }}>
+                        Ваш заказ
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Итог и состав корзины
+                      </Typography>
+                    </Box>
                   </Box>
-                ))}
-              </Box>
+                  <Chip
+                    label="Без предоплаты"
+                    size="small"
+                    sx={{
+                      bgcolor: alpha(theme.palette.info.main, 0.10),
+                      color: theme.palette.info.dark,
+                      fontWeight: 700,
+                      border: `1px solid ${alpha(theme.palette.info.main, 0.18)}`
+                    }}
+                  />
+                </Box>
 
-              <Divider sx={{ my: 2 }} />
+                <Box sx={{
+                  mb: 2,
+                  maxHeight: { xs: 220, sm: 260 },
+                  overflow: 'auto',
+                  pr: 1,
+                  '&::-webkit-scrollbar': { width: 8 },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: alpha(theme.palette.primary.main, 0.25),
+                    borderRadius: 999
+                  }
+                }}>
+                  {cartItems.map((item, index) => (
+                    <Box
+                      key={`${getProductId(item) ?? index}-${index}`}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 1.5,
+                        py: 1.25,
+                        borderBottom: index < cartItems.length - 1 ? `1px dashed ${alpha(theme.palette.primary.main, 0.18)}` : 'none'
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flex: 1, minWidth: 0 }}>
+                        <Avatar
+                          src={getProductImage(item) || undefined}
+                          alt={getProductName(item)}
+                          variant="rounded"
+                          sx={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 2,
+                            bgcolor: alpha(theme.palette.primary.main, 0.08),
+                            flexShrink: 0,
+                            '& .MuiAvatar-img': { objectFit: 'cover' }
+                          }}
+                        />
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography variant="body2" sx={{
+                            fontWeight: 700,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {getProductName(item)}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {`${getProductPrice(item).toLocaleString('ru-RU')} ₽ × ${item.quantity || 1}`}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Typography variant="body2" sx={{ fontWeight: 800, minWidth: 84, textAlign: 'right' }}>
+                        {(getProductPrice(item) * (item.quantity || 1)).toLocaleString('ru-RU')} ₽
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="h6">Итого:</Typography>
-                <Typography variant="h6" color="primary" fontWeight="bold">
-                  {getTotalPrice().toLocaleString('ru-RU')} ₽
-                </Typography>
-              </Box>
+                <Divider sx={{ my: 2 }} />
 
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                fullWidth
-                disabled={loading}
-                sx={{
-                  py: 1.5,
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  mt: 2
-                }}
-              >
-                {loading ? (
-                  <>
-                    <CircularProgress size={24} sx={{ mr: 2, color: 'white' }} />
-                    Оформление...
-                  </>
-                ) : (
-                  `Оформить заказ - ${getTotalPrice().toLocaleString('ru-RU')} ₽`
-                )}
-              </Button>
-            </Paper>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 1 }}>
+                  <Typography variant="body1" color="text.secondary" sx={{ fontWeight: 600 }}>
+                    Итого:
+                  </Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 900, color: 'primary.main' }}>
+                    {getTotalPrice().toLocaleString('ru-RU')} ₽
+                  </Typography>
+                </Box>
+
+                <Alert severity="info" icon={<Lock fontSize="inherit" />} sx={{
+                  mt: 2,
+                  borderRadius: 2,
+                  background: alpha(theme.palette.info.main, 0.08),
+                  border: `1px solid ${alpha(theme.palette.info.main, 0.18)}`
+                }}>
+                  Оплата и персональные данные защищены.
+                </Alert>
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  size={isMobile ? 'medium' : 'large'}
+                  fullWidth
+                  disabled={loading}
+                  startIcon={!loading ? <ShoppingCartCheckout /> : undefined}
+                  sx={{
+                    py: { xs: 1.25, sm: 1.5 },
+                    fontSize: { xs: '0.95rem', sm: '1.05rem' },
+                    fontWeight: 900,
+                    mt: 2,
+                    borderRadius: 3,
+                    background: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
+                    boxShadow: '0 10px 25px rgba(102, 126, 234, 0.35)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #5a67d8 0%, #6b46c1 100%)',
+                      transform: loading ? 'none' : 'translateY(-2px)',
+                      boxShadow: '0 14px 32px rgba(102, 126, 234, 0.45)'
+                    },
+                    transition: 'all 0.25s ease'
+                  }}
+                >
+                  {loading ? (
+                    <>
+                      <CircularProgress size={22} sx={{ mr: 1.5, color: 'white' }} />
+                      Оформляем заказ…
+                    </>
+                  ) : (
+                    `Подтвердить заказ — ${getTotalPrice().toLocaleString('ru-RU')} ₽`
+                  )}
+                </Button>
+              </Paper>
+            </Box>
           </Grid>
         </Grid>
       </form>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

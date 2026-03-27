@@ -22,8 +22,15 @@ body {
 }
 
 .main-content {
-  padding-top: 64px;
+  /* Header занимает место через Toolbar, но оставляем страховку */
+  padding-top: 80px;
   flex: 1;
+}
+
+@media (max-width: 899.98px) {
+  .main-content {
+    padding-top: 70px;
+  }
 }
 
 /* Утилитарные классы */

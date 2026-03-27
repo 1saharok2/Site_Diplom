@@ -116,6 +116,74 @@
   display: flex;
 }
 
+/* === RESPONSIVE === */
+@media (max-width: 968px) {
+  .contacts-hero {
+    padding: 110px 0 60px;
+  }
+
+  .hero-title {
+    font-size: 2.4rem;
+  }
+
+  .map-content-wrapper {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .map-side-info {
+    flex: 1 1 auto;
+  }
+
+  .map-wrapper {
+    height: 460px;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 0 12px;
+  }
+
+  .contacts-hero {
+    padding: 90px 0 44px;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .contacts-grid {
+    gap: 16px;
+    margin: 28px 0;
+  }
+
+  .card {
+    padding: 18px 16px;
+    border-radius: 14px;
+  }
+
+  .contact-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    font-size: 1.6rem;
+    margin-bottom: 14px;
+  }
+
+  .map-section {
+    padding: 60px 0;
+  }
+
+  .map-wrapper {
+    height: 360px;
+  }
+}
+
 .info-card {
   background: white;
   padding: 35px 30px;

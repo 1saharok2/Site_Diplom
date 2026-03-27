@@ -34,18 +34,19 @@ export const reviewService = {
       const response = await apiService.get(`/reviews/user/${userId}`);
       console.log('✅ Ответ отзывов:', response);
 
-      // Если API возвращает { success: true, data: [...] }
-      if (response?.success && Array.isArray(response.data)) {
-        return response.data;
+      // Если API возвращает { success: true, reviews: [...] } (актуальная схема)
+      if (response?.success) {
+        if (Array.isArray(response.reviews)) return response.reviews;
+        // На случай старой схемы
+        if (Array.isArray(response.data)) return response.data;
       }
       // Если просто массив
       if (Array.isArray(response)) {
         return response;
       }
-      // Если есть поле data (без success)
-      if (Array.isArray(response?.data)) {
-        return response.data;
-      }
+      // Если есть поле reviews/data без success
+      if (Array.isArray(response?.reviews)) return response.reviews;
+      if (Array.isArray(response?.data)) return response.data;
       // В противном случае возвращаем пустой массив
       return [];
     } catch (error) {
