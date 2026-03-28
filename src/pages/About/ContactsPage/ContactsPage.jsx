@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./ContactsPage.css";
 import YandexMap from "../../../components/YandexMap";
 import axios from "axios";
+
+const getAuthToken = () =>
+  localStorage.getItem("token") || localStorage.getItem("authToken") || "";
 
 const ContactsPage = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +18,26 @@ const ContactsPage = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [hasSession, setHasSession] = useState(false);
+
+  useEffect(() => {
+    const token = getAuthToken();
+    setHasSession(!!token);
+    try {
+      const raw = localStorage.getItem("userData");
+      if (!raw) return;
+      const u = JSON.parse(raw);
+      const fullName = [u.first_name, u.last_name].filter(Boolean).join(" ").trim();
+      setFormData((prev) => ({
+        ...prev,
+        name: fullName || prev.name,
+        email: u.email || prev.email,
+        phone: u.phone || prev.phone,
+      }));
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,8 +53,16 @@ const ContactsPage = () => {
     setError("");
     
     try {
-      // Отправляем запрос на сервер
-      const response = await axios.post('/api/support/create-ticket.php', formData);
+      const token = getAuthToken();
+      const headers = { "Content-Type": "application/json" };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await axios.post(
+        "/api/support/create-ticket.php",
+        formData,
+        { headers }
+      );
       
       if (response.data.success) {
         setSuccess(true);
@@ -132,6 +163,9 @@ const ContactsPage = () => {
               <p className="form-subtitle">
                 Заполните форму ниже, и наша служба поддержки свяжется с вами в кратчайшие сроки.
                 Мы отвечаем на все обращения в течение 24 часов.
+                {hasSession && (
+                  <> Вход выполнен — обращение будет привязано к вашему аккаунту и отобразится в личном кабинете.</>
+                )}
               </p>
               
               <div className="support-features">

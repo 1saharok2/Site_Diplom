@@ -28,7 +28,9 @@ import {
   IconButton,
   Tab,
   Tabs,
-  CircularProgress
+  CircularProgress,
+  Stack,
+  CardContent
 } from '@mui/material';
 import {
   Edit,
@@ -50,7 +52,9 @@ import {
   LocalShipping,
   CheckCircle,
   Image as ImageIcon,
-  PhotoCamera
+  PhotoCamera,
+  SupportAgent,
+  Dashboard as DashboardIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { orderService } from '../../services/orderService';
@@ -98,6 +102,10 @@ const ProfilePage = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarFileInputRef = useRef(null);
+  const [mainContentTab, setMainContentTab] = useState(0);
+  const [supportTickets, setSupportTickets] = useState([]);
+  const [supportLoading, setSupportLoading] = useState(false);
+  const [supportError, setSupportError] = useState('');
 
   const formFromUser = useCallback((user) => {
     if (!user) {
@@ -562,6 +570,36 @@ const ProfilePage = () => {
     }
   };
 
+  const ticketStatusLabel = useCallback((s) => {
+    const map = {
+      new: 'Новый',
+      in_progress: 'В работе',
+      resolved: 'Отвечено',
+      closed: 'Закрыт',
+    };
+    return map[s] || s || '—';
+  }, []);
+
+  const fetchSupportTickets = useCallback(async () => {
+    setSupportLoading(true);
+    setSupportError('');
+    try {
+      const data = await apiService.getMySupportTickets();
+      setSupportTickets(Array.isArray(data.tickets) ? data.tickets : []);
+    } catch (e) {
+      setSupportError(e.message || 'Не удалось загрузить обращения');
+      setSupportTickets([]);
+    } finally {
+      setSupportLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mainContentTab === 1 && currentUser) {
+      fetchSupportTickets();
+    }
+  }, [mainContentTab, currentUser?.id, fetchSupportTickets]);
+
   const quickActions = [
     {
       icon: <History sx={{ fontSize: 24 }} />,
@@ -759,6 +797,39 @@ const ProfilePage = () => {
 
             {/* Основное содержание */}
             <Grid item xs={12} md={8}>
+              <Paper
+                elevation={0}
+                sx={{
+                  mb: 2,
+                  borderRadius: 4,
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                  overflow: 'hidden',
+                }}
+              >
+                <Tabs
+                  value={mainContentTab}
+                  onChange={(_, v) => setMainContentTab(v)}
+                  variant="fullWidth"
+                  sx={{
+                    bgcolor: alpha(theme.palette.primary.main, 0.04),
+                    '& .MuiTab-root': { py: 2, fontWeight: 600 },
+                  }}
+                >
+                  <Tab
+                    icon={<DashboardIcon fontSize="small" />}
+                    iconPosition="start"
+                    label="Обзор"
+                  />
+                  <Tab
+                    icon={<SupportAgent fontSize="small" />}
+                    iconPosition="start"
+                    label="Поддержка"
+                  />
+                </Tabs>
+              </Paper>
+
+              {mainContentTab === 0 && (
+                <>
               {/* Быстрые действия */}
               <Slide direction="right" in={true} timeout={700}>
                 <Paper elevation={0} sx={{ 
@@ -917,6 +988,147 @@ const ProfilePage = () => {
                   </Box>
                 </Paper>
               </Slide>
+                </>
+              )}
+
+              {mainContentTab === 1 && (
+                <Slide direction="right" in={true} timeout={500}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 4,
+                      borderRadius: 4,
+                      background:
+                        'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                      border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        gap: 2,
+                        mb: 3,
+                      }}
+                    >
+                      <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                        Обращения в поддержку
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={fetchSupportTickets}
+                        disabled={supportLoading}
+                      >
+                        Обновить
+                      </Button>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Здесь отображаются ваши вопросы и ответы администратора. Новое обращение можно отправить на{' '}
+                      <Button
+                        variant="text"
+                        size="small"
+                        onClick={() => navigate('/contacts')}
+                        sx={{ verticalAlign: 'baseline', p: 0, minWidth: 0 }}
+                      >
+                        странице контактов
+                      </Button>
+                      .
+                    </Typography>
+
+                    {supportError && (
+                      <Alert severity="error" sx={{ mb: 2 }} onClose={() => setSupportError('')}>
+                        {supportError}
+                      </Alert>
+                    )}
+
+                    {supportLoading ? (
+                      <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                        <CircularProgress />
+                      </Box>
+                    ) : supportTickets.length === 0 ? (
+                      <Typography color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+                        Пока нет обращений, привязанных к вашему аккаунту.
+                      </Typography>
+                    ) : (
+                      <Stack spacing={2}>
+                        {supportTickets.map((t) => (
+                          <Card
+                            key={t.id}
+                            variant="outlined"
+                            sx={{
+                              borderRadius: 3,
+                              borderColor: alpha(theme.palette.primary.main, 0.15),
+                            }}
+                          >
+                            <CardContent>
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  flexWrap: 'wrap',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                  mb: 1.5,
+                                }}
+                              >
+                                <Typography variant="subtitle1" fontWeight="bold">
+                                  {t.subject || 'Без темы'}
+                                </Typography>
+                                <Chip
+                                  size="small"
+                                  label={t.ticket_number || `#${t.id}`}
+                                  variant="outlined"
+                                />
+                                <Chip
+                                  size="small"
+                                  label={ticketStatusLabel(t.status)}
+                                  color={
+                                    t.status === 'resolved' || t.status === 'closed'
+                                      ? 'success'
+                                      : t.status === 'in_progress'
+                                        ? 'warning'
+                                        : 'default'
+                                  }
+                                />
+                              </Box>
+                              <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                                {t.created_at
+                                  ? `Создано: ${new Date(t.created_at).toLocaleString('ru-RU')}`
+                                  : ''}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                <strong>Ваш вопрос:</strong> {t.message}
+                              </Typography>
+                              <Divider sx={{ my: 2 }} />
+                              {t.response && String(t.response).trim() !== '' ? (
+                                <Alert severity="info" icon={false} sx={{ borderRadius: 2 }}>
+                                  <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                                    Ответ поддержки
+                                  </Typography>
+                                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                                    {t.response}
+                                  </Typography>
+                                  {t.responded_at && (
+                                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
+                                      {new Date(t.responded_at).toLocaleString('ru-RU')}
+                                    </Typography>
+                                  )}
+                                </Alert>
+                              ) : (
+                                <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                                  Ответ пока не получен. Мы ответим в ближайшее время.
+                                </Typography>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </Stack>
+                    )}
+                  </Paper>
+                </Slide>
+              )}
             </Grid>
           </Grid>
 

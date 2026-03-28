@@ -24,6 +24,7 @@ RewriteRule ^wishlist/([^/]+)/?$ wishlist.php?userId=$1 [QSA,L]
 RewriteRule ^wishlist/add/?$ wishlist.php [QSA,L]
 RewriteRule ^orders/user/(.*)$ orders_user.php?userId=$1 [L,QSA]
 RewriteRule ^reviews/user/([^/]+)/?$ reviews.php?user_id=$1 [QSA,L]
+RewriteRule ^support/my-tickets/?$ support/my-tickets.php [QSA,L]
 
 # admin панель
 RewriteRule ^admin/stats/?$ admin/stats.php [QSA,L]

@@ -126,6 +126,22 @@ export const apiService = {
     });
     return handleResponse(response, fullUrl);
   },
+
+  /** Обращения в поддержку текущего пользователя (ответы администратора) */
+  getMySupportTickets: async () => {
+    const token =
+      localStorage.getItem('token') || localStorage.getItem('authToken');
+    const fullUrl = `${API_BASE}/support/my-tickets.php`;
+    devLog('🔧 getMySupportTickets:', fullUrl);
+    const response = await fetch(fullUrl, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    return handleResponse(response, fullUrl);
+  },
   
   // Products - используйте только эти методы
   getProducts: () => {

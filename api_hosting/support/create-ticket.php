@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: https://electronic.tw1.ru');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -33,21 +33,20 @@ try {
         throw new Exception('Некорректный email адрес');
     }
     
-    // Пытаемся получить user_id из токена
+    // user_id из токена (Authorization с фронта или REDIRECT_ после Apache)
     $userId = null;
-    if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
-        $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
-        if (strpos($authHeader, 'Bearer ') === 0) {
-            $token = substr($authHeader, 7);
-            
-            // Проверяем токен в вашей таблице users
-            $query = "SELECT id FROM users WHERE token = :token";
-            $stmt = $db->prepare($query);
-            $stmt->execute([':token' => $token]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($user) {
-                $userId = $user['id'];
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? null;
+    if ($authHeader) {
+        if (stripos($authHeader, 'Bearer ') === 0) {
+            $token = trim(substr($authHeader, 7));
+            if ($token !== '') {
+                $query = "SELECT id FROM users WHERE token = :token LIMIT 1";
+                $stmt = $db->prepare($query);
+                $stmt->execute([':token' => $token]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($user) {
+                    $userId = $user['id'];
+                }
             }
         }
     }
