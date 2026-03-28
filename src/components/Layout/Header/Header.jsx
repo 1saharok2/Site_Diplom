@@ -47,6 +47,7 @@ import {
   DrawerContainer,
   DrawerHeader
 } from './HeaderStyles';
+import { getProductThumbnailSrc } from '../../../utils/productImage';
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -85,6 +86,11 @@ const Header = () => {
     const value = e.target.value;
     setSearchQuery(value);
     setShowSearchResults(value.length > 0);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setShowSearchResults(false);
   };
 
   const handleSearchSubmit = (e) => {
@@ -142,7 +148,14 @@ const Header = () => {
                         ),
                         endAdornment: searchQuery && (
                           <InputAdornment position="end">
-                            <IconButton onClick={() => setSearchQuery('')}>
+                            <IconButton
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                clearSearch();
+                              }}
+                              aria-label="Очистить поиск"
+                            >
                               <Clear />
                             </IconButton>
                           </InputAdornment>
@@ -174,14 +187,19 @@ const Header = () => {
                               <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                                 <Box
                                   component="img"
-                                  src={product.image || '/images/placeholder.jpg'}
+                                  src={getProductThumbnailSrc(product)}
                                   alt={product.name}
+                                  onError={(e) => {
+                                    e.currentTarget.src = `${process.env.PUBLIC_URL || ''}/images/placeholder.jpg`;
+                                  }}
                                   sx={{
                                     width: 50,
                                     height: 50,
                                     objectFit: 'cover',
                                     borderRadius: 2,
-                                    mr: 3
+                                    mr: 3,
+                                    flexShrink: 0,
+                                    backgroundColor: 'action.hover',
                                   }}
                                 />
                                 <Box sx={{ flexGrow: 1 }}>
@@ -385,7 +403,15 @@ const Header = () => {
                   ),
                   endAdornment: searchQuery && (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setSearchQuery('')} size="small">
+                      <IconButton
+                        type="button"
+                        size="small"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          clearSearch();
+                        }}
+                        aria-label="Очистить поиск"
+                      >
                         <Clear />
                       </IconButton>
                     </InputAdornment>
@@ -417,14 +443,19 @@ const Header = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                           <Box
                             component="img"
-                            src={product.image || '/images/placeholder.jpg'}
+                            src={getProductThumbnailSrc(product)}
                             alt={product.name}
+                            onError={(e) => {
+                              e.currentTarget.src = `${process.env.PUBLIC_URL || ''}/images/placeholder.jpg`;
+                            }}
                             sx={{
                               width: 40,
                               height: 40,
                               objectFit: 'cover',
                               borderRadius: 1,
-                              mr: 2
+                              mr: 2,
+                              flexShrink: 0,
+                              backgroundColor: 'action.hover',
                             }}
                           />
                           <Box sx={{ flexGrow: 1, minWidth: 0 }}>

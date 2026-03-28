@@ -5,9 +5,15 @@
 
 .categories-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 25px;
   padding: 20px 0;
+  width: 100%;
+  align-items: stretch;
+}
+
+.categories-grid > * {
+  min-width: 0;
 }
 
 .category-card {

@@ -1,164 +1,234 @@
-/* === ОСНОВА СТРАНИЦЫ === */
+/* === База страницы «О нас» === */
 .about-page-root {
   min-height: 100vh;
-  padding-bottom: 4rem;
-  background: linear-gradient(135deg, #f4f6ff 0%, #eef1f9 100%);
+  padding-bottom: clamp(2rem, 5vw, 4rem);
+  background: linear-gradient(180deg, #f5f7fc 0%, #eef1f8 50%, #f4f6ff 100%);
   color: #1a1a1a;
   overflow-x: hidden;
-  font-family: "Inter", sans-serif;
 }
 
-/* === HERO (верхний блок) === */
+/* === Hero === */
 .about-hero {
-  background: linear-gradient(135deg, #6a5af9 0%, #8a7dfc 50%, #b39afd 100%);
+  position: relative;
+  background: linear-gradient(135deg, #5b4df5 0%, #7c6af0 45%, #9b8aed 100%);
   color: #fff;
   text-align: center;
-  padding: 100px 20px 100px;
-  position: relative;
-  overflow: hidden;
-  border-radius: 0 0 35px 35px;
-  box-shadow: 0 8px 30px rgba(0, 0, 60, 0.25);
+  padding: clamp(3.5rem, 10vw, 5.5rem) 1rem clamp(3rem, 8vw, 4.5rem);
+  border-radius: 0 0 clamp(20px, 4vw, 32px) clamp(20px, 4vw, 32px);
+  box-shadow: 0 12px 40px rgba(45, 40, 120, 0.22);
 }
 
-@media (max-width: 600px) {
-  .about-hero {
-    padding: 80px 14px 60px;
-    border-radius: 0 0 26px 26px;
-  }
-
-  .about-hero-sub {
-    font-size: 1rem;
-    line-height: 1.6;
-  }
-
-  .about-history-paper {
-    padding: 1.5rem 1.1rem;
-    border-radius: 18px;
-  }
-
-  .about-history-image {
-    height: 240px;
-    border-radius: 16px;
-  }
+.about-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 44rem;
+  margin: 0 auto;
 }
 
 .about-hero::before {
   content: "";
   position: absolute;
-  top: -20%;
-  left: -20%;
-  width: 140%;
-  height: 140%;
-  background: radial-gradient(circle, rgba(255,255,255,0.25), transparent 70%);
-  animation: pulse-light 7s infinite ease-in-out;
-}
-
-@keyframes pulse-light {
-  0%,100% { transform: scale(1); opacity: .55; }
-  50% { transform: scale(1.15); opacity: .75; }
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(255, 255, 255, 0.22), transparent 55%);
+  pointer-events: none;
 }
 
 .about-hero-title {
-  font-size: clamp(2.6rem, 6vw, 3.6rem) !important;
+  font-size: clamp(2rem, 5vw, 3.25rem) !important;
   font-weight: 900 !important;
-  background: linear-gradient(to right, #ffffff, #d1c6ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: 1px;
+  letter-spacing: -0.03em;
+  line-height: 1.15 !important;
   margin-bottom: 1rem !important;
-  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.12);
 }
 
 .about-hero-sub {
-  font-size: clamp(1.1rem, 2.3vw, 1.4rem);
-  opacity: 0.93;
-  max-width: 750px;
+  font-size: clamp(1rem, 2vw, 1.2rem) !important;
+  font-weight: 400 !important;
+  opacity: 0.95;
   margin: 0 auto;
-  line-height: 1.7;
+  max-width: 36rem;
+  line-height: 1.65 !important;
 }
 
-/* === БЛОК "ИСТОРИЯ" === */
+/* === Блок статистики (доп. к MUI) === */
+.about-stats-paper {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.about-stats-grid {
+  display: grid;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  gap: 0.75rem 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.about-stats-grid-item {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.about-stats-grid-item > :first-child {
+  width: 100%;
+  max-width: 280px;
+}
+
+@media (min-width: 900px) {
+  .about-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    max-width: 100%;
+  }
+
+  .about-stats-grid-item > :first-child {
+    max-width: none;
+  }
+}
+
+.about-stat-cell {
+  border-radius: 12px;
+}
+
+/* === История === */
 .about-history-paper {
-  padding: 3rem 2.5rem;
-  border-radius: 25px;
+  padding: clamp(1.5rem, 4vw, 2.75rem);
+  border-radius: clamp(16px, 3vw, 24px);
   background: #ffffff;
-  border: 1px solid rgba(120, 120, 200, 0.1);
-  box-shadow: 0 10px 30px rgba(100, 100, 150, 0.07);
-  transition: all 0.4s ease;
+  border: 1px solid rgba(50, 60, 120, 0.08);
+  box-shadow: 0 4px 24px rgba(25, 30, 70, 0.06);
+  transition: box-shadow 0.3s ease;
 }
 
 .about-history-paper:hover {
-  box-shadow: 0 18px 50px rgba(90, 90, 180, 0.12);
-  transform: translateY(-6px);
-}
-
-.about-history-image {
-  width: 100%;
-  height: 380px;
-  border-radius: 20px;
-  background-image: url("https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80&auto=format&fit=crop");
-  background-size: cover;
-  background-position: center;
-  box-shadow: 0 14px 40px rgba(14, 30, 37, 0.16);
-  transition: transform 0.35s ease, box-shadow 0.35s ease;
-}
-.about-history-image:hover {
-  transform: scale(1.03);
-  box-shadow: 0 20px 50px rgba(14, 30, 37, 0.2);
+  box-shadow: 0 12px 40px rgba(25, 30, 70, 0.1);
 }
 
 .about-section-title {
-  font-size: clamp(2rem, 4.5vw, 2.7rem);
-  font-weight: 800;
+  font-size: clamp(1.5rem, 3.5vw, 2rem) !important;
+  font-weight: 800 !important;
   color: #2d34a6;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem !important;
 }
 
 .about-paragraph {
-  font-size: 1.07rem;
-  line-height: 1.8;
-  margin-bottom: 1.2rem;
-  color: #444;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: #424242;
 }
 
-/* === КОМАНДА === */
+/* === Блок «Почему выбирают нас» — сетка, по центру страницы === */
+.about-features-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.about-feature-cell {
+  display: flex;
+  min-width: 0;
+}
+
+.about-feature-cell .about-feature-card-inner {
+  flex: 1;
+  width: 100%;
+}
+
+@media (max-width: 959px) {
+  .about-features-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 640px;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 599px) {
+  .about-features-grid {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+  }
+}
+
+/* === Карточки преимуществ === */
+.about-feature-card {
+  border: 1px solid rgba(90, 100, 180, 0.08) !important;
+}
+
+/* === Команда === */
 .team-card {
-  border-radius: 18px;
-  padding: 1.8rem;
-  background: linear-gradient(180deg, #ffffff 0%, #f5f6ff 100%);
-  transition: all 0.3s ease;
-  box-shadow: 0 12px 25px rgba(30, 30, 70, 0.07);
+  border-radius: clamp(14px, 2.5vw, 20px);
+  padding: 0;
+  background: #ffffff;
+  border: 1px solid rgba(90, 100, 180, 0.08);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  box-shadow: 0 4px 20px rgba(30, 30, 70, 0.06);
 }
 
 .team-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 18px 45px rgba(30, 30, 70, 0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 14px 36px rgba(30, 30, 70, 0.1);
 }
 
 .team-card .MuiAvatar-root {
-  border: 4px solid #6c7afe;
-  box-shadow: 0 10px 25px rgba(110, 120, 255, 0.35);
+  box-shadow: 0 8px 24px rgba(91, 77, 245, 0.25);
 }
 
-/* === БЛОК СТАТИСТИКИ === */
-.about-stats .stats-value {
-  font-size: 2.4rem;
-  font-weight: 800;
+/* Одна строка, когда ширины хватает; иначе 2 или 1 колонка */
+.about-team-grid {
+  display: grid;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  align-items: stretch;
+  justify-content: center;
 }
 
-.about-stats .stats-label {
-  opacity: 0.9;
+.about-team-cell {
+  min-width: 0;
+  display: flex;
 }
 
-/* === АДАПТИВ === */
-@media (max-width: 960px) {
-  .about-hero { padding: 80px 20px 60px; }
-  .about-history-image { height: 300px; }
+.about-team-cell .team-card {
+  flex: 1;
+  width: 100%;
 }
 
+/* === Адаптив === */
 @media (max-width: 600px) {
-  .about-hero { padding: 60px 15px 40px; }
-  .about-history-paper { padding: 1.7rem; }
-  .about-history-image { height: 200px; }
-  .team-card { padding: 1.2rem; }
+  .about-hero {
+    padding: 3rem 0.875rem 2.5rem;
+  }
+
+  .about-history-paper {
+    padding: 1.35rem 1.15rem;
+  }
+
+  .about-history-image {
+    min-height: 200px;
+    margin-top: 0.25rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .about-history-image {
+    min-height: 320px;
+  }
 }

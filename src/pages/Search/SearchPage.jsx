@@ -13,6 +13,7 @@ import {
 import { ArrowBack, Search, Clear } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../context/ProductsContext';
+import { getProductThumbnailSrc } from '../../utils/productImage';
 
 const SearchPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,8 +77,11 @@ const SearchPage = () => {
                     <CardMedia
                       component="img"
                       height="140"
-                      image={product.image}
+                      image={getProductThumbnailSrc(product)}
                       alt={product.name}
+                      onError={(e) => {
+                        e.currentTarget.src = `${process.env.PUBLIC_URL || ''}/images/placeholder.jpg`;
+                      }}
                       sx={{ objectFit: 'contain', p: 1 }}
                     />
                     <CardContent>

@@ -41,25 +41,53 @@ const CategoryPage = () => {
   const [serverSpecificationsCountMap, setServerSpecificationsCountMap] = useState(null);
 
   useEffect(() => {
+    if (!slug) return;
+
+    let cancelled = false;
+
+    const resetCategoryViewState = () => {
+      setError('');
+      setCategory(null);
+      setProducts([]);
+      setServerSpecifications(null);
+      setServerSpecificationsCountMap(null);
+      setFilterInStock(true);
+      setPriceRange([0, 500000]);
+      setSelectedBrands([]);
+      setFilters({});
+      setAvailabilityFilter('availability-all');
+      setMinRating(null);
+      setReliableModels(false);
+      setHasReview(false);
+      setSortBy('name');
+      setShowFilters(false);
+    };
+
+    setLoading(true);
+    resetCategoryViewState();
+
     const fetchData = async () => {
       try {
-        setLoading(true);
         const [categoryData, productsData] = await Promise.all([
           categoryService.getCategoryBySlug(slug),
-          categoryService.getProductsByCategory(slug)
+          categoryService.getProductsByCategory(slug),
         ]);
+        if (cancelled) return;
+
         setCategory(categoryData);
         setProducts(productsData);
-        
+
         if (productsData.length > 0) {
-          const maxPrice = Math.max(...productsData.map(p => p.price));
-          setPriceRange([0, maxPrice]);
+          const maxP = Math.max(...productsData.map((p) => p.price));
+          setPriceRange([0, maxP]);
+        } else {
+          setPriceRange([0, 500000]);
         }
 
-        // Пытаемся получить предрасчёт фильтров с сервера (не критично при ошибке)
         try {
           const filtersData = await getCategoryFilters(slug);
-          if (filtersData && filtersData.specifications && filtersData.counts) {
+          if (cancelled) return;
+          if (filtersData?.specifications && filtersData?.counts) {
             setServerSpecifications(filtersData.specifications);
             setServerSpecificationsCountMap(filtersData.counts);
           } else {
@@ -67,21 +95,26 @@ const CategoryPage = () => {
             setServerSpecificationsCountMap(null);
           }
         } catch (e) {
-          console.error('Error fetching category filters:', e);
-          setServerSpecifications(null);
-          setServerSpecificationsCountMap(null);
+          if (!cancelled) {
+            console.error('Error fetching category filters:', e);
+            setServerSpecifications(null);
+            setServerSpecificationsCountMap(null);
+          }
         }
       } catch (err) {
-        setError('Ошибка загрузки данных категории');
-        console.error('Error fetching category data:', err);
+        if (!cancelled) {
+          setError('Ошибка загрузки данных категории');
+          console.error('Error fetching category data:', err);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    if (slug) {
-      fetchData();
-    }
+    fetchData();
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
   // Мемоизированная обработка продуктов

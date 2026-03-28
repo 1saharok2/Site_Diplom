@@ -1,7 +1,8 @@
-/* ОСНОВНОЙ КОНТЕЙНЕР */
+/* ОСНОВНОЙ КОНТЕЙНЕР — без боковых отступов: сетка задаёт gap, иначе ломается auto-fill */
 .product-card-container {
   width: 100%;
-  padding: 0 15px 25px 15px;
+  min-width: 0;
+  padding: 0 0 1.5rem 0;
   box-sizing: border-box;
 }
 
@@ -33,7 +34,7 @@
   border: none;
   position: relative;
   width: 100%;
-  margin: 15px;
+  margin: 0;
   padding: 20px;
 }
 

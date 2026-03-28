@@ -3,7 +3,6 @@ import {
   Container,
   Typography,
   Box,
-  Grid,
   Card,
   CardContent,
   Paper,
@@ -11,7 +10,6 @@ import {
   useTheme,
   alpha,
   Fade,
-  Slide,
   Zoom,
   Chip,
 } from "@mui/material";
@@ -27,7 +25,7 @@ import {
   EmojiEvents,
   Group,
 } from "@mui/icons-material";
-import { keyframes } from '@emotion/react';
+import { keyframes } from "@emotion/react";
 import "./AboutPage.css";
 
 const gradientBackground = keyframes`
@@ -39,25 +37,33 @@ const gradientBackground = keyframes`
 const AboutPage = () => {
   const theme = useTheme();
 
+  const sectionGap = { xs: 5, md: 7 };
+  const sectionTitleSx = {
+    fontWeight: 800,
+    mb: { xs: 3, md: 4 },
+    color: theme.palette.text.primary,
+    letterSpacing: "-0.02em",
+  };
+
   const features = [
     {
-      icon: <Store sx={{ fontSize: 48 }} />,
+      icon: <Store sx={{ fontSize: 44 }} />,
       title: "Широкий ассортимент",
       description:
         "Более 1000 товаров различных категорий от проверенных производителей",
     },
     {
-      icon: <LocalShipping sx={{ fontSize: 48 }} />,
+      icon: <LocalShipping sx={{ fontSize: 44 }} />,
       title: "Быстрая доставка",
       description: "Доставляем заказы по всей России за 1–3 рабочих дня",
     },
     {
-      icon: <Security sx={{ fontSize: 48 }} />,
+      icon: <Security sx={{ fontSize: 44 }} />,
       title: "Гарантия качества",
       description: "Все товары проходят тщательную проверку перед отправкой",
     },
     {
-      icon: <SupportAgent sx={{ fontSize: 48 }} />,
+      icon: <SupportAgent sx={{ fontSize: 44 }} />,
       title: "Поддержка 24/7",
       description: "Наша служба поддержки всегда готова помочь вам",
     },
@@ -67,31 +73,28 @@ const AboutPage = () => {
     {
       name: "Коробков Иван",
       position: "CEO & Основатель",
-      avatar:
-        "https://electronic.tw1.ru/images/3w.jpg",
+      avatar: "https://electronic.tw1.ru/images/3w.jpg",
       description: "Опытный специалист с многолетним стажем в e-commerce",
     },
     {
       name: "Стариков Александр",
       position: "Технический директор",
-      avatar:
-        "https://electronic.tw1.ru/images/2w.jpg",
+      avatar: "https://electronic.tw1.ru/images/2w.jpg",
       description: "Профессиональный программист и лидер технической команды",
     },
     {
       name: "Амин Гусейнли",
       position: "Менеджер по продажам",
-      avatar:
-        "https://electronic.tw1.ru/images/1w.jpg",
+      avatar: "https://electronic.tw1.ru/images/1w.jpg",
       description: "Эксперт в клиентском сервисе и управлении продажами",
     },
   ];
 
   const stats = [
-    { icon: <People sx={{ fontSize: 32 }} />, value: "10K+", label: "Довольных клиентов" },
-    { icon: <Store sx={{ fontSize: 32 }} />, value: "1000+", label: "Товаров в каталоге" },
-    { icon: <CalendarToday sx={{ fontSize: 32 }} />, value: "3", label: "Года на рынке" },
-    { icon: <AccessTime sx={{ fontSize: 32 }} />, value: "24/7", label: "Поддержка" },
+    { icon: <People sx={{ fontSize: 30 }} />, value: "10K+", label: "Довольных клиентов" },
+    { icon: <Store sx={{ fontSize: 30 }} />, value: "1000+", label: "Товаров в каталоге" },
+    { icon: <CalendarToday sx={{ fontSize: 30 }} />, value: "3", label: "Года на рынке" },
+    { icon: <AccessTime sx={{ fontSize: 30 }} />, value: "24/7", label: "Поддержка" },
   ];
 
   const avatarImgProps = {
@@ -103,15 +106,14 @@ const AboutPage = () => {
 
   return (
     <Box className="about-page-root">
-      {/* HERO */}
       <Box className="about-hero">
-        <Container maxWidth="md">
+        <Container maxWidth="md" sx={{ px: { xs: 2, sm: 3 } }}>
           <Zoom in timeout={800}>
             <Box className="about-hero-inner">
               <Typography component="h1" className="about-hero-title">
                 О нашем магазине
               </Typography>
-              <Typography className="about-hero-sub" variant="h6">
+              <Typography className="about-hero-sub" variant="h6" component="p">
                 Мы создаём будущее розничной торговли, объединяя технологии и безупречный сервис
                 для вашего комфорта.
               </Typography>
@@ -119,185 +121,343 @@ const AboutPage = () => {
           </Zoom>
         </Container>
       </Box>
-      <Container maxWidth="lg" sx={{ mt: { xs: 4, md: 8 }, mb: { xs: 8, md: 12 } }}>
-        {/* Stats */}
-        <Box sx={{ mt: { xs: 6, md: 10 } }}>
+
+      <Container
+        maxWidth="lg"
+        sx={{
+          px: { xs: 2, sm: 3 },
+          py: { xs: 4, md: 6 },
+          pb: { xs: 8, md: 12 },
+        }}
+      >
+        {/* Статистика */}
+        <Box
+          component="section"
+          aria-labelledby="about-stats-heading"
+          sx={{ mb: sectionGap, display: "flex", justifyContent: "center" }}
+        >
           <Paper
             elevation={0}
+            className="about-stats-paper"
             sx={{
-              p: { xs: 4, md: 8 },
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-              color: 'white',
-              borderRadius: 4,
-              textAlign: 'center',
-              animation: `${gradientBackground} 8s ease infinite`,
-              backgroundSize: '400% 400%',
+              width: "100%",
+              maxWidth: 1040,
+              mx: "auto",
+              p: { xs: 3, sm: 4, md: 5 },
+              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary?.main || theme.palette.primary.dark} 100%)`,
+              color: "white",
+              borderRadius: 3,
+              textAlign: "center",
+              animation: `${gradientBackground} 10s ease infinite`,
+              backgroundSize: "400% 400%",
             }}
           >
-            <Typography variant="h3" gutterBottom sx={{ fontWeight: 800, mb: 6 }}>
+            <Typography
+              id="about-stats-heading"
+              variant="h4"
+              component="h2"
+              align="center"
+              sx={{ fontWeight: 800, mb: { xs: 3, md: 4 }, width: "100%" }}
+            >
               Мы в цифрах
             </Typography>
-
-            <Grid container spacing={4} justifyContent="center" alignItems="center">
+            <Box className="about-stats-grid">
               {stats.map((stat, index) => (
-                <Grid item xs={6} md={3} key={index}>
-                  <Fade in={true} timeout={1500 + index * 200}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Box sx={{ color: 'white', mb: 2, display: 'flex', justifyContent: 'center' }}>
+                <Box key={index} className="about-stats-grid-item">
+                  <Fade in timeout={1200 + index * 120}>
+                    <Box
+                      className="about-stat-cell"
+                      sx={{
+                        textAlign: "center",
+                        py: { xs: 1.5, md: 2 },
+                        px: 1,
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          color: "white",
+                          mb: 1.5,
+                          display: "flex",
+                          justifyContent: "center",
+                          opacity: 0.95,
+                        }}
+                        aria-hidden
+                      >
                         {stat.icon}
                       </Box>
-                      <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
+                      <Typography
+                        variant="h4"
+                        component="span"
+                        sx={{
+                          fontWeight: 800,
+                          mb: 0.75,
+                          fontSize: { xs: "1.65rem", sm: "2rem", md: "2.125rem" },
+                          lineHeight: 1.2,
+                        }}
+                      >
                         {stat.value}
                       </Typography>
-                      <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 400 }}>
+                      <Typography
+                        variant="body2"
+                        component="span"
+                        sx={{
+                          opacity: 0.92,
+                          fontWeight: 500,
+                          lineHeight: 1.4,
+                          maxWidth: 200,
+                          mx: "auto",
+                        }}
+                      >
                         {stat.label}
                       </Typography>
                     </Box>
                   </Fade>
-                </Grid>
+                </Box>
               ))}
-            </Grid>
+            </Box>
           </Paper>
         </Box>
 
-        {/* History / story block */}
-        <Box sx={{ mt: 4 }}> {/* Добавлен отступ сверху */}
+        {/* История */}
+        <Box
+          component="section"
+          aria-labelledby="about-history-heading"
+          sx={{ mb: sectionGap, display: "flex", justifyContent: "center" }}
+        >
           <Fade in timeout={900}>
-            <Paper className="about-history-paper" elevation={0}>
-              <Grid container spacing={6} alignItems="center">
-                <Grid item xs={12} md={6}>
-                  <Typography variant="h2" className="about-section-title">
+            <Paper
+              className="about-history-paper"
+              elevation={0}
+              sx={{
+                overflow: "hidden",
+                width: "100%",
+                maxWidth: 1040,
+                mx: "auto",
+                textAlign: "center",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: { xs: 2.5, md: 3 },
+                }}
+              >
+                <Box sx={{ width: "100%", maxWidth: 640, mx: "auto" }}>
+                  <Typography
+                    id="about-history-heading"
+                    variant="h4"
+                    component="h2"
+                    className="about-section-title"
+                    sx={{ ...sectionTitleSx, textAlign: "center" }}
+                  >
                     Наша история
                   </Typography>
-                  <Typography className="about-paragraph" paragraph>
+                  <Typography className="about-paragraph" paragraph sx={{ mb: 2, textAlign: "center" }}>
                     <strong>TechMarket</strong> был основан в 2020 году тремя друзьями-энтузиастами, которые верили,
                     что онлайн-шопинг должен быть простым, безопасным и доступным для каждого.
                   </Typography>
-                  <Typography className="about-paragraph" paragraph>
-                    В 2021 году мы заключили партнерские соглашения с ведущими брендами, к 2022 — расширили склад
-                    и команду. Сегодня мы обслуживаем более 10 000 клиентов по всей России.
+                  <Typography className="about-paragraph" paragraph sx={{ mb: 0, textAlign: "center" }}>
+                    В 2021 году мы заключили партнерские соглашения с ведущими брендами, к 2022 — расширили склад и
+                    команду. Сегодня мы обслуживаем более 10 000 клиентов по всей России.
                   </Typography>
-                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 2 }}>
-                    <Chip icon={<EmojiEvents />} label="Лучший магазин 2023" color="primary" variant="outlined" />
-                    <Chip icon={<TrendingUp />} label="Рост +200% в год" color="success" variant="outlined" />
-                    <Chip icon={<Group />} label="25+ сотрудников" color="secondary" variant="outlined" />
-                  </Box>
-                </Grid>
-              </Grid>
+                </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    flexWrap: "wrap",
+                    justifyContent: "center",
+                    width: "100%",
+                    maxWidth: 720,
+                  }}
+                >
+                  <Chip icon={<EmojiEvents />} label="Лучший магазин 2023" color="primary" variant="outlined" />
+                  <Chip icon={<TrendingUp />} label="Рост +200% в год" color="success" variant="outlined" />
+                  <Chip icon={<Group />} label="25+ сотрудников" color="secondary" variant="outlined" />
+                </Box>
+              </Box>
             </Paper>
           </Fade>
         </Box>
 
-        {/* Why choose us */}
-        <Box sx={{ mb: 12 }}>
+        {/* Преимущества */}
+        <Box
+          component="section"
+          aria-labelledby="about-features-heading"
+          sx={{ mb: sectionGap, display: "flex", flexDirection: "column", alignItems: "center" }}
+        >
           <Typography
-            variant="h2"
+            id="about-features-heading"
+            variant="h4"
+            component="h2"
             align="center"
-            gutterBottom
-            sx={{ 
-              fontWeight: 800, 
-              mb: 8,
-              color: theme.palette.text.primary
-            }}
+            sx={{ ...sectionTitleSx, width: "100%" }}
           >
             Почему выбирают нас
           </Typography>
-          <Grid container spacing={4} justifyContent="center">
-            {features.map((feature, index) => (
-              <Grid item xs={12} sm={6} md={3} key={index}>
-                <Slide direction="up" in={true} timeout={800 + index * 200}>
-                  <Card
+          <Box className="about-features-grid">
+            {features.map((feature) => (
+              <Box key={feature.title} className="about-feature-cell">
+                <Card
+                  className="about-feature-card about-feature-card-inner"
+                  sx={{
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    border: "none",
+                    background: `linear-gradient(145deg, ${theme.palette.background.paper} 0%, ${alpha(theme.palette.primary.main, 0.04)} 100%)`,
+                    boxShadow: theme.shadows[1],
+                    borderRadius: 3,
+                    transition: "box-shadow 0.25s ease, transform 0.25s ease",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
+                      boxShadow: theme.shadows[6],
+                    },
+                  }}
+                >
+                  <CardContent
                     sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      textAlign: 'center',
-                      p: 4,
-                      border: 'none',
-                      background: `linear-gradient(145deg, ${theme.palette.background.paper} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
-                      boxShadow: theme.shadows[2],
-                      transition: 'all 0.3s ease',
-                      borderRadius: 3,
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        boxShadow: theme.shadows[8],
-                        background: `linear-gradient(145deg, ${theme.palette.background.paper} 0%, ${alpha(theme.palette.primary.light, 0.1)} 100%)`,
-                      }
+                      flexGrow: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "flex-start",
+                      textAlign: "center",
+                      p: { xs: 2.5, md: 3 },
+                      minHeight: 268,
                     }}
                   >
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Box
-                        className="feature-icon"
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          width: 80,
-                          height: 80,
-                          borderRadius: '50%',
-                          backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                          color: theme.palette.primary.main,
-                          mb: 3,
-                          mx: 'auto'
-                        }}
-                      >
-                        {feature.icon}
-                      </Box>
-                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
-                        {feature.title}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                        {feature.description}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Slide>
-              </Grid>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        width: 72,
+                        height: 72,
+                        flexShrink: 0,
+                        borderRadius: "50%",
+                        backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                        color: theme.palette.primary.main,
+                        mb: 2,
+                      }}
+                    >
+                      {feature.icon}
+                    </Box>
+                    <Typography
+                      variant="subtitle1"
+                      component="h3"
+                      sx={{
+                        fontWeight: 700,
+                        mb: 1,
+                        minHeight: 48,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {feature.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        lineHeight: 1.65,
+                        flexGrow: 1,
+                        maxWidth: 260,
+                        mx: "auto",
+                      }}
+                    >
+                      {feature.description}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Box>
             ))}
-          </Grid>
+          </Box>
         </Box>
 
-        {/* Team */}
-        <Box sx={{ mt: { xs: 6, md: 10 } }}>
-          <Typography variant="h3" align="center" className="about-section-title">
+        {/* Команда */}
+        <Box
+          component="section"
+          aria-labelledby="about-team-heading"
+          sx={{ mb: 2, display: "flex", flexDirection: "column", alignItems: "center" }}
+        >
+          <Typography
+            id="about-team-heading"
+            variant="h4"
+            component="h2"
+            align="center"
+            className="about-section-title"
+            sx={{ ...sectionTitleSx, width: "100%" }}
+          >
             Наша команда
           </Typography>
-
-          <Grid container spacing={3} sx={{ mt: 2 }} justifyContent="center">
+          <Box className="about-team-grid">
             {team.map((m, i) => (
-              <Grid item xs={12} sm={6} md={4} key={i}>
-                <Fade in timeout={800 + i * 200}>
-                  <Card className="team-card" elevation={0}>
-                    <CardContent sx={{ textAlign: "center" }}>
+              <Box key={m.name} className="about-team-cell">
+                <Fade in timeout={700 + i * 120}>
+                  <Card
+                    className="team-card"
+                    elevation={0}
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    <CardContent
+                      sx={{
+                        textAlign: "center",
+                        flexGrow: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        py: { xs: 3, md: 3 },
+                        px: { xs: 2, md: 2.5 },
+                      }}
+                    >
                       <Avatar
                         src={m.avatar}
                         alt={m.name}
                         imgProps={avatarImgProps}
                         sx={{
-                          width: { xs: 86, sm: 100, md: 120 },
-                          height: { xs: 86, sm: 100, md: 120 },
-                          mx: "auto",
+                          width: 100,
+                          height: 100,
                           mb: 2,
                           border: `3px solid ${theme.palette.primary.main}`,
                         }}
                       />
-                      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700 }}>
                         {m.name}
                       </Typography>
-                      <Typography variant="body2" color="primary" sx={{ fontWeight: 600, mb: 1 }}>
+                      <Typography
+                        variant="body2"
+                        color="primary"
+                        sx={{ fontWeight: 600, mb: 1, mt: 0.5 }}
+                      >
                         {m.position}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ lineHeight: 1.65, maxWidth: 320, mx: "auto" }}
+                      >
                         {m.description}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Fade>
-              </Grid>
+              </Box>
             ))}
-          </Grid>
+          </Box>
         </Box>
       </Container>
     </Box>
