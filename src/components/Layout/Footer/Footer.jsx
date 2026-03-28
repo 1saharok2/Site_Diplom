@@ -31,7 +31,7 @@ const Footer = () => {
           {/* Информация о компании - занимает 6 колонок на md экранах */}
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 1.5 }}>
-              🛍️ Гитон
+              Гитон
             </Typography>
             <Typography variant="body2" sx={{ mb: 1.5, opacity: 0.8, maxWidth: '500px' }}>
               Ваш надежный партнер в мире электроники и техники. 
