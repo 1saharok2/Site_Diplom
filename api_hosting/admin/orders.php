@@ -6,6 +6,7 @@
  */
 
 require_once __DIR__ . '/_guard.php'; // 🔐 Проверка токена и роли admin
+require_once __DIR__ . '/../utils/shipping_address.php';
 
 $db = (new Database())->getConnection();
 
@@ -62,7 +63,7 @@ try {
             $itemsStmt->execute([$orderId]);
 
             $order['items'] = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
-            $order['shipping_address'] = json_decode($order['shipping_address'], true);
+            $order['shipping_address'] = normalize_shipping_address_for_api($order['shipping_address']);
 
             echo json_encode([
                 'success' => true,
@@ -96,7 +97,7 @@ try {
         foreach ($orders as &$order) {
             $itemsStmt->execute([$order['id']]);
             $order['items'] = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
-            $order['shipping_address'] = json_decode($order['shipping_address'], true);
+            $order['shipping_address'] = normalize_shipping_address_for_api($order['shipping_address']);
         }
 
         echo json_encode([

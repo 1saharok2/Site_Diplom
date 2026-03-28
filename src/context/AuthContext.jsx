@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { apiService } from '../services/api';
 import { adminService } from '../services/adminService';
 import { cartService } from '../services/cartService';
 import { wishlistService } from '../services/wishlistService';
+import { IS_DEV } from '../utils/devLog';
 
 const AuthContext = createContext();
 
@@ -18,13 +19,18 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // --- НОВАЯ ФУНКЦИЯ: Загрузка актуальных данных с сервера ---
-  const loadUserData = async () => {
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('userId');
+    setCurrentUser(null);
+  }, []);
+
+  const loadUserData = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) return null;
 
     try {
-      // Прямой fetch к вашему новому PHP файлу
       const response = await fetch('/api/auth/get_user.php', {
         method: 'GET',
         headers: {
@@ -36,17 +42,16 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
 
       if (data.success && data.user) {
-        // Обновляем состояние и локальное хранилище свежими данными
         setCurrentUser(data.user);
         localStorage.setItem('userData', JSON.stringify(data.user));
         return data.user;
       }
       return null;
     } catch (error) {
-      console.error('Ошибка при получении данных пользователя:', error);
+      if (IS_DEV) console.error('Ошибка при получении данных пользователя:', error);
       return null;
     }
-  };
+  }, []);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -55,12 +60,10 @@ export const AuthProvider = ({ children }) => {
       
       if (token && userData) {
         try {
-          // Сначала ставим то, что есть в памяти для быстроты
           setCurrentUser(JSON.parse(userData));
-          // Затем фоново обновляем данные с сервера
           await loadUserData();
         } catch (error) {
-          console.error('Error parsing user data:', error);
+          if (IS_DEV) console.error('Error parsing user data:', error);
           logout();
         }
       }
@@ -68,9 +71,9 @@ export const AuthProvider = ({ children }) => {
     };
 
     initAuth();
-  }, []);
+  }, [loadUserData, logout]);
 
-  const login = async (credentials) => {
+  const login = useCallback(async (credentials) => {
     try {
       const response = await apiService.login(credentials);
       let userData, token;
@@ -89,16 +92,15 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('userData', JSON.stringify(userData));
       setCurrentUser(userData);
       
-      // Сразу после входа пробуем подтянуть полные данные (телефон, адрес)
       await loadUserData();
       
       return { success: true, user: userData };
     } catch (error) {
       return { success: false, error: error.message || 'Ошибка входа' };
     }
-  };
+  }, [loadUserData]);
 
-  const register = async (userData) => {
+  const register = useCallback(async (userData) => {
     try {
       const res = await apiService.register(userData);
       if (!res || !res.user || !res.token) {
@@ -111,43 +113,35 @@ export const AuthProvider = ({ children }) => {
       
       setCurrentUser(res.user);
 
-      // Синхронизация корзины и избранного
       try {
         await Promise.all([
           cartService.syncCartWithServer(res.user.id),
           wishlistService.syncWishlistWithServer(res.user.id)
         ]);
-      } catch (e) { console.warn('Sync error:', e); }
+      } catch (e) {
+        if (IS_DEV) console.warn('Sync error:', e);
+      }
 
       return { success: true, user: res.user };
     } catch (error) {
       logout();
       return { success: false, error: error.message || 'Ошибка регистрации' };
     }
-  };
+  }, [logout]);
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userData');
-    localStorage.removeItem('userId');
-    setCurrentUser(null);
-  };
-
-  const updateProfile = async (userData) => {
+  const updateProfile = useCallback(async (userData) => {
     try {
-      // Обновляем через API
       await adminService.updateUser(currentUser.id, userData);
       
-      // КРИТИЧНО: После обновления на сервере, скачиваем свежий профиль
       const freshUser = await loadUserData();
       
       return { success: true, user: freshUser || userData };
     } catch (error) {
       return { success: false, error: error.message || 'Ошибка обновления' };
     }
-  };
+  }, [currentUser, loadUserData]);
 
-  const value = {
+  const value = useMemo(() => ({
     user: currentUser,
     currentUser,
     loading,
@@ -155,10 +149,18 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateProfile,
-    loadUserData, // Экспортируем функцию получения данных
+    loadUserData,
     isAuthenticated: !!currentUser,
     isAdmin: currentUser?.role === 'admin'
-  };
+  }), [
+    currentUser,
+    loading,
+    login,
+    register,
+    logout,
+    updateProfile,
+    loadUserData
+  ]);
 
   return (
     <AuthContext.Provider value={value}>

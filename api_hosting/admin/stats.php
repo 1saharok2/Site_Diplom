@@ -52,7 +52,10 @@ try {
         $query = "SELECT SUM(total_amount) as total FROM orders";
         $stmt = $db->prepare($query);
         $stmt->execute();
-        $stats['revenue'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+        $rev = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+        $stats['revenue'] = $rev;
+        // Алиас для фронта (adminService ожидает sales / totalSales)
+        $stats['sales'] = $rev;
         
         ob_clean();
         echo json_encode($stats);

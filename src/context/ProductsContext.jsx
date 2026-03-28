@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { apiService } from '../services/api';
 
 const ProductsContext = createContext();
@@ -17,11 +17,7 @@ export const ProductsProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-
-  const fetchInitialData = async () => {
+  const fetchInitialData = useCallback(async () => {
     try {
       setLoading(true);
       const [productsData, categoriesData] = await Promise.all([
@@ -34,50 +30,54 @@ export const ProductsProvider = ({ children }) => {
       setError('');
     } catch (error) {
       setError('Ошибка загрузки данных');
-      console.error('Fetch error:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Fetch error:', error);
       // Устанавливаем пустые массивы при ошибке
       setProducts([]);
       setCategories([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const getProductById = async (id) => {
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
+
+  const getProductById = useCallback(async (id) => {
     try {
       const product = await apiService.getProduct(id);
       return product;
     } catch (error) {
-      console.error('Error fetching product:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching product:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const getProductsByCategory = async (categorySlug) => {
+  const getProductsByCategory = useCallback(async (categorySlug) => {
     try {
       const productsData = await apiService.getProductsByCategory(categorySlug);
       return productsData || [];
     } catch (error) {
-      console.error('Error fetching products by category:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error fetching products by category:', error);
       return [];
     }
-  };
+  }, []);
 
-  const searchProducts = async (query) => {
+  const searchProducts = useCallback(async (query) => {
     try {
       const productsData = await apiService.searchProducts(query);
       return productsData || [];
     } catch (error) {
-      console.error('Error searching products:', error);
+      if (process.env.NODE_ENV === 'development') console.error('Error searching products:', error);
       return [];
     }
-  };
+  }, []);
 
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     await fetchInitialData();
-  };
+  }, [fetchInitialData]);
 
-  const value = {
+  const value = useMemo(() => ({
     // Данные
     products,
     categories,
@@ -89,7 +89,16 @@ export const ProductsProvider = ({ children }) => {
     getProductsByCategory,
     searchProducts,
     refreshData
-  };
+  }), [
+    products,
+    categories,
+    loading,
+    error,
+    getProductById,
+    getProductsByCategory,
+    searchProducts,
+    refreshData
+  ]);
 
   return (
     <ProductsContext.Provider value={value}>

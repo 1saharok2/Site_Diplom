@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import { AuthProvider } from './context/AuthContext';
 import reportWebVitals from './reportWebVitals';
 
 // Компонент для отображения загрузки
@@ -40,12 +39,10 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <React.Suspense fallback={<AppLoader />}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <App />
     </React.Suspense>
   </React.StrictMode>
 );
 
-// Отчет о веб-метриках
-reportWebVitals(console.log);
+// Отчёт о веб-метриках только в development (не нагружает production)
+reportWebVitals(process.env.NODE_ENV === 'development' ? console.log : () => {});

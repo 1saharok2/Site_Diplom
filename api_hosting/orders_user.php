@@ -22,7 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 // 1. Подключение к БД
 // Убедитесь, что 'config/database.php' доступен
-require_once 'config/database.php'; 
+require_once 'config/database.php';
+require_once __DIR__ . '/utils/shipping_address.php';
 $db = (new Database())->getConnection();
 
 // 2. Получение userId
@@ -70,8 +71,7 @@ foreach ($userOrders as $order) {
     $itemsStmt->execute([$orderId]);
     $orderItems = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Декодирование адреса, который был сохранен как JSON
-    $shippingAddress = json_decode($order['shipping_address'], true) ?? null;
+    $shippingAddress = normalize_shipping_address_for_api($order['shipping_address']);
 
     // ВНИМАНИЕ: ВСЕ ПОЛЯ, ИДУЩИЕ ИЗ БАЗЫ, ИСПОЛЬЗУЮТСЯ В SNAKE_CASE
     $responseOrders[] = [

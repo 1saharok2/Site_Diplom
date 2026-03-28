@@ -21,7 +21,7 @@ $tks = explode(" ", $authHeader);
 $token = $tks[1] ?? null;
 
 try {
-    $query = "SELECT id, email, first_name, last_name, phone, address, created_at, role 
+    $query = "SELECT id, email, first_name, last_name, phone, address, avatar_url, created_at, role 
               FROM users 
               WHERE token = :token 
               LIMIT 0,1";
@@ -39,6 +39,7 @@ try {
             "last_name" => $row['last_name'],
             "phone" => $row['phone'],
             "address" => $row['address'],
+            "avatar_url" => $row['avatar_url'],
             "created_at" => $row['created_at'],
             "role" => $row['role']
         ];

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import { devLog } from '../utils/devLog';
 import { reviewService } from '../services/reviewService';
 import { adminService } from '../services/adminService';
 import { fetchWithAuth } from '../services/adminService';
@@ -57,10 +58,10 @@ export const ReviewProvider = ({ children }) => {
   // Загрузить отзывы для модерации
   const loadModerationReviews = useCallback(async () => {
     try {
-      console.log('🔄 Загрузка отзывов для модерации...');
+      devLog('🔄 Загрузка отзывов для модерации...');
       setLoading(true);
       const data = await fetchWithAuth('/admin/reviews?action=pending');
-      console.log('✅ Отзывы для модерации получены:', data);
+      devLog('✅ Отзывы для модерации получены:', data);
       setModerationReviews(data || []);
       return data || [];
     } catch (error) {
@@ -99,7 +100,7 @@ export const ReviewProvider = ({ children }) => {
       user_id: currentUser.id
     };
 
-    console.log('📝 Создание отзыва с данными:', reviewDataWithUser);
+    devLog('📝 Создание отзыва с данными:', reviewDataWithUser);
 
     try {
       setLoading(true);
@@ -183,7 +184,7 @@ export const ReviewProvider = ({ children }) => {
     }
   }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     reviews,
     userReviews,
     moderationReviews,
@@ -198,7 +199,22 @@ export const ReviewProvider = ({ children }) => {
     deleteOwnReview,
     deleteReview,
     getReviewStats
-  };
+  }), [
+    reviews,
+    userReviews,
+    moderationReviews,
+    loading,
+    loadProductReviews,
+    loadUserReviews,
+    loadModerationReviews,
+    loadAllReviews,
+    createReview,
+    approveReview,
+    rejectReview,
+    deleteOwnReview,
+    deleteReview,
+    getReviewStats
+  ]);
 
   return (
     <ReviewContext.Provider value={value}>

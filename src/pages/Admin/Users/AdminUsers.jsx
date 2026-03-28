@@ -123,20 +123,27 @@ const AdminUsers = () => {
   };
 
   const handleDeleteUser = async () => {
+    const deletedId = deleteDialog.user?.id;
+    if (deletedId == null) {
+      setDeleteDialog({ open: false, user: null });
+      return;
+    }
     try {
-      await adminService.deleteUser(deleteDialog.user.id);
-      setUsers(users.filter(user => user.id !== deleteDialog.user.id));
-      setSnackbar({ 
-        open: true, 
-        message: 'Пользователь успешно удален', 
-        severity: 'success' 
+      await adminService.deleteUser(deletedId);
+      setUsers((prev) =>
+        prev.filter((u) => String(u.id) !== String(deletedId))
+      );
+      setSnackbar({
+        open: true,
+        message: 'Пользователь успешно удалён',
+        severity: 'success'
       });
     } catch (error) {
       console.error('Delete error:', error);
-      setSnackbar({ 
-        open: true, 
-        message: error.message || 'Ошибка при удалении пользователя', 
-        severity: 'error' 
+      setSnackbar({
+        open: true,
+        message: error.message || 'Ошибка при удалении пользователя',
+        severity: 'error'
       });
     } finally {
       setDeleteDialog({ open: false, user: null });
@@ -181,12 +188,10 @@ const AdminUsers = () => {
 
   const handleUpdateUser = async (data) => {
     try {
-      const response = await adminService.updateUser(managementDialog.user.id, data);
-      console.log('📦 Ответ сервера:', response);
-      const updatedUser = await adminService.updateUser(managementDialog.user.id, data);
-      setUsers(users.map(user => user.id === managementDialog.user.id ? updatedUser : user));
-      setSnackbar({ open: true, message: 'Пользователь успешно обновлен', severity: 'success' });
-      setManagementDialog({ open: false, user: null, isViewMode: false });
+      await adminService.updateUser(managementDialog.user.id, data);
+      await fetchUsers();
+      setSnackbar({ open: true, message: 'Пользователь успешно обновлён', severity: 'success' });
+      setManagementDialog({ open: false, user: null, formData: null, isViewMode: false });
     } catch (error) {
       console.error('Update error:', error);
       setSnackbar({ open: true, message: error.message || 'Ошибка при обновлении пользователя', severity: 'error' });
@@ -284,20 +289,6 @@ const AdminUsers = () => {
         <Grid item xs={6} md={3}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            color: 'white',
-            borderRadius: 2
-          }}>
-            <CardContent sx={{ textAlign: 'center', p: 2 }}>
-              <Typography variant="h5" gutterBottom>
-                {users.filter(u => u.is_active).length}
-              </Typography>
-              <Typography variant="body2">Активных</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={6} md={3}>
-          <Card sx={{ 
-            background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
             color: 'white',
             borderRadius: 2
           }}>

@@ -91,12 +91,18 @@ const AdminProducts = () => {
     }
 
     const sorted = filtered.sort((a, b) => {
-      let aValue = a[sortField];
-      let bValue = b[sortField];
+      let aValue;
+      let bValue;
 
       if (sortField === 'price' || sortField === 'stock') {
-        aValue = Number(aValue);
-        bValue = Number(bValue);
+        aValue = Number(a[sortField]);
+        bValue = Number(b[sortField]);
+      } else if (sortField === 'created_at') {
+        aValue = new Date(a.created_at || a.createdAt || 0).getTime();
+        bValue = new Date(b.created_at || b.createdAt || 0).getTime();
+      } else {
+        aValue = (a[sortField] ?? '').toString().toLowerCase();
+        bValue = (b[sortField] ?? '').toString().toLowerCase();
       }
 
       if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
@@ -198,7 +204,7 @@ const AdminProducts = () => {
   };
 
   const getSortIcon = (field) => {
-    if (sortField !== field) return null;
+    if (sortField !== field) return '';
     return sortOrder === 'asc' ? '↑' : '↓';
   };
 
@@ -308,17 +314,20 @@ const AdminProducts = () => {
             { field: 'name', label: 'По названию' },
             { field: 'price', label: 'По цене' },
             { field: 'stock', label: 'По количеству' },
-            { field: 'createdAt', label: 'По дате' }
-          ].map((sort) => (
+            { field: 'created_at', label: 'По дате' }
+          ].map((sort) => {
+            const arrow = getSortIcon(sort.field);
+            return (
             <Chip
               key={sort.field}
-              label={`${sort.label} ${getSortIcon(sort.field)}`}
+              label={arrow ? `${sort.label} ${arrow}` : sort.label}
               onClick={() => handleSort(sort.field)}
               variant={sortField === sort.field ? 'filled' : 'outlined'}
               color={sortField === sort.field ? 'primary' : 'default'}
               clickable
             />
-          ))}
+          );
+          })}
         </Box>
       </Paper>
 

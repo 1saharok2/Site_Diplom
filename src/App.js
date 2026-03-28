@@ -10,6 +10,7 @@ import { AuthProvider, CartProvider, ProductsProvider, CategoriesProvider, Wishl
 import { ReviewProvider } from './context/ReviewContext';
 import ScrollToTop from './components/ScrollToTop';
 import { initAuth } from './utils/authSync';
+import { devLog } from './utils/devLog';
 import './App.css';
 
 // Ленивая загрузка страниц
@@ -93,11 +94,11 @@ function App() {
 
   // Инициализация авторизации при загрузке приложения
   useEffect(() => {
-    console.log('🚀 Инициализация приложения...');
+    devLog('🚀 Инициализация приложения...');
     
     // 1. Инициализируем авторизацию
     const authState = initAuth();
-    console.log('✅ Авторизация инициализирована:', authState);
+    devLog('✅ Авторизация инициализирована:', authState);
     
     // 2. Устанавливаем флаг, что авторизация инициализирована
     setIsAuthInitialized(true);
@@ -111,17 +112,17 @@ function App() {
             import('./pages/Catalog/CategoriesPage/CategoriesPage'),
             import('./pages/Search/SearchPage')
           ]);
-          console.log('📦 Ключевые страницы предзагружены');
+          devLog('📦 Ключевые страницы предзагружены');
         }, 3000);
       } catch (error) {
-        console.log('Предзагрузка страниц не удалась:', error);
+        devLog('Предзагрузка страниц не удалась:', error);
       }
     };
 
     preloadCriticalPages();
     
     // 4. Логируем начальное состояние
-    console.log('📋 Начальное состояние localStorage:', {
+    devLog('📋 Начальное состояние localStorage:', {
       userId: localStorage.getItem('userId'),
       hasToken: !!localStorage.getItem('authToken'),
       hasUserData: !!localStorage.getItem('userData')

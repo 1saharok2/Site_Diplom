@@ -16,7 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     exit();
 }
 
-require_once 'config/database.php'; 
+require_once 'config/database.php';
+require_once __DIR__ . '/utils/shipping_address.php';
 $db = (new Database())->getConnection();
 
 // Получаем и очищаем параметр id
@@ -62,8 +63,7 @@ try {
     $itemsStmt->execute([$orderId]);
     $orderItems = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Формируем ответ
-    $shippingAddress = json_decode($order['shipping_address'], true) ?? $order['shipping_address'];
+    $shippingAddress = normalize_shipping_address_for_api($order['shipping_address']);
     
     $response = [
         'id' => (int)$order['id'],

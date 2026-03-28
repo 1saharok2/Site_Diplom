@@ -1,5 +1,5 @@
 // context/CartContext.jsx
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo } from 'react';
 import { cartService } from '../services/cartService';
 import { getUserUuid } from '../utils/authUtils';
 import { useAuth } from './AuthContext';
@@ -106,7 +106,7 @@ export const CartProvider = ({ children }) => {
     }
   }, [loadCart]);
 
-  const updateQuantity = async (cartItemId, quantity) => {
+  const updateQuantity = useCallback(async (cartItemId, quantity) => {
     try {
       const updatedItem = await cartService.updateCartItem(cartItemId, quantity);
       dispatch({ type: 'UPDATE_ITEM', payload: updatedItem });
@@ -118,12 +118,11 @@ export const CartProvider = ({ children }) => {
       await loadCart(true, { silent: true });
       throw error;
     }
-  };
+  }, [loadCart]);
 
   const removeFromCart = useCallback(async (cartItemId) => {
     try {
       const userUuid = getUserUuid(); 
-      console.log('🗑️ removeFromCart в контексте:', { cartItemId, userUuid });
       
       await cartService.removeFromCart(cartItemId, userUuid);
       dispatch({ type: 'REMOVE_ITEM', payload: cartItemId });
@@ -135,7 +134,7 @@ export const CartProvider = ({ children }) => {
     }
   }, [loadCart]);
 
-  const clearCart = async () => {
+  const clearCart = useCallback(async () => {
     if (!currentUser) return;
     
     try {
@@ -145,15 +144,15 @@ export const CartProvider = ({ children }) => {
       dispatch({ type: 'SET_ERROR', payload: error.message });
       throw error;
     }
-  };
+  }, [currentUser]);
 
-  const getTotalPrice = () => {
+  const getTotalPrice = useCallback(() => {
     return cartService.getCartTotal(state.items);
-  };
+  }, [state.items]);
 
-  const getItemsCount = () => {
+  const getItemsCount = useCallback(() => {
     return cartService.getCartItemsCount(state.items);
-  };
+  }, [state.items]);
 
   useEffect(() => {
     if (currentUser) {
@@ -163,7 +162,7 @@ export const CartProvider = ({ children }) => {
     }
   }, [currentUser, loadCart]);
 
-  const value = {
+  const value = useMemo(() => ({
     items: state.items,
     loading: state.loading,
     error: state.error,
@@ -174,7 +173,18 @@ export const CartProvider = ({ children }) => {
     getTotalPrice,
     getItemsCount,
     refreshCart: loadCart
-  };
+  }), [
+    state.items,
+    state.loading,
+    state.error,
+    addToCart,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    getTotalPrice,
+    getItemsCount,
+    loadCart
+  ]);
 
   return (
     <CartContext.Provider value={value}>

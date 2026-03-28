@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { adminService } from '../services/adminService';
 
 const CategoriesContext = createContext();
@@ -16,8 +16,7 @@ export const CategoriesProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ПЕРЕМЕСТИТЕ ФУНКЦИЮ ВНУТРЬ КОМПОНЕНТА
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
       const response = await adminService.getCategories();
@@ -29,22 +28,22 @@ export const CategoriesProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
-  const refreshCategories = () => {
+  const refreshCategories = useCallback(() => {
     fetchCategories();
-  };
+  }, [fetchCategories]);
 
-  const value = {
+  const value = useMemo(() => ({
     categories,
     loading,
     error,
     refreshCategories
-  };
+  }), [categories, loading, error, refreshCategories]);
 
   return (
     <CategoriesContext.Provider value={value}>

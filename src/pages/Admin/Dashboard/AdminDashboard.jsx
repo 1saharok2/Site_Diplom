@@ -78,7 +78,8 @@ const AdminDashboard = () => {
     try {
       setRefreshing(true);
       setError(null);
-      const token = localStorage.getItem('authToken');
+      const token =
+        localStorage.getItem('token') || localStorage.getItem('authToken');
       if (!token) {
         navigate('/login');
         return;

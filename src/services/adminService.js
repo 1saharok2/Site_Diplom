@@ -25,7 +25,8 @@ const handleApiResponse = async (response) => {
 };
 
 export const fetchWithAuth = async (url, options = {}) => {
-  const token = localStorage.getItem('token');
+  const token =
+    localStorage.getItem('token') || localStorage.getItem('authToken');
 
   const response = await fetch(`${API_BASE}${url}`, {
     ...options,
@@ -200,14 +201,15 @@ export const adminService = {
   },
 
   updateUser: async (id, userData) => {
-    return fetchWithAuth(`/admin/users/${id}`, {
+    return fetchWithAuth(`/admin/users/${encodeURIComponent(id)}`, {
       method: 'PUT',
       body: JSON.stringify(userData)
     });
   },
 
   deleteUser: async (id) => {
-    return fetchWithAuth(`/admin/users/${id}`, {
+    const enc = encodeURIComponent(id);
+    return fetchWithAuth(`/admin/users/${enc}`, {
       method: 'DELETE'
     });
   },
@@ -216,11 +218,17 @@ export const adminService = {
     try {
       const data = await fetchWithAuth('/admin/stats');
       console.log('📊 Stats data:', data);
+      const n = (v) => {
+        const x = Number(v);
+        return Number.isFinite(x) ? x : 0;
+      };
       return {
-        totalOrders: data.totalOrders || data.orders_count || data.orders || 0,
-        totalProducts: data.totalProducts || data.products_count || data.products || 0,
-        totalUsers: data.totalUsers || data.users_count || data.users || 0,
-        totalSales: data.totalSales || data.sales_total || data.sales || 0,
+        totalOrders: n(data.totalOrders ?? data.orders_count ?? data.orders),
+        totalProducts: n(data.totalProducts ?? data.products_count ?? data.products),
+        totalUsers: n(data.totalUsers ?? data.users_count ?? data.users),
+        totalSales: n(
+          data.totalSales ?? data.sales_total ?? data.sales ?? data.revenue
+        ),
         recentOrders: data.recentOrders || data.last_orders || data.orders || []
       }; 
     } catch (error) {

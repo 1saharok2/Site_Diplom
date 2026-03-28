@@ -15,6 +15,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 ob_start();
 
+/**
+ * ID пользователя: из RewriteRule (?id=) или из пути .../admin/users/{id}
+ */
+function admin_users_resolve_id(): string
+{
+    if (!empty($_GET['id'])) {
+        return trim((string) $_GET['id']);
+    }
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+    $segments = array_values(array_filter(explode('/', trim($path, '/'))));
+    foreach ($segments as $i => $seg) {
+        if (strcasecmp($seg, 'users') === 0 && isset($segments[$i + 1])) {
+            $cand = $segments[$i + 1];
+            if (stripos($cand, '.php') === false) {
+                return $cand;
+            }
+        }
+    }
+    $last = end($segments);
+    if ($last && stripos($last, '.php') === false) {
+        return $last;
+    }
+
+    return '';
+}
+
 try {
     include_once '../config/database.php';
     $database = new Database();
@@ -43,13 +69,11 @@ try {
     if ($method === 'PUT') {
         error_log("===== НАЧАЛО PUT ЗАПРОСА =====");
 
-        // получаем ID из URL: /api/admin/users/{id}
-        $uri = explode('/', trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'));
-        $userId = end($uri);
+        $userId = admin_users_resolve_id();
 
         error_log("PUT - ID пользователя: " . $userId);
 
-        if (empty($userId)) {
+        if ($userId === '') {
             error_log("PUT - ОШИБКА: ID пользователя не передан");
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'ID пользователя не передан']);
@@ -85,7 +109,7 @@ try {
         $fields = [];
         $params = [];
 
-        $allowed = ['first_name', 'last_name', 'email', 'phone', 'address', 'role', 'is_active'];
+        $allowed = ['first_name', 'last_name', 'email', 'phone', 'address', 'role', 'is_active', 'avatar_url'];
         foreach ($allowed as $key) {
             if (isset($data[$key])) {
                 $fields[] = "$key = ?";
@@ -136,123 +160,92 @@ try {
     // ======== DELETE — удаление пользователя ========
     //
 if ($method === 'DELETE') {
-    $uri = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
-    $userId = end($uri);
+    $userId = admin_users_resolve_id();
 
-    if (empty($userId)) {
+    if ($userId === '') {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'ID пользователя не передан']);
         exit;
     }
 
     try {
-        // Начинаем транзакцию для целостности данных
         $db->beginTransaction();
 
-        // 1. Проверяем, существует ли пользователь
         $checkStmt = $db->prepare("SELECT id, role FROM users WHERE id = ?");
         $checkStmt->execute([$userId]);
         $user = $checkStmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if (!$user) {
+            $db->rollBack();
             http_response_code(404);
             echo json_encode(['success' => false, 'message' => 'Пользователь не найден']);
             exit;
         }
 
-        // 2. Проверяем, не пытается ли пользователь удалить себя
-        // Нужно получить ID текущего пользователя из токена
-        // Пока пропустим эту проверку, если нет информации о текущем пользователе
-
-        // 3. Проверяем, не удаляем ли последнего администратора
         if ($user['role'] === 'admin') {
-            $adminCountStmt = $db->prepare("SELECT COUNT(*) as admin_count FROM users WHERE role = 'admin'");
+            $adminCountStmt = $db->prepare("SELECT COUNT(*) as c FROM users WHERE role = 'admin'");
             $adminCountStmt->execute();
-            $adminCount = $adminCountStmt->fetch(PDO::FETCH_ASSOC)['admin_count'];
-            
+            $adminCount = (int) $adminCountStmt->fetch(PDO::FETCH_ASSOC)['c'];
+
             if ($adminCount <= 1) {
+                $db->rollBack();
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Нельзя удалить последнего администратора']);
                 exit;
             }
         }
 
-        // 4. УДАЛЯЕМ СВЯЗАННЫЕ ДАННЫЕ (важно для внешних ключей)
-        // Список таблиц, которые могут содержать ссылки на пользователя
-        
-        // user_cart (из ошибки видно, что есть внешний ключ)
-        try {
-            $deleteCartStmt = $db->prepare("DELETE FROM user_cart WHERE user_id = ?");
-            $deleteCartStmt->execute([$userId]);
-            error_log("Удалены записи из user_cart для пользователя: " . $userId);
-        } catch (Exception $e) {
-            error_log("Ошибка при удалении из user_cart: " . $e->getMessage());
+        // Сотрудник: сначала убираем ссылки из заказов, иначе FK на employees
+        $empIdsStmt = $db->prepare("SELECT id FROM employees WHERE user_id = ?");
+        $empIdsStmt->execute([$userId]);
+        $empIds = $empIdsStmt->fetchAll(PDO::FETCH_COLUMN);
+        if (!empty($empIds)) {
+            $ph = implode(',', array_fill(0, count($empIds), '?'));
+            $db->prepare("UPDATE orders SET employee_id = NULL WHERE employee_id IN ($ph)")->execute($empIds);
+            $db->prepare("DELETE FROM employees WHERE user_id = ?")->execute([$userId]);
         }
-        
-        // wishlist
+
+        $db->prepare("DELETE FROM user_cart WHERE user_id = ?")->execute([$userId]);
+        $db->prepare("DELETE FROM user_wishlist WHERE user_id = ?")->execute([$userId]);
+        $db->prepare("DELETE FROM reviews WHERE user_id = ?")->execute([$userId]);
+
         try {
-            $deleteWishlistStmt = $db->prepare("DELETE FROM wishlist WHERE user_id = ?");
-            $deleteWishlistStmt->execute([$userId]);
-            error_log("Удалены записи из wishlist для пользователя: " . $userId);
-        } catch (Exception $e) {
-            error_log("Ошибка при удалении из wishlist: " . $e->getMessage());
+            $db->prepare("DELETE FROM support_tickets WHERE user_id = ?")->execute([$userId]);
+        } catch (Throwable $e) {
+            error_log('support_tickets delete: ' . $e->getMessage());
         }
-        
-        // user_activity или activity_log (если есть такая таблица)
+
         try {
-            $deleteActivityStmt = $db->prepare("DELETE FROM user_activity WHERE user_id = ?");
-            $deleteActivityStmt->execute([$userId]);
-            error_log("Удалены записи из user_activity для пользователя: " . $userId);
-        } catch (Exception $e) {
-            // Игнорируем, если таблицы нет
+            $db->prepare("DELETE FROM user_activity WHERE user_id = ?")->execute([$userId]);
+        } catch (Throwable $e) {
+            // таблицы может не быть
         }
-        
-        // orders (если есть таблица заказов)
-        try {
-            $deleteOrdersStmt = $db->prepare("DELETE FROM orders WHERE user_id = ?");
-            $deleteOrdersStmt->execute([$userId]);
-            error_log("Удалены записи из orders для пользователя: " . $userId);
-        } catch (Exception $e) {
-            // Игнорируем, если таблицы нет
-        }
-        
-        // reviews (если есть таблица отзывов)
-        try {
-            $deleteReviewsStmt = $db->prepare("DELETE FROM reviews WHERE user_id = ?");
-            $deleteReviewsStmt->execute([$userId]);
-            error_log("Удалены записи из reviews для пользователя: " . $userId);
-        } catch (Exception $e) {
-            // Игнорируем, если таблицы нет
-        }
-        
-        // 5. Теперь удаляем самого пользователя
+
         $deleteUserStmt = $db->prepare("DELETE FROM users WHERE id = ?");
         $deleteUserStmt->execute([$userId]);
-        
+
         if ($deleteUserStmt->rowCount() > 0) {
             $db->commit();
+            ob_clean();
             echo json_encode([
-                'success' => true, 
-                'message' => 'Пользователь и все связанные данные успешно удалены',
-                'deleted_id' => $userId
-            ]);
+                'success' => true,
+                'message' => 'Пользователь и связанные данные удалены',
+                'deleted_id' => $userId,
+            ], JSON_UNESCAPED_UNICODE);
         } else {
             $db->rollBack();
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Не удалось удалить пользователя']);
         }
-        
-    } catch (Exception $e) {
-        // Откатываем транзакцию при ошибке
+    } catch (Throwable $e) {
         if ($db->inTransaction()) {
             $db->rollBack();
         }
-        
         http_response_code(500);
-        error_log("DELETE User Error: " . $e->getMessage() . " - User ID: " . $userId);
+        error_log('DELETE User Error: ' . $e->getMessage() . ' - User ID: ' . $userId);
         echo json_encode([
             'success' => false,
-            'message' => 'Ошибка при удалении пользователя: ' . $e->getMessage()
+            'message' => 'Ошибка при удалении пользователя: ' . $e->getMessage(),
         ], JSON_UNESCAPED_UNICODE);
     }
     exit;

@@ -1,4 +1,5 @@
 import { getUserId } from "../utils/authUtils";
+import { IS_DEV, devLog } from "../utils/devLog";
 
 const getApiBase = () => {
   if (process.env.REACT_APP_API_URL) {
@@ -13,7 +14,7 @@ const getApiBase = () => {
 
 const API_BASE = getApiBase();
 
-console.log('🔧 API_BASE:', API_BASE);
+devLog('🔧 API_BASE:', API_BASE);
 
 // Улучшенная обработка ответов
 const handleResponse = async (response, url) => {
@@ -25,17 +26,20 @@ const handleResponse = async (response, url) => {
     try {
       data = responseText ? JSON.parse(responseText) : {};
     } catch (parseError) {
-      console.error(`❌ JSON parse error for ${url}:`, parseError);
-      console.error('Response text:', responseText);
+      if (IS_DEV) {
+        console.error(`❌ JSON parse error for ${url}:`, parseError);
+        console.error('Response text:', responseText);
+      }
       throw new Error(`Invalid JSON response from server: ${responseText.substring(0, 100)}`);
     }
     
-    // Логируем для отладки
-    console.log(`📥 Response from ${url}:`, {
-      status: response.status,
-      ok: response.ok,
-      data: data
-    });
+    if (IS_DEV) {
+      devLog(`📥 Response from ${url}:`, {
+        status: response.status,
+        ok: response.ok,
+        data
+      });
+    }
     
     // Если ответ не OK, бросаем ошибку
     if (!response.ok) {
@@ -47,7 +51,7 @@ const handleResponse = async (response, url) => {
     
     return data;
   } catch (error) {
-    console.error(`❌ Error in handleResponse for ${url}:`, error);
+    if (IS_DEV) console.error(`❌ Error in handleResponse for ${url}:`, error);
     throw error;
   }
 };
@@ -76,13 +80,13 @@ export const apiService = {
   // Базовые методы с авторизацией
   get: (url) => {
     const fullUrl = `${API_BASE}${url}`;
-    console.log('🔧 GET request to:', fullUrl);
+    devLog('🔧 GET request to:', fullUrl);
     return fetchWithAuth(fullUrl).then(response => handleResponse(response, fullUrl));
   },
   
   post: (url, data) => {
     const fullUrl = `${API_BASE}${url}`;
-    console.log('🔧 POST request to:', fullUrl, data);
+    devLog('🔧 POST request to:', fullUrl, data);
     return fetchWithAuth(fullUrl, {
       method: 'POST',
       body: JSON.stringify(data)
@@ -91,7 +95,7 @@ export const apiService = {
     
   put: (url, data) => {
     const fullUrl = `${API_BASE}${url}`;
-    console.log('🔧 PUT request to:', fullUrl, data);
+    devLog('🔧 PUT request to:', fullUrl, data);
     return fetchWithAuth(fullUrl, {
       method: 'PUT',
       body: JSON.stringify(data)
@@ -100,17 +104,33 @@ export const apiService = {
     
   delete: (url, data = {}) => {
     const fullUrl = `${API_BASE}${url}`;
-    console.log('🔧 DELETE request to:', fullUrl, data);
+    devLog('🔧 DELETE request to:', fullUrl, data);
     return fetchWithAuth(fullUrl, {
       method: 'DELETE',
       body: Object.keys(data).length > 0 ? JSON.stringify(data) : undefined
     }).then(response => handleResponse(response, fullUrl));
   },
+
+  /** Загрузка аватара (multipart), токен как у остальных запросов */
+  uploadAvatar: async (file) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const token =
+      localStorage.getItem('token') || localStorage.getItem('authToken');
+    const fullUrl = `${API_BASE}/auth/upload_avatar.php`;
+    devLog('🔧 uploadAvatar:', fullUrl);
+    const response = await fetch(fullUrl, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData
+    });
+    return handleResponse(response, fullUrl);
+  },
   
   // Products - используйте только эти методы
   getProducts: () => {
     const url = `/products`;
-    console.log('🔧 getProducts URL:', url);
+    devLog('🔧 getProducts URL:', url);
     return apiService.get(url);
   },
   
@@ -129,7 +149,7 @@ export const apiService = {
   // Categories
   getCategories: () => {
     const url = `/categories`;
-    console.log('🔧 getCategories URL:', url);
+    devLog('🔧 getCategories URL:', url);
     return apiService.get(url);
   },
   
@@ -139,7 +159,7 @@ export const apiService = {
 
   getCategoryFilters: (categorySlug) => {
     const url = `/filters.php?category=${categorySlug}`;
-    console.log('🔧 getCategoryFilters URL:', url);
+    devLog('🔧 getCategoryFilters URL:', url);
     return apiService.get(url);
   },
 
@@ -147,8 +167,8 @@ export const apiService = {
   login: async (credentials) => {
     try {
       const url = `${API_BASE}/auth/login`;
-      console.log('🔧 login URL:', url);
-      console.log('🔧 login credentials:', { ...credentials, password: '***' });
+      devLog('🔧 login URL:', url);
+      devLog('🔧 login credentials:', { ...credentials, password: '***' });
       
       const response = await fetch(url, {
         method: 'POST',
@@ -166,12 +186,12 @@ export const apiService = {
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('userId', data.user.id.toString());
         localStorage.setItem('userData', JSON.stringify(data.user));
-        console.log('✅ Login successful, user ID:', data.user.id);
+        devLog('✅ Login successful, user ID:', data.user.id);
       }
       
       return data;
     } catch (error) {
-      console.error('Login error:', error);
+      if (IS_DEV) console.error('Login error:', error);
       throw error;
     }
   },
@@ -179,8 +199,8 @@ export const apiService = {
   register: async (userData) => {
     try {
       const url = 'https://electronic.tw1.ru/api/auth/register.php';
-      console.log('🔧 register URL:', url);
-      console.log('🔧 register data:', { 
+      devLog('🔧 register URL:', url);
+      devLog('🔧 register data:', { 
         ...userData, 
         password: userData.password ? '***' : undefined 
       });
@@ -193,15 +213,15 @@ export const apiService = {
         body: JSON.stringify(userData)
       });
 
-      console.log('🔧 register response status:', response.status);
+      devLog('🔧 register response status:', response.status);
       
       const data = await response.json();
-      console.log('🔧 register response data:', data);
+      devLog('🔧 register response data:', data);
 
       // !!! ИСПРАВЛЕНИЕ: ваш API не возвращает поле success
       // Проверяем структуру ответа (ваш API возвращает другой формат)
       if (!data.token || !data.user) {
-        console.error('⚠ Неожиданная структура ответа:', data);
+        if (IS_DEV) console.error('⚠ Неожиданная структура ответа:', data);
         throw new Error(data.message || 'Сервер вернул некорректные данные');
       }
 
@@ -218,7 +238,7 @@ export const apiService = {
       localStorage.setItem('userId', normalizedData.user.id.toString());
       localStorage.setItem('userData', JSON.stringify(normalizedData.user));
       
-      console.log('✅ Registration successful:', {
+      devLog('✅ Registration successful:', {
         userId: normalizedData.user.id,
         email: normalizedData.user.email,
         tokenSaved: !!normalizedData.token
@@ -227,7 +247,7 @@ export const apiService = {
       return normalizedData;
       
     } catch (error) {
-      console.error('❌ API register error:', error);
+      if (IS_DEV) console.error('❌ API register error:', error);
       // Очищаем при ошибке
       localStorage.removeItem('authToken');
       localStorage.removeItem('userId');
@@ -240,13 +260,13 @@ export const apiService = {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userId');
     localStorage.removeItem('userData');
-    console.log('✅ Logged out successfully');
+    devLog('✅ Logged out successfully');
   },
 
   // Cart & Orders
   createOrder: async (orderData) => {
     const url = `/orders.php`;
-    console.log('🔧 createOrder URL:', url, orderData);
+    devLog('🔧 createOrder URL:', url, orderData);
     
     try {
       const response = await fetchWithAuth(`${API_BASE}${url}`, {
@@ -255,27 +275,27 @@ export const apiService = {
       });
       
       const result = await handleResponse(response, url);
-      console.log('✅ Order created successfully:', result);
+      devLog('✅ Order created successfully:', result);
       return result;
       
     } catch (error) {
-      console.error('❌ Error creating order:', error);
+      if (IS_DEV) console.error('❌ Error creating order:', error);
       throw new Error(`Failed to create order: ${error.message}`);
     }
   },
 
   getUserOrders: async (userId) => {
     const url = `/orders/user/${userId}`;
-    console.log('🔧 getUserOrders URL:', url);
+    devLog('🔧 getUserOrders URL:', url);
     
     try {
       const response = await fetchWithAuth(`${API_BASE}${url}`);
       const result = await handleResponse(response, url);
-      console.log('✅ User orders fetched:', result.orders?.length || 0, 'orders');
+      devLog('✅ User orders fetched:', result.orders?.length || 0, 'orders');
       return result;
       
     } catch (error) {
-      console.error('❌ Error fetching user orders:', error);
+      if (IS_DEV) console.error('❌ Error fetching user orders:', error);
       // Возвращаем пустые данные вместо ошибки
       return {
         success: true,
@@ -287,21 +307,21 @@ export const apiService = {
 
   getOrderById: async (orderId) => {
     const url = `/orders/${orderId}`;
-    console.log('🔧 getOrderById URL:', url);
+    devLog('🔧 getOrderById URL:', url);
     
     try {
       const response = await fetchWithAuth(`${API_BASE}${url}`);
       return await handleResponse(response, url);
       
     } catch (error) {
-      console.error('❌ Error fetching order:', error);
+      if (IS_DEV) console.error('❌ Error fetching order:', error);
       throw error;
     }
   },
 
   updateOrderStatus: async (orderId, status) => {
     const url = `/admin/orders/${orderId}/status`;
-    console.log('🔧 updateOrderStatus URL:', url);
+    devLog('🔧 updateOrderStatus URL:', url);
     
     try {
       const response = await fetchWithAuth(`${API_BASE}${url}`, {
@@ -312,7 +332,7 @@ export const apiService = {
       return await handleResponse(response, url);
       
     } catch (error) {
-      console.error('❌ Error updating order status:', error);
+      if (IS_DEV) console.error('❌ Error updating order status:', error);
       throw error;
     }
   },
@@ -325,7 +345,7 @@ export const apiService = {
 
   // Reviews
   getUserReviews: async (userId = null) => {
-    console.log('!!! ФУНКЦИЯ ВЫЗВАНА !!!');
+    devLog('getUserReviews called');
     try {
       const actualUserId = userId || localStorage.getItem('userId');
       
@@ -335,11 +355,11 @@ export const apiService = {
       
       // МЕНЯЕМ ПУТЬ на прямой вызов файла с параметром
       const url = `reviews.php?user_id=${actualUserId}`;
-      console.log('🔧 getUserReviews URL:', url);
+      devLog('🔧 getUserReviews URL:', url);
       
       return await apiService.get(url);
     } catch (error) {
-      console.error('❌ Error getting user reviews:', error);
+      if (IS_DEV) console.error('❌ Error getting user reviews:', error);
       return {
         success: false,
         reviews: [],
@@ -354,23 +374,23 @@ export const apiService = {
       try {
           const actualUserId = userId || localStorage.getItem('userId');
           if (!actualUserId || actualUserId === '0') {
-              console.log('⚠ No user ID, returning empty cart');
+              devLog('⚠ No user ID, returning empty cart');
               return Promise.resolve({ success: true, items: [] });
           }
           
           // Убедитесь, что userId не дублируется
           const url = `/cart.php?userId=${actualUserId}`;
-          console.log('🔧 getCart URL:', url);
+          devLog('🔧 getCart URL:', url);
           
           // Используйте простой fetch без fetchWithAuth
           return fetch(`${API_BASE}${url}`)
               .then(response => handleResponse(response, url))
               .catch(error => {
-                  console.error('Cart fetch error:', error);
+                  if (IS_DEV) console.error('Cart fetch error:', error);
                   return { success: true, items: [] };
               });
       } catch (error) {
-          console.error('Error in getCart:', error);
+          if (IS_DEV) console.error('Error in getCart:', error);
           return Promise.resolve({ success: true, items: [] });
       }
   },
@@ -379,7 +399,7 @@ export const apiService = {
   getWishlist: (userId = null) => {
     const actualUserId = userId || localStorage.getItem('userId');
     if (!actualUserId || actualUserId === '0') {
-      console.log('⚠ No user ID, returning empty wishlist');
+      devLog('⚠ No user ID, returning empty wishlist');
       return Promise.resolve({ success: true, items: [] });
     }
     return apiService.get(`/wishlist.php?userId=${actualUserId}`);
@@ -410,7 +430,7 @@ export const apiService = {
         return { authenticated: false };
       }
     } catch (error) {
-      console.error('Auth check error:', error);
+      if (IS_DEV) console.error('Auth check error:', error);
       return { authenticated: false };
     }
   },
@@ -421,7 +441,7 @@ export const apiService = {
       const userData = localStorage.getItem('userData');
       return userData ? JSON.parse(userData) : null;
     } catch (error) {
-      console.error('Error getting current user:', error);
+      if (IS_DEV) console.error('Error getting current user:', error);
       return null;
     }
   }

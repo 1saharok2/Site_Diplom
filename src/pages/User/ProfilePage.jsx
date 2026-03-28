@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   Container,
@@ -48,13 +48,24 @@ import {
   Payment,
   AccountCircle,
   LocalShipping,
-  CheckCircle
+  CheckCircle,
+  Image as ImageIcon,
+  PhotoCamera
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { orderService } from '../../services/orderService';
 import { favoritesService } from '../../services/favoritesService';
 import { reviewService } from '../../services/reviewService';
 import { adminService } from '../../services/adminService';
+import { apiService } from '../../services/api';
+
+/** Ссылка на фото: http(s) или путь с сайта, до 500 символов (как в БД). */
+const isAvatarUrlAllowed = (s) => {
+  if (!s || typeof s !== 'string') return false;
+  const t = s.trim();
+  if (!t || t.length > 500) return false;
+  return /^https?:\/\//i.test(t) || t.startsWith('/');
+};
 
 const ProfilePage = () => {
   const { currentUser, updateProfile, loadUserData: fetchProfileFromApi } = useAuth();
@@ -64,7 +75,8 @@ const ProfilePage = () => {
     name: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
+    avatarUrl: ''
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -84,6 +96,26 @@ const ProfilePage = () => {
     writtenReviews: 0
   });
   const [userProfile, setUserProfile] = useState(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarFileInputRef = useRef(null);
+
+  const formFromUser = useCallback((user) => {
+    if (!user) {
+      return { name: '', email: '', phone: '', address: '', avatarUrl: '' };
+    }
+    const name =
+      user.name ||
+      (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : '') ||
+      (user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : '') ||
+      '';
+    return {
+      name,
+      email: user.email || '',
+      phone: user.phone || '',
+      address: user.address || '',
+      avatarUrl: user.avatar_url || ''
+    };
+  }, []);
 
   // Вспомогательные функции с useCallback
   const getOrderStatusText = useCallback((status) => {
@@ -357,14 +389,7 @@ const ProfilePage = () => {
       const freshData = await fetchProfileFromApi(); 
       const user = freshData || currentUser;
       setUserProfile(user);
-      setFormData({
-        name: user.name || 
-              (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : '') ||
-              (user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : '') || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: user.address || ''
-      });
+      setFormData(formFromUser(user));
       await fetchUserStatsAndActivity();
     } catch (error) {
       console.error('Ошибка загрузки данных:', error);
@@ -372,13 +397,16 @@ const ProfilePage = () => {
     } finally {
       setProfileLoading(false);
     }
-  }, [currentUser, fetchProfileFromApi, fetchUserStatsAndActivity]); 
+  }, [currentUser, fetchProfileFromApi, fetchUserStatsAndActivity, formFromUser]); 
 
   useEffect(() => {
     if (currentUser && !userProfile) { loadUserProfile(); }
   }, [currentUser?.id]);
 
   const handleEdit = () => {
+    if (userProfile) {
+      setFormData(formFromUser(userProfile));
+    }
     setEditDialogOpen(true);
     setActiveTab(0);
   };
@@ -386,12 +414,7 @@ const ProfilePage = () => {
   const handleCancel = () => {
     setEditDialogOpen(false);
     if (userProfile) {
-      setFormData({
-        name: userProfile.first_name || '',
-        email: userProfile.email || '',
-        phone: userProfile.phone || '',
-        address: userProfile.address || ''
-      });
+      setFormData(formFromUser(userProfile));
     }
     setPasswordData({
       currentPassword: '',
@@ -418,6 +441,35 @@ const ProfilePage = () => {
     setActiveTab(newValue);
   };
 
+  const handleAvatarFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const maxBytes = 2 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setMessage('Размер файла не больше 2 МБ');
+      setMessageType('error');
+      e.target.value = '';
+      return;
+    }
+    setAvatarUploading(true);
+    setMessage('');
+    try {
+      const data = await apiService.uploadAvatar(file);
+      if (data?.success && data.url) {
+        setFormData((prev) => ({ ...prev, avatarUrl: data.url }));
+      } else {
+        setMessage(data?.message || 'Не удалось загрузить фото');
+        setMessageType('error');
+      }
+    } catch (err) {
+      setMessage(err.message || 'Ошибка загрузки фото');
+      setMessageType('error');
+    } finally {
+      setAvatarUploading(false);
+      e.target.value = '';
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -425,10 +477,19 @@ const ProfilePage = () => {
 
     try {
       // Обновляем профиль через adminService
+      const trimmedAvatar = formData.avatarUrl.trim();
+      if (trimmedAvatar && !isAvatarUrlAllowed(trimmedAvatar)) {
+        setMessage('Укажите корректную ссылку на фото (https://… или путь, начинающийся с /), не длиннее 500 символов');
+        setMessageType('error');
+        setLoading(false);
+        return;
+      }
+
       const result = await updateProfile({
         name: formData.name,
         phone: formData.phone,
-        address: formData.address
+        address: formData.address,
+        avatar_url: trimmedAvatar
       });
       
       if (result.success) {
@@ -436,7 +497,11 @@ const ProfilePage = () => {
         setMessageType('success');
         setEditDialogOpen(false);
         
-        await fetchProfileFromApi();
+        const fresh = await fetchProfileFromApi();
+        if (fresh) {
+          setUserProfile(fresh);
+          setFormData(formFromUser(fresh));
+        }
         
         setTimeout(() => {
           setMessage('');
@@ -619,6 +684,11 @@ const ProfilePage = () => {
                   height: '100%'
                 }}>
                   <Avatar
+                    src={
+                      isAvatarUrlAllowed(userProfile?.avatar_url)
+                        ? userProfile.avatar_url.trim()
+                        : undefined
+                    }
                     sx={{
                       width: 120,
                       height: 120,
@@ -889,6 +959,80 @@ const ProfilePage = () => {
             <DialogContent sx={{ p: 4 }}>
               {activeTab === 0 ? (
                 <Box component="form" onSubmit={handleSubmit}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      mb: 3
+                    }}
+                  >
+                    <Avatar
+                      src={
+                        isAvatarUrlAllowed(formData.avatarUrl)
+                          ? formData.avatarUrl.trim()
+                          : undefined
+                      }
+                      sx={{
+                        width: 88,
+                        height: 88,
+                        mb: 2,
+                        border: `3px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        fontSize: '2rem',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {(formData.name || formData.email || 'U').charAt(0).toUpperCase()}
+                    </Avatar>
+                    <input
+                      ref={avatarFileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      style={{ display: 'none' }}
+                      onChange={handleAvatarFileChange}
+                    />
+                    <Button
+                      type="button"
+                      variant="outlined"
+                      size="small"
+                      startIcon={
+                        avatarUploading ? (
+                          <CircularProgress size={16} color="inherit" />
+                        ) : (
+                          <PhotoCamera />
+                        )
+                      }
+                      disabled={avatarUploading || loading}
+                      onClick={() => avatarFileInputRef.current?.click()}
+                      sx={{ mb: 2 }}
+                    >
+                      {avatarUploading ? 'Загрузка…' : 'Выбрать файл с устройства'}
+                    </Button>
+                    <TextField
+                      fullWidth
+                      label="Или ссылка на фото"
+                      name="avatarUrl"
+                      value={formData.avatarUrl}
+                      onChange={handleChange}
+                      placeholder="https://… или /api/uploads/…"
+                      sx={{ mb: 1 }}
+                      InputProps={{
+                        startAdornment: <ImageIcon sx={{ mr: 1, color: 'primary.main' }} />
+                      }}
+                      helperText="Можно загрузить файл выше или вставить URL (https или путь с /), до 500 символов."
+                    />
+                    <Button
+                      type="button"
+                      size="small"
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, avatarUrl: '' }))
+                      }
+                    >
+                      Убрать фото
+                    </Button>
+                  </Box>
+
                   <TextField
                     fullWidth
                     label="Полное имя"

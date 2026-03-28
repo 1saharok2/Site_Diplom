@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { wishlistService } from '../services/wishlistService';
 
@@ -122,7 +122,7 @@ export const WishlistProvider = ({ children }) => {
     }
   }, [currentUser, refreshWishlist]);
 
-  const value = {
+  const value = useMemo(() => ({
     wishlist,
     loading,
     addToWishlist,
@@ -132,7 +132,17 @@ export const WishlistProvider = ({ children }) => {
     getWishlistCount,
     toggleWishlist,
     refreshWishlist
-  };
+  }), [
+    wishlist,
+    loading,
+    addToWishlist,
+    removeFromWishlist,
+    removeFromWishlistByProduct,
+    isInWishlist,
+    getWishlistCount,
+    toggleWishlist,
+    refreshWishlist
+  ]);
 
   return (
     <WishlistContext.Provider value={value}>

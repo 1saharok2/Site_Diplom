@@ -54,10 +54,27 @@ import { adminService } from '../../../services/adminService';
 // =================================================================
 // 🚀 1. ФУНКЦИИ СТАТУСА (ВЫНЕСЕНЫ ИЗ КОМПОНЕНТА)
 // =================================================================
+// В MySQL enum: pending, confirmed, processing, shipped, delivered, cancelled
+// В UI «Завершён» = completed; в API/БД финальный статус — delivered
+
+const toApiStatus = (uiStatus) => (uiStatus === 'completed' ? 'delivered' : uiStatus);
+
+const isCompletedStatus = (status) =>
+  status === 'completed' || status === 'delivered';
+
+const statusMatchesFilter = (orderStatus, filter) => {
+  if (filter === 'all') return true;
+  if (filter === 'completed') return isCompletedStatus(orderStatus);
+  return orderStatus === filter;
+};
 
 const getStatusColor = (status) => {
   switch (status) {
-    case 'completed': return 'success';
+    case 'completed':
+    case 'delivered':
+      return 'success';
+    case 'confirmed':
+      return 'info';
     case 'processing': return 'primary';
     case 'shipped': return 'info';
     case 'pending': return 'warning';
@@ -68,24 +85,49 @@ const getStatusColor = (status) => {
 
 const getStatusText = (status) => {
   const statusMap = {
-    'pending': 'Ожидание',
-    'processing': 'В обработке',
-    'shipped': 'Отправлен',
-    'completed': 'Завершен',
-    'cancelled': 'Отменен'
+    pending: 'Ожидание',
+    confirmed: 'Подтверждён',
+    processing: 'В обработке',
+    shipped: 'Отправлен',
+    completed: 'Завершен',
+    delivered: 'Завершен',
+    cancelled: 'Отменен'
   };
   return statusMap[status] || status;
 };
 
 const getStatusIcon = (status) => {
   switch (status) {
-    case 'completed': return <CompleteIcon fontSize="small" />;
+    case 'completed':
+    case 'delivered':
+      return <CompleteIcon fontSize="small" />;
+    case 'confirmed':
+      return <CompleteIcon fontSize="small" />;
     case 'processing': return <ProcessingIcon fontSize="small" />;
     case 'shipped': return <ShippedIcon fontSize="small" />;
     case 'pending': return <PendingIcon fontSize="small" />;
     case 'cancelled': return <CancelIcon fontSize="small" />;
     default: return <PendingIcon fontSize="small" />;
   }
+};
+
+/** Адрес из API: строка или JSON-объект */
+const formatShippingAddress = (addr) => {
+  if (addr == null || addr === '') return 'Не указан';
+  if (typeof addr === 'string') return addr.trim() || 'Не указан';
+  if (typeof addr === 'object') {
+    const parts = [
+      addr.address,
+      addr.street,
+      addr.line1,
+      addr.city,
+      addr.region,
+      addr.postal,
+      addr.zip
+    ].filter((p) => p != null && String(p).trim() !== '');
+    if (parts.length) return parts.join(', ');
+  }
+  return 'Не указан';
 };
 
 // =================================================================
@@ -171,7 +213,7 @@ const MobileOrderCard = ({ order, handleMenuOpen, viewOrderDetails, updateOrderS
             e.stopPropagation();
             updateOrderStatus(order.id, 'processing');
           }}
-          disabled={order.status === 'processing'}
+          disabled={order.status === 'processing' || isCompletedStatus(order.status)}
           color="primary"
         >
           Обработать
@@ -235,9 +277,9 @@ const AdminOrders = () => {
       });
     }
 
-    // Фильтр по статусу
+    // Фильтр по статусу (завершённые = completed в UI и delivered в БД)
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(order => order.status === statusFilter);
+      filtered = filtered.filter((order) => statusMatchesFilter(order.status, statusFilter));
     }
 
     // Фильтр по дате
@@ -326,7 +368,7 @@ const AdminOrders = () => {
     try {
       handleMenuClose();
       handleMobileMenuClose();
-      await adminService.updateOrderStatus(orderId, newStatus);
+      await adminService.updateOrderStatus(orderId, toApiStatus(newStatus));
       await fetchOrders();
       
       const order = orders.find(o => o.id === orderId);
@@ -394,7 +436,7 @@ const AdminOrders = () => {
     const pending = orders.filter(order => order.status === 'pending').length;
     const processing = orders.filter(order => order.status === 'processing').length;
     const shipped = orders.filter(order => order.status === 'shipped').length;
-    const completed = orders.filter(order => order.status === 'completed').length;
+    const completed = orders.filter((order) => isCompletedStatus(order.status)).length;
     const cancelled = orders.filter(order => order.status === 'cancelled').length;
 
     return { total, pending, processing, shipped, completed, cancelled };
@@ -692,7 +734,7 @@ const AdminOrders = () => {
                         size="small"
                         variant="contained"
                         onClick={() => updateOrderStatus(order.id, 'processing')}
-                        disabled={order.status === 'processing'}
+                        disabled={order.status === 'processing' || isCompletedStatus(order.status)}
                         sx={{ minWidth: 'auto', px: 2 }}
                       >
                         Обработать
@@ -859,7 +901,7 @@ const AdminOrders = () => {
                   <Typography><strong>Статус:</strong> {getStatusText(selectedOrder.status)}</Typography>
                 </Grid>
                 <Grid item xs={12}>
-                  <Typography><strong>Адрес доставки:</strong> {selectedOrder.shipping_address || 'Не указан'}</Typography>
+                  <Typography><strong>Адрес доставки:</strong> {formatShippingAddress(selectedOrder.shipping_address)}</Typography>
                 </Grid>
               </Grid>
               
