@@ -46,6 +46,7 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { getProductThumbnailSrc } from '../../utils/productImage';
 
 const WishlistPage = () => {
   const { wishlist, loading, removeFromWishlist, refreshWishlist } = useWishlist();
@@ -120,7 +121,7 @@ const WishlistPage = () => {
   // Функция для безопасного получения изображения продукта
   const getProductImage = (item) => {
     const product = getProduct(item);
-    return product?.image_url || product?.image || product?.images?.[0] || '/images/placeholder.jpg';
+    return getProductThumbnailSrc(product);
   };
 
   const handleRemoveFromWishlist = async (wishlistItemId, productName) => {
@@ -617,7 +618,7 @@ const WishlistPage = () => {
                 const stockColor = getStockColor(product);
 
                 return (
-                  <Grid item xs={12} sm={6} lg={4} key={`${productId}-${index}`}>
+                  <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={`${productId}-${index}`}>
                     <Slide direction="up" in={mounted} timeout={400 + index * 100}>
                       <Card 
                         onMouseEnter={() => !isMobile && setHoveredCard(productId)}
@@ -639,16 +640,28 @@ const WishlistPage = () => {
                         }}
                       >
                         {/* Бейджи на изображении */}
-                        <Box sx={{ position: 'relative' }}>
+                        <Box
+                          sx={{
+                            position: 'relative',
+                            background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                            minHeight: isMobile ? 200 : 250,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            p: 2,
+                          }}
+                        >
                           <CardMedia
                             component="img"
-                            height={isMobile ? 200 : 250}
                             image={productImage}
                             alt={productName}
-                            sx={{ 
-                              objectFit: 'cover',
+                            sx={{
+                              width: '100%',
+                              height: isMobile ? 200 : 250,
+                              objectFit: 'contain',
                               transition: !isMobile ? 'transform 0.4s ease' : 'none',
-                              transform: !isMobile && hoveredCard === productId ? 'scale(1.05)' : 'scale(1)'
+                              transform:
+                                !isMobile && hoveredCard === productId ? 'scale(1.05)' : 'scale(1)',
                             }}
                             onError={(e) => {
                               e.target.src = '/images/placeholder.jpg';
