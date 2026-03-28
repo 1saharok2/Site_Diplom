@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Row, Col, Alert, Container } from 'react-bootstrap';
+import { Alert, Container } from 'react-bootstrap';
 import ReviewForm from '../../../components/Reviews/ReviewForm';
 import ReviewList from '../../../components/Reviews/ReviewList';
 import './ProductPage_css/ProductTabs.css';
@@ -236,14 +236,10 @@ const ProductTabs = ({
               <h5 className="spec-group-title">{groupName}</h5>
               <div className="spec-list">
                 {validSpecs.map((spec, index) => (
-                  <Row key={index} className="spec-item">
-                    <Col md={6} className="spec-label">
-                      {spec.label}
-                    </Col>
-                    <Col md={6} className="spec-value">
-                      {spec.value}
-                    </Col>
-                  </Row>
+                  <div key={index} className="spec-item">
+                    <span className="spec-label">{spec.label}</span>
+                    <span className="spec-value">{spec.value}</span>
+                  </div>
                 ))}
               </div>
             </div>

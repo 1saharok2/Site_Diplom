@@ -2,35 +2,101 @@
   margin-top: 48px;
 }
 
+.recommendations-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
 .recommendations-title {
   font-size: 1.5rem;
   font-weight: 800;
   color: #2c3e50;
-  margin: 0 0 18px 0;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
 }
 
-.recommendations-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.recommendations-nav-buttons {
+  display: flex;
   gap: 8px;
-  align-items: stretch;
+  flex-shrink: 0;
 }
 
-@media (max-width: 1200px) {
-  .recommendations-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+.recommendations-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid #e9ecef;
+  border-radius: 50%;
+  background: #fff;
+  color: #007bff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.recommendations-nav-btn:hover:not(.swiper-button-disabled) {
+  background: #007bff;
+  color: #fff;
+  border-color: #007bff;
+  box-shadow: 0 4px 14px rgba(0, 123, 255, 0.35);
+}
+
+.recommendations-nav-btn:active:not(.swiper-button-disabled) {
+  transform: scale(0.96);
+}
+
+.recommendations-nav-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.recommendations-nav-btn.swiper-button-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.recommendations-slider-wrap {
+  position: relative;
+  margin: 0 -4px;
+  padding: 4px 2px 12px;
+}
+
+.recommendations-swiper .swiper-slide {
+  height: auto;
+  display: flex;
+  box-sizing: border-box;
+}
+
+.recommendations-slide-inner {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.recommendations-slide-inner .product-card-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 767.98px) {
+  .recommendations-nav-buttons {
+    display: none;
+  }
+
+  .recommendations-slider-wrap {
+    margin: 0 -12px;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 }
-
-@media (max-width: 992px) {
-  .recommendations-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 576px) {
-  .recommendations-grid {
-    grid-template-columns: 1fr;
-  }
-}
-

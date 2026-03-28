@@ -291,32 +291,40 @@
 }
 
 .spec-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.5rem;
+  row-gap: 0.15rem;
 }
 
 .spec-item {
-  padding: 0.8rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  padding: 0.65rem 0;
   border-bottom: 1px solid #e9ecef;
   margin: 0;
-}
-
-.spec-item:last-child {
-  border-bottom: none;
+  min-width: 0;
 }
 
 .spec-label {
   font-weight: 600;
   color: #6c757d;
   font-size: 0.95rem;
-  padding-right: 1rem;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .spec-value {
   font-weight: 500;
   color: #2c3e50;
   font-size: 0.95rem;
+  text-align: right;
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .no-specs {
@@ -389,14 +397,25 @@
     margin-bottom: 1.5rem;
   }
   
+  .spec-list {
+    grid-template-columns: 1fr;
+    column-gap: 0;
+  }
+
   .spec-item {
     flex-direction: column;
+    align-items: flex-start;
     gap: 0.3rem;
   }
-  
-  .spec-label, .spec-value {
+
+  .spec-label,
+  .spec-value {
     text-align: left;
     width: 100%;
+  }
+
+  .spec-value {
+    text-align: left;
   }
   
   .delivery-info {
@@ -405,19 +424,6 @@
   }
 }
 
-@media (max-width: 576px) {
-  .tab-content {
-    padding: 1rem;
-  }
-  
-  .spec-group {
-    padding: 1rem;
-  }
-  
-  .spec-group-title {
-    font-size: 1.1rem;
-  }
-}
 .no-specs-alert {
   margin-top: 1rem;
   border-radius: 12px;
@@ -428,69 +434,31 @@
   color: #0c5460;
   font-weight: 600;
 }
-/* Стили для универсальных характеристик */
-.spec-item {
-  padding: 0.8rem 0;
-  border-bottom: 1px solid #e9ecef;
-  margin: 0;
-  align-items: center;
-}
-
-.spec-item:last-child {
-  border-bottom: none;
-}
-
-.spec-label {
-  font-weight: 600;
-  color: #6c757d;
-  font-size: 0.95rem;
-  padding-right: 1rem;
-}
-
-.spec-value {
-  font-weight: 500;
-  color: #2c3e50;
-  font-size: 0.95rem;
-  word-break: break-word;
-}
-
-/* Адаптивность для мобильных */
-@media (max-width: 768px) {
-  .spec-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.3rem;
-    padding: 0.6rem 0;
+@media (max-width: 576px) {
+  .tab-content {
+    padding: 1rem;
   }
-  
-  .spec-label, .spec-value {
-    width: 100%;
-    text-align: left;
-    padding-right: 0;
-  }
-  
+
   .spec-group {
     padding: 1rem;
   }
-  
+
   .spec-group-title {
     font-size: 1.1rem;
   }
-}
 
-@media (max-width: 576px) {
   .specs-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .spec-item {
     padding: 0.5rem 0;
   }
-  
+
   .spec-label {
     font-size: 0.9rem;
   }
-  
+
   .spec-value {
     font-size: 0.9rem;
   }
