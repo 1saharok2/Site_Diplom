@@ -76,6 +76,64 @@ export function getCameraCountBucket(cameraStr) {
   return '5+';
 }
 
+/** Верхняя граница полей «от/до» по цене в фильтрах (как в крупных магазинах). */
+export const PRICE_FILTER_CEILING = 2999999;
+
+function parseGbFromStorageString(raw) {
+  if (raw === null || raw === undefined) return null;
+  const s = String(raw).trim();
+  if (!s || /ddr|озу|ram/i.test(s)) return null;
+  const tb = s.match(/(\d+(?:[.,]\d+)?)\s*(tb|тб)/i);
+  if (tb) return Math.round(parseFloat(tb[1].replace(',', '.')) * 1024);
+  const gb = s.match(/(\d+)\s*(gb|гб|гиг)/i);
+  if (gb) return parseInt(gb[1], 10);
+  return null;
+}
+
+function parseGbFromRamString(raw) {
+  if (raw === null || raw === undefined) return null;
+  const s = String(raw).trim();
+  if (!s) return null;
+  const m = s.match(/(\d+)\s*(gb|гб|гиг)/i);
+  if (!m) return null;
+  return parseInt(m[1], 10);
+}
+
+/** Нормализованная встроенная память для фасета (например «256 ГБ»). */
+export function normalizeStorageGb(parsedSpecs = {}) {
+  const direct = parseGbFromStorageString(parsedSpecs.storage);
+  if (direct != null) return `${direct} ГБ`;
+  if (parsedSpecs.memory && !/ddr/i.test(String(parsedSpecs.memory))) {
+    const m = parseGbFromStorageString(parsedSpecs.memory);
+    if (m != null) return `${m} ГБ`;
+  }
+  return null;
+}
+
+/** Нормализованная ОЗУ для фасета (например «8 ГБ»). */
+export function normalizeRamGb(parsedSpecs = {}) {
+  if (parsedSpecs.ram) {
+    const n = parseGbFromRamString(parsedSpecs.ram);
+    if (n != null) return `${n} ГБ`;
+  }
+  if (parsedSpecs.memory && /ddr/i.test(String(parsedSpecs.memory))) {
+    const n = parseGbFromRamString(parsedSpecs.memory);
+    if (n != null) return `${n} ГБ`;
+  }
+  return null;
+}
+
+function extractIpRatingFromSpecs(parsedSpecs = {}) {
+  const texts = [parsedSpecs.waterproof, parsedSpecs.body, parsedSpecs.protection].map((x) =>
+    x != null ? String(x) : ''
+  );
+  for (const t of texts) {
+    const m = t.match(/IP\s*(\d{2})/i);
+    if (m) return `IP${m[1]}`;
+  }
+  return null;
+}
+
 export function getProcessorCompany(proc) {
   const s = String(proc || '').toLowerCase();
   if (s.includes('qualcomm') || s.includes('snapdragon')) return 'Qualcomm';
@@ -118,7 +176,7 @@ function addFacetValue(facets, key, value) {
  *
  * Returns object: key -> string[] (deduped)
  */
-export function buildProductFacetValues(parsedSpecs = {}) {
+export function buildProductFacetValues(parsedSpecs = {}, product = null) {
   const facets = {};
 
   // Raw specs -> normalized strings
@@ -129,6 +187,26 @@ export function buildProductFacetValues(parsedSpecs = {}) {
       addFacetValue(facets, key, toYesNo(value));
     }
   });
+
+  // DNS-style derived facets
+  addFacetValue(facets, 'storage_gb', normalizeStorageGb(parsedSpecs));
+  addFacetValue(facets, 'ram_gb', normalizeRamGb(parsedSpecs));
+
+  const modelLine = toCleanString(parsedSpecs.model || parsedSpecs.series || parsedSpecs.product_line);
+  if (modelLine) addFacetValue(facets, 'product_model', modelLine);
+
+  const ip = extractIpRatingFromSpecs(parsedSpecs);
+  if (ip) addFacetValue(facets, 'ip_rating', ip);
+
+  const yearFromSpecs = toCleanString(parsedSpecs.release_year || parsedSpecs.year);
+  if (yearFromSpecs) addFacetValue(facets, 'release_year', yearFromSpecs);
+  else if (product?.created_at) {
+    const y = new Date(product.created_at).getFullYear();
+    if (!Number.isNaN(y)) addFacetValue(facets, 'release_year', String(y));
+  }
+
+  const diag = toCleanString(parsedSpecs.screen_size || parsedSpecs.screen_diagonal);
+  if (diag) addFacetValue(facets, 'screen_diagonal_inch', diag);
 
   // Derived: supports_5g from network text
   const network = parsedSpecs?.network || '';
@@ -206,7 +284,7 @@ export function aggregateSpecifications(processedProducts = []) {
   };
 
   processedProducts.forEach((product) => {
-    const facetValues = buildProductFacetValues(product?.parsedSpecs || {});
+    const facetValues = buildProductFacetValues(product?.parsedSpecs || {}, product);
     Object.entries(facetValues).forEach(([key, values]) => {
       (Array.isArray(values) ? values : [values]).forEach((v) => {
         addValue(key, v);
@@ -228,7 +306,7 @@ export function aggregateSpecifications(processedProducts = []) {
  * `filters` shape: { [key: string]: string[] } where values are EXACTLY what UI shows.
  */
 export function productMatchesFacetFilters(product, filters = {}) {
-  const facetValues = buildProductFacetValues(product?.parsedSpecs || {});
+  const facetValues = buildProductFacetValues(product?.parsedSpecs || {}, product);
 
   for (const [key, selectedValues] of Object.entries(filters)) {
     if (!Array.isArray(selectedValues) || selectedValues.length === 0) continue;

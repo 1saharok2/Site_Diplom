@@ -1,21 +1,51 @@
 import React from 'react';
-import { Card, Form } from 'react-bootstrap';
+import { Card, Form, Button, Badge } from 'react-bootstrap';
 
-const SortingCard = ({ sortBy, setSortBy }) => {
+const SortingCard = ({
+  sortBy,
+  setSortBy,
+  onOpenFilters,
+  showFilterButton = false,
+  resultCount = null,
+  activeFiltersCount = 0
+}) => {
   return (
     <Card className="sorting-card mb-3">
-      <Card.Header>
-        <h5 className="mb-0">Сортировка</h5>
+      <Card.Header className="sorting-card-header-row d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <h5 className="mb-0">Каталог</h5>
+        <div className="d-flex align-items-center gap-2 flex-wrap">
+          {resultCount != null && (
+            <span className="sorting-result-count text-muted small">
+              Найдено: <strong>{resultCount}</strong>
+            </span>
+          )}
+          {showFilterButton && (
+            <Button
+              variant="outline-primary"
+              size="sm"
+              className="sorting-filters-btn"
+              type="button"
+              onClick={onOpenFilters}
+            >
+              Фильтры
+              {activeFiltersCount > 0 && (
+                <Badge bg="primary" className="ms-1 sorting-filters-badge">
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </Button>
+          )}
+        </div>
       </Card.Header>
       <Card.Body>
         <div className="sorting-group">
           <Form.Label className="sorting-label" htmlFor="sort-select">
             Сортировать по:
           </Form.Label>
-          <Form.Select 
+          <Form.Select
             id="sort-select"
             aria-label="Сортировка товаров"
-            value={sortBy} 
+            value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="sort-select-custom"
           >

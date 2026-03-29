@@ -1009,6 +1009,33 @@ input:checked + .slider:before {
   top: 20px;
 }
 
+.category-filters-offcanvas.offcanvas {
+  --bs-offcanvas-width: min(100%, 420px);
+}
+
+.category-filters-offcanvas .offcanvas-body {
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+.sorting-card-header-row h5 {
+  font-weight: 600;
+}
+
+.sorting-filters-btn {
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.sorting-filters-badge {
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+
+.sorting-result-count strong {
+  color: #212529;
+}
+
 .current-range {
   padding: 0.5rem 0;
   border-top: 1px solid #e9ecef;

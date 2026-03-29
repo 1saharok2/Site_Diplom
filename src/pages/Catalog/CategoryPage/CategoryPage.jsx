@@ -6,10 +6,15 @@ import {
   Alert, 
   Button,
   Row,
-  Col
+  Col,
+  Offcanvas
 } from 'react-bootstrap';
 import { categoryService, getCategoryFilters } from '../../../services/categoryService';
-import { aggregateSpecifications, productMatchesFacetFilters } from '../../../services/filterService';
+import {
+  aggregateSpecifications,
+  productMatchesFacetFilters,
+  PRICE_FILTER_CEILING
+} from '../../../services/filterService';
 import ProductCard from '../../../components/Products/ProductCard/ProductCard';
 import SortingCard from './SortingCard';
 import FiltersCard from './FiltersCard';
@@ -28,7 +33,17 @@ const CategoryPage = () => {
   const [priceRange, setPriceRange] = useState([0, 500000]);
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [filters, setFilters] = useState({});
-  const [showFilters, setShowFilters] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(
+    () => (typeof window !== 'undefined' ? window.matchMedia('(min-width: 992px)').matches : true)
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 992px)');
+    const onChange = () => setIsDesktop(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
   
   // Новые состояния для фильтров
   const [availabilityFilter, setAvailabilityFilter] = useState('availability-all');
@@ -60,7 +75,7 @@ const CategoryPage = () => {
       setReliableModels(false);
       setHasReview(false);
       setSortBy('name');
-      setShowFilters(false);
+      setMobileFiltersOpen(false);
     };
 
     setLoading(true);
@@ -132,21 +147,24 @@ const CategoryPage = () => {
     });
   }, [products]);
 
-  // Facets used by FiltersCard + consistent matching.
+  // Facets: клиентская агрегация (производные поля DNS) + дополнение от сервера при наличии
   const { specifications, specificationsCountMap } = useMemo(() => {
-    // Если сервер отдал готовые данные - используем их
-    if (serverSpecifications && serverSpecificationsCountMap) {
-      const map = new Map();
-      Object.entries(serverSpecificationsCountMap).forEach(([key, count]) => {
-        map.set(key, count);
-      });
-      return {
-        specifications: serverSpecifications,
-        specificationsCountMap: map
-      };
+    const client = aggregateSpecifications(processedProducts);
+    if (!serverSpecifications || !serverSpecificationsCountMap) {
+      return client;
     }
-    // Иначе считаем на фронтенде
-    return aggregateSpecifications(processedProducts);
+    const mergedSpecs = { ...serverSpecifications };
+    Object.entries(client.specifications).forEach(([key, vals]) => {
+      if (!mergedSpecs[key]?.length) mergedSpecs[key] = vals;
+    });
+    const mergedMap = new Map();
+    Object.entries(serverSpecificationsCountMap).forEach(([key, count]) => {
+      mergedMap.set(key, count);
+    });
+    client.specificationsCountMap.forEach((count, mapKey) => {
+      if (!mergedMap.has(mapKey)) mergedMap.set(mapKey, count);
+    });
+    return { specifications: mergedSpecs, specificationsCountMap: mergedMap };
   }, [processedProducts, serverSpecifications, serverSpecificationsCountMap]);
   // Мемоизированные вычисления
   const brands = useMemo(() => 
@@ -227,39 +245,119 @@ const CategoryPage = () => {
     setHasReview(false);
   };
 
-  const getDisplayName = (key) => {
+  const getDisplayName = useCallback((key) => {
     const nameMap = {
-      'os': 'Операционная система',
-      'ram': 'Оперативная память',
-      'storage': 'Встроенная память',
-      'screen_size': 'Размер экрана',
-      'screen_size_range': 'Размер экрана',
-      'camera': 'Камера',
-      'camera_count_bucket': 'Количество камер',
-      'battery': 'Аккумулятор',
-      'battery_capacity_bucket': 'Емкость аккумулятора',
-      'processor': 'Процессор',
-      'cpu_cores': 'Кол-во ядер',
-      'processor_company': 'Производитель процессора',
-      'color': 'Цвет',
-      'waterproof': 'Защита от воды',
-      'wireless_charge_support': 'Беспроводная зарядка',
-      'refresh_rate': 'Частота обновления',
-      'resolution_class': 'Разрешение',
-      'video_recording': 'Запись видео',
-      'supports_5g': 'Поддержка 5G',
-      'fast_charge_range': 'Быстрая зарядка',
-      'wireless_charge': 'Беспроводная зарядка',
-      'nfc': 'NFC',
+      storage_gb: 'Объем встроенной памяти (ГБ)',
+      storage: 'Объем встроенной памяти (ГБ)',
+      ram_gb: 'Объем оперативной памяти (ГБ)',
+      ram: 'Объем оперативной памяти (ГБ)',
+      product_model: 'Модель',
+      model: 'Модель',
+      os: 'Операционная система',
+      release_year: 'Год релиза',
+      battery_capacity_bucket: 'Емкость аккумулятора (мА·ч)',
+      nfc: 'NFC',
+      screen_size_range: 'Диагональ экрана (дюйм)',
+      screen_diagonal_inch: 'Диагональ экрана (дюйм)',
+      screen_size: 'Диагональ экрана (дюйм)',
+      ip_rating: 'Степень защиты IP',
+      waterproof: 'Степень защиты IP',
+      refresh_rate: 'Частота обновления экрана (Гц)',
+      processor: 'Модель процессора',
+      camera: 'Камера',
+      camera_count_bucket: 'Количество камер',
+      battery: 'Аккумулятор',
+      cpu_cores: 'Кол-во ядер',
+      processor_company: 'Производитель процессора',
+      color: 'Цвет',
+      wireless_charge_support: 'Беспроводная зарядка',
+      resolution_class: 'Разрешение',
+      video_recording: 'Запись видео',
+      supports_5g: 'Поддержка 5G',
+      fast_charge_range: 'Быстрая зарядка',
+      wireless_charge: 'Беспроводная зарядка',
       '5g': '5G',
-      'display': 'Тип дисплея',
-      'network': 'Сети',
-      'material': 'Материал',
-      'material_basic': 'Материал',
-      'security': 'Безопасность'
+      display: 'Тип дисплея',
+      network: 'Сети',
+      material: 'Материал',
+      material_basic: 'Материал',
+      security: 'Безопасность'
     };
     return nameMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-  };
+  }, []);
+
+  const filterChips = useMemo(() => {
+    const chips = [];
+    if (!filterInStock) {
+      chips.push({
+        key: 'stock',
+        label: 'Включая не в наличии',
+        onRemove: () => setFilterInStock(true)
+      });
+    }
+    if (priceRange[0] > 0 || priceRange[1] < maxPrice) {
+      chips.push({
+        key: 'price',
+        label: `Цена: ${Number(priceRange[0]).toLocaleString('ru-RU')}–${Number(priceRange[1]).toLocaleString('ru-RU')} ₽`,
+        onRemove: () => setPriceRange([0, maxPrice])
+      });
+    }
+    selectedBrands.forEach((b) => {
+      chips.push({
+        key: `brand-${b}`,
+        label: String(b),
+        onRemove: () => setSelectedBrands((prev) => prev.filter((x) => x !== b))
+      });
+    });
+    Object.entries(filters).forEach(([specKey, values]) => {
+      (values || []).forEach((val) => {
+        chips.push({
+          key: `spec-${specKey}-${val}`,
+          label: `${getDisplayName(specKey)}: ${val}`,
+          onRemove: () =>
+            setFilters((prev) => {
+              const cur = [...(prev[specKey] || [])].filter((x) => x !== val);
+              const next = { ...prev };
+              if (cur.length) next[specKey] = cur;
+              else delete next[specKey];
+              return next;
+            })
+        });
+      });
+    });
+    if (minRating !== null) {
+      chips.push({
+        key: 'rating',
+        label: 'Рейтинг 4 и выше',
+        onRemove: () => setMinRating(null)
+      });
+    }
+    if (hasReview) {
+      chips.push({
+        key: 'review',
+        label: 'Есть отзывы',
+        onRemove: () => setHasReview(false)
+      });
+    }
+    if (reliableModels) {
+      chips.push({
+        key: 'new-models',
+        label: 'Новые модели',
+        onRemove: () => setReliableModels(false)
+      });
+    }
+    return chips;
+  }, [
+    filterInStock,
+    priceRange,
+    maxPrice,
+    selectedBrands,
+    filters,
+    minRating,
+    hasReview,
+    reliableModels,
+    getDisplayName
+  ]);
 
   // Оптимизированная функция подсчета
   const getSpecificationCount = useCallback((key, value) => {
@@ -269,10 +367,10 @@ const CategoryPage = () => {
   // Мемоизированный подсчет активных фильтров
   const activeFiltersCount = useMemo(() => {
     let count = 0;
-    if (filterInStock) count++;
+    if (!filterInStock) count++;
     if (priceRange[0] > 0 || priceRange[1] < maxPrice) count++;
     count += selectedBrands.length;
-    Object.values(filters).forEach(values => {
+    Object.values(filters).forEach((values) => {
       count += values.length;
     });
     if (availabilityFilter !== 'availability-all') count++;
@@ -320,51 +418,72 @@ const CategoryPage = () => {
     );
   }
 
+  const filtersCardProps = {
+    filterInStock,
+    setFilterInStock,
+    priceRange,
+    setPriceRange,
+    selectedBrands,
+    setSelectedBrands,
+    filters,
+    setFilters,
+    brands,
+    specifications,
+    getDisplayName,
+    clearAllFilters: () => {
+      clearAllFilters();
+      setMobileFiltersOpen(false);
+    },
+    activeFiltersCount,
+    getSpecificationCount,
+    minRating,
+    setMinRating,
+    reliableModels,
+    setReliableModels,
+    hasReview,
+    setHasReview,
+    getBrandCount,
+    filterChips,
+    resultCount: filteredAndSortedProducts.length,
+    priceCeiling: PRICE_FILTER_CEILING
+  };
+
   return (
     <Container className="category-page">
       <Row>
-        {/* Левая колонка - фильтры */}
-        <Col lg={3} className="filters-column">
-          {/* Sticky контейнер для фильтров */}
-          <div className="sticky-filters">
-            <FiltersCard
-              filterInStock={filterInStock}
-              setFilterInStock={setFilterInStock}
-              priceRange={priceRange}
-              setPriceRange={setPriceRange}
-              selectedBrands={selectedBrands}
-              setSelectedBrands={setSelectedBrands}
-              filters={filters}
-              setFilters={setFilters}
-              brands={brands}
-              specifications={specifications}
-              getDisplayName={getDisplayName}
-              clearAllFilters={clearAllFilters}
-              activeFiltersCount={activeFiltersCount}
-              getSpecificationCount={getSpecificationCount}
-              maxPrice={maxPrice}
-              showFilters={showFilters}
-              setShowFilters={setShowFilters}
-              // Новые пропсы для фильтров
-              availabilityFilter={availabilityFilter}
-              setAvailabilityFilter={setAvailabilityFilter}
-              minRating={minRating}
-              setMinRating={setMinRating}
-              reliableModels={reliableModels}
-              setReliableModels={setReliableModels}
-              hasReview={hasReview}
-              setHasReview={setHasReview}
-              getBrandCount={getBrandCount}
-            />
-          </div>
+        {isDesktop && (
+          <Col lg={3} className="filters-column">
+            <div className="sticky-filters">
+              <FiltersCard {...filtersCardProps} />
+            </div>
+          </Col>
+        )}
 
-          {/* Кнопка возврата удалена по требованию */}
-        </Col>
+        {!isDesktop && (
+          <Offcanvas
+            show={mobileFiltersOpen}
+            onHide={() => setMobileFiltersOpen(false)}
+            placement="start"
+            className="category-filters-offcanvas"
+          >
+            <Offcanvas.Header closeButton className="border-bottom-0 pb-0">
+              <Offcanvas.Title className="visually-hidden">Фильтры</Offcanvas.Title>
+            </Offcanvas.Header>
+            <Offcanvas.Body className="p-0">
+              <FiltersCard {...filtersCardProps} />
+            </Offcanvas.Body>
+          </Offcanvas>
+        )}
 
-        {/* Правая колонка - сортировка и товары */}
-        <Col lg={9} className="products-column">
-          {/* Сортировка над товарами */}
-          <SortingCard sortBy={sortBy} setSortBy={setSortBy} />
+        <Col lg={isDesktop ? 9 : 12} className="products-column">
+          <SortingCard
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            onOpenFilters={() => setMobileFiltersOpen(true)}
+            showFilterButton={!isDesktop}
+            resultCount={filteredAndSortedProducts.length}
+            activeFiltersCount={activeFiltersCount}
+          />
 
           <div className="products-section">
             {filteredAndSortedProducts.length === 0 ? (
