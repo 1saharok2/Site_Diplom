@@ -1002,6 +1002,10 @@ input:checked + .slider:before {
     max-width: 100%;
     flex: 1;
   }
+
+  .products-column {
+    padding-bottom: 80px;
+  }
 }
 
 .sticky-filters {
@@ -1011,11 +1015,22 @@ input:checked + .slider:before {
 
 .category-filters-offcanvas.offcanvas {
   --bs-offcanvas-width: min(100%, 420px);
+  --bs-offcanvas-zindex: 2000002;
+  z-index: 2000002 !important;
+}
+
+.category-filters-offcanvas.offcanvas.show,
+.category-filters-offcanvas.offcanvas-start {
+  z-index: 2000002 !important;
 }
 
 .category-filters-offcanvas .offcanvas-body {
   overflow-y: auto;
-  max-height: 100vh;
+  max-height: calc(100vh - 84px);
+}
+
+body .offcanvas-backdrop.show {
+  z-index: 2000001 !important;
 }
 
 .sorting-card-header-row h5 {
@@ -1034,6 +1049,97 @@ input:checked + .slider:before {
 
 .sorting-result-count strong {
   color: #212529;
+}
+
+.mobile-offcanvas-footer {
+  padding: 10px 14px 14px;
+  border-top: 1px solid #eceff3;
+  background: #fff;
+}
+
+.mobile-offcanvas-apply-btn {
+  border-radius: 10px;
+  font-weight: 600;
+  min-height: 44px;
+}
+
+.mobile-filters-fab-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  z-index: 3500;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.mobile-filters-fab {
+  pointer-events: auto;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 16px;
+  min-height: 46px;
+  font-weight: 700;
+  background: #0d6efd;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(13, 110, 253, 0.32);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-filters-fab:hover,
+.mobile-filters-fab:focus {
+  background: #0b5ed7;
+  color: #fff;
+}
+
+.mobile-filters-fab-badge {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #fff;
+  color: #0d6efd;
+  font-size: 12px;
+  line-height: 22px;
+  text-align: center;
+  font-weight: 700;
+  padding: 0 6px;
+}
+
+.mobile-filters-inline-wrap {
+  margin-bottom: 12px;
+}
+
+.mobile-filters-inline-btn {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mobile-filters-inline-badge {
+  min-width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #0d6efd;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  font-weight: 700;
+  padding: 0 6px;
+}
+
+@media (min-width: 992px) {
+  .mobile-filters-fab-wrap {
+    display: none;
+  }
 }
 
 .current-range {

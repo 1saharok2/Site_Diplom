@@ -37,6 +37,7 @@ const CategoryPage = () => {
   const [isDesktop, setIsDesktop] = useState(
     () => (typeof window !== 'undefined' ? window.matchMedia('(min-width: 992px)').matches : true)
   );
+  const offcanvasContainer = typeof window !== 'undefined' ? window.document.body : undefined;
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 992px)');
@@ -44,6 +45,17 @@ const CategoryPage = () => {
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
   }, []);
+
+  // Дополнительно фиксируем слой offcanvas/backdrop через inline-стили в runtime.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (!mobileFiltersOpen) return;
+
+    const offcanvasEl = document.querySelector('.category-filters-offcanvas.offcanvas');
+    const backdropEl = document.querySelector('.offcanvas-backdrop.show');
+    if (offcanvasEl) offcanvasEl.style.zIndex = '2000002';
+    if (backdropEl) backdropEl.style.zIndex = '2000001';
+  }, [mobileFiltersOpen]);
   
   // Новые состояния для фильтров
   const [availabilityFilter, setAvailabilityFilter] = useState('availability-all');
@@ -464,6 +476,10 @@ const CategoryPage = () => {
             show={mobileFiltersOpen}
             onHide={() => setMobileFiltersOpen(false)}
             placement="start"
+            backdrop
+            scroll={false}
+            container={offcanvasContainer}
+            style={{ zIndex: 2000002 }}
             className="category-filters-offcanvas"
           >
             <Offcanvas.Header closeButton className="border-bottom-0 pb-0">
@@ -472,10 +488,34 @@ const CategoryPage = () => {
             <Offcanvas.Body className="p-0">
               <FiltersCard {...filtersCardProps} />
             </Offcanvas.Body>
+            <div className="mobile-offcanvas-footer">
+              <Button
+                variant="primary"
+                className="w-100 mobile-offcanvas-apply-btn"
+                onClick={() => setMobileFiltersOpen(false)}
+              >
+                Показать {filteredAndSortedProducts.length} товаров
+              </Button>
+            </div>
           </Offcanvas>
         )}
 
         <Col lg={isDesktop ? 9 : 12} className="products-column">
+          {!isDesktop && (
+            <div className="mobile-filters-inline-wrap">
+              <Button
+                type="button"
+                variant="primary"
+                className="mobile-filters-inline-btn"
+                onClick={() => setMobileFiltersOpen(true)}
+              >
+                Открыть фильтры
+                {activeFiltersCount > 0 && (
+                  <span className="mobile-filters-inline-badge">{activeFiltersCount}</span>
+                )}
+              </Button>
+            </div>
+          )}
           <SortingCard
             sortBy={sortBy}
             setSortBy={setSortBy}
@@ -522,6 +562,20 @@ const CategoryPage = () => {
           </div>
         </Col>
       </Row>
+      {!isDesktop && (
+        <div className="mobile-filters-fab-wrap">
+          <Button
+            type="button"
+            className="mobile-filters-fab"
+            onClick={() => setMobileFiltersOpen(true)}
+          >
+            Фильтры
+            {activeFiltersCount > 0 && (
+              <span className="mobile-filters-fab-badge">{activeFiltersCount}</span>
+            )}
+          </Button>
+        </div>
+      )}
     </Container>
   );
 };
