@@ -5,19 +5,26 @@ import { PRICE_FILTER_CEILING } from '../../../services/filterService';
 const BRAND_PAGE_SIZE = 10;
 const SPEC_PAGE_SIZE = 8;
 
-/** Порядок блоков как в DNS: сначала производный фасет, иначе поле из карточки товара */
+/** Только выбранные пользователем параметры (без "лишних" полей). */
 const DNS_PARAM_GROUPS = [
   ['storage_gb', 'storage'],
   ['ram_gb', 'ram'],
-  ['product_model', 'model'],
   ['os'],
-  ['release_year'],
-  ['battery_capacity_bucket'],
   ['nfc'],
   ['screen_size_range', 'screen_diagonal_inch', 'screen_size'],
   ['ip_rating', 'waterproof'],
   ['refresh_rate'],
-  ['processor']
+  ['processor'],
+  ['battery_capacity_bucket', 'battery'],
+  ['camera_count_bucket', 'camera'],
+  ['display'],
+  ['fast_charge_range', 'fast_charge'],
+  ['material_basic', 'material'],
+  ['network'],
+  ['processor_company'],
+  ['video_recording', 'video'],
+  ['product_model', 'model'],
+  ['release_year'],
 ];
 
 const FiltersCard = ({
@@ -50,7 +57,6 @@ const FiltersCard = ({
     availability: true,
     price: true,
     brands: true,
-    dnsMain: true,
     rating: false
   });
 
@@ -59,19 +65,12 @@ const FiltersCard = ({
   const [specExpandKeys, setSpecExpandKeys] = useState({});
 
   const dnsKeysOrdered = useMemo(() => {
-    const consumed = new Set();
     const ordered = [];
     DNS_PARAM_GROUPS.forEach((group) => {
       const found = group.find((k) => specifications[k]?.length > 0);
-      if (found) {
-        ordered.push(found);
-        group.forEach((k) => consumed.add(k));
-      }
+      if (found) ordered.push(found);
     });
-    const rest = Object.keys(specifications)
-      .filter((k) => !consumed.has(k) && specifications[k]?.length > 0)
-      .sort();
-    return [...ordered, ...rest];
+    return ordered;
   }, [specifications]);
 
   const hasDnsParams = dnsKeysOrdered.length > 0;
@@ -88,10 +87,10 @@ const FiltersCard = ({
       'availability',
       'price',
       ...(brands.length > 0 ? ['brands'] : []),
-      ...(hasDnsParams ? ['dnsMain'] : []),
+      ...(hasDnsParams ? dnsKeysOrdered.map((key) => `param-${key}`) : []),
       'rating'
     ],
-    [brands.length, hasDnsParams]
+    [brands.length, hasDnsParams, dnsKeysOrdered]
   );
 
   const expandAllSections = useCallback(() => {
@@ -178,7 +177,8 @@ const FiltersCard = ({
     setSpecExpandKeys((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const renderKeySection = (key) => {
+  const renderKeySection = (key, options = {}) => {
+    const { showTitle = true } = options;
     const values = Array.isArray(specifications[key]) ? specifications[key] : [];
     if (values.length === 0) return null;
 
@@ -188,7 +188,7 @@ const FiltersCard = ({
 
     return (
       <div className="mb-3" key={`wrap-${key}`}>
-        <div className="fw-semibold mb-2 filter-subtitle">{getDisplayName(key)}</div>
+        {showTitle && <div className="fw-semibold mb-2 filter-subtitle">{getDisplayName(key)}</div>}
         {visibleValues.map((value) => {
           const count = getSpecificationCount(key, value);
           if (!count || count <= 0) return null;
@@ -994,16 +994,20 @@ const FiltersCard = ({
           )}
         </div>
 
-        {hasDnsParams && (
-          <div className="dns-filter-section">
-            <SectionHeader sectionKey="dnsMain" title="Подбор по параметрам" />
-            {openSections.dnsMain && (
-              <div className="dns-section-content dns-dns-params-block">
-                {dnsKeysOrdered.map((key) => renderKeySection(key))}
+        {hasDnsParams &&
+          dnsKeysOrdered.map((key) => {
+            const sectionKey = `param-${key}`;
+            return (
+              <div className="dns-filter-section" key={sectionKey}>
+                <SectionHeader sectionKey={sectionKey} title={getDisplayName(key)} />
+                {openSections[sectionKey] && (
+                  <div className="dns-section-content dns-dns-params-block">
+                    {renderKeySection(key, { showTitle: false })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        )}
+            );
+          })}
       </Card.Body>
     </Card>
   );
