@@ -171,20 +171,6 @@ try {
             echo json_encode(['message' => 'comment is required'], JSON_UNESCAPED_UNICODE);
             exit;
         }
-        // Проверка на существующий отзыв (исправлено: user_id не приводится к int)
-        $stmt = $db->prepare("SELECT id, status FROM reviews WHERE user_id = ? AND product_id = ? ORDER BY created_at DESC LIMIT 1");
-        $stmt->execute([$user['id'], $productId]);
-        $existing = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($existing) {
-            http_response_code(409);
-            ob_clean();
-            echo json_encode([
-                'message' => 'Вы уже оставляли отзыв на этот товар',
-                'existing_review_id' => (int)$existing['id'],
-                'existing_status' => $existing['status']
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            exit;
-        }
         // Вставка отзыва (исправлено: user_id не приводится к int)
         $status = 'pending';
         $stmt = $db->prepare("INSERT INTO reviews (user_id, product_id, rating, comment, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())");

@@ -206,7 +206,7 @@ const AdminDashboard = () => {
       {/* Используем spacing={2} на мобильных для компактности */}
       <Grid container spacing={{ xs: 2, md: 3 }} mb={{ xs: 3, md: 4 }}>
         {statCards.map((card, index) => (
-          <Grid item xs={6} sm={6} md={3} key={index}> {/* xs={6} - по 2 карточки в ряд на мобильном */}
+          <Grid key={index} size={{ xs: 6, sm: 6, md: 3 }}> {/* xs={6} - по 2 карточки в ряд на мобильном */}
             <StatCard
               title={card.title}
               value={card.value}
@@ -222,7 +222,7 @@ const AdminDashboard = () => {
       <Grid container spacing={{ xs: 2, md: 3 }}>
         
         {/* Последние заказы */}
-        <Grid item xs={12} lg={8}>
+        <Grid size={{ xs: 12, lg: 8 }}>
           <Paper sx={{ p: { xs: 2, md: 3 }, height: '100%', borderRadius: 2 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -313,14 +313,14 @@ const AdminDashboard = () => {
         </Grid>
         
         {/* Быстрые действия */}
-        <Grid item xs={12} lg={4}>
+        <Grid size={{ xs: 12, lg: 4 }}>
           <Paper sx={{ p: { xs: 2, md: 3 }, height: '100%', borderRadius: 2 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
               Быстрые действия
             </Typography>
             <Grid container spacing={2}> {/* Используем Grid внутри для действий */}
               {quickActions.map((action, index) => (
-                <Grid item xs={6} sm={6} lg={12} key={index}> {/* На мобильных по 2 в ряд, на десктопе в колонку */}
+                <Grid key={index} size={{ xs: 6, sm: 6, lg: 12 }}> {/* На мобильных по 2 в ряд, на десктопе в колонку */}
                   <Box
                     onClick={action.onClick}
                     sx={{

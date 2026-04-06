@@ -170,18 +170,18 @@ const OrderDetailPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ 
-      py: { xs: 3, md: 4 }, 
+      py: { xs: 2, md: 3 }, 
       minHeight: '80vh',
       background: 'linear-gradient(135deg, #fafbfc 0%, #f5f7fa 50%)'
     }}>
       {/* Шапка */}
-      <Box sx={{ mb: 6 }}>
+      <Box sx={{ mb: { xs: 3, md: 4 } }}>
         <Button
           startIcon={<ArrowBack />}
           onClick={() => navigate('/orders')}
           sx={{ 
             color: 'text.secondary', 
-            mb: 3,
+            mb: 2,
             borderRadius: 2,
             px: 2,
             py: 1,
@@ -200,11 +200,11 @@ const OrderDetailPage = () => {
           alignItems: 'center',
           gap: 3,
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          px: 4,
-          py: 3,
+          px: { xs: 2.5, md: 4 },
+          py: { xs: 2, md: 3 },
           borderRadius: 4,
           color: 'white',
-          mb: 3
+          mb: 2.5
         }}>
           <ReceiptLong sx={{ fontSize: 40 }} />
           <Box>
@@ -214,20 +214,20 @@ const OrderDetailPage = () => {
             }}>
               Заказ #{order.order_number}
             </Typography>
-            <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400 }}>
+            <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400, fontSize: { xs: '1rem', md: '1.1rem' } }}>
               Детальная информация о вашем заказе
             </Typography>
           </Box>
         </Box>
       </Box>
 
-      <Grid container spacing={4}>
+      <Grid container spacing={{ xs: 2, md: 3 }}>
         {/* Левая колонка - товары */}
         <Grid item xs={12} lg={8}>
           <Paper 
             elevation={0}
             sx={{ 
-              p: { xs: 3, md: 4 }, 
+              p: { xs: 2.5, md: 3 }, 
               borderRadius: 4,
               background: 'white',
               border: '1px solid',
@@ -236,7 +236,7 @@ const OrderDetailPage = () => {
             }}
           >
             <Typography variant="h5" sx={{ 
-              mb: 4, 
+              mb: 2.5, 
               fontWeight: 700, 
               color: 'text.primary',
               display: 'flex',
@@ -247,21 +247,21 @@ const OrderDetailPage = () => {
               Состав заказа ({order.items?.length || 0})
             </Typography>
 
-            <Box sx={{ mb: 4 }}>
+            <Box sx={{ mb: 2.5 }}>
               {order.items?.map((item, index) => (
                 <Card 
                   key={index} 
                   elevation={0}
                   sx={{ 
-                    mb: 2, 
-                    p: 2,
+                    mb: 1.5, 
+                    p: 1.5,
                     borderRadius: 3,
                     background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
                     border: '1px solid',
                     borderColor: 'divider'
                   }}
                 >
-                  <CardContent>
+                  <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
                       {item.product_name || item.name || `Товар #${item.product_id}`}
                     </Typography>
@@ -278,13 +278,13 @@ const OrderDetailPage = () => {
               ))}
             </Box>
 
-            <Divider sx={{ my: 3, borderStyle: 'dashed' }} />
+            <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
 
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
               alignItems: 'center',
-              p: 3,
+              p: { xs: 2, md: 2.5 },
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               borderRadius: 3,
               color: 'white'
@@ -301,11 +301,11 @@ const OrderDetailPage = () => {
 
         {/* Правая колонка - информация */}
         <Grid item xs={12} lg={4}>
-          <Box sx={{ position: 'sticky', top: 100, zIndex: 10 }}>
+          <Box sx={{ position: 'sticky', top: 100, zIndex: 10, width: '100%' }}>
             <Paper 
               elevation={0}
               sx={{ 
-                p: { xs: 3, md: 4 }, 
+                p: { xs: 2.5, md: 3 }, 
                 borderRadius: 4,
                 background: 'white',
                 border: '1px solid',
@@ -314,7 +314,7 @@ const OrderDetailPage = () => {
               }}
             >
               <Typography variant="h5" sx={{ 
-                mb: 4, 
+                mb: 2.5, 
                 fontWeight: 700, 
                 color: 'text.primary',
                 display: 'flex',
@@ -326,7 +326,7 @@ const OrderDetailPage = () => {
               </Typography>
 
               {/* Статус */}
-              <Box sx={{ mb: 4 }}>
+              <Box sx={{ mb: 2.5 }}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   Статус заказа:
                 </Typography>
@@ -336,8 +336,8 @@ const OrderDetailPage = () => {
                   color={getStatusColor(order.status)}
                   sx={{ 
                     width: '100%',
-                    py: 2,
-                    fontSize: '1rem',
+                    py: 1.25,
+                    fontSize: '0.95rem',
                     fontWeight: 600,
                     background: getStatusColor(order.status) === 'success' ? 
                       'linear-gradient(45deg, #4caf50 0%, #66bb6a 100%)' :
@@ -351,32 +351,45 @@ const OrderDetailPage = () => {
                 />
               </Box>
 
-              {/* Дата */}
-              <Box sx={{ mb: 4 }}>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Дата создания:
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
-                  <CalendarToday sx={{ color: 'primary.main' }} />
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {formatDate(order.created_at)}
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+                  gap: 1.5,
+                  mb: 2.5,
+                }}
+              >
+                {/* Дата */}
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Дата создания:
                   </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.5, bgcolor: 'grey.50', borderRadius: 2 }}>
+                    <CalendarToday sx={{ color: 'primary.main' }} />
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {formatDate(order.created_at)}
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
 
-              {/* Номер заказа */}
-              <Box sx={{ mb: 4 }}>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Номер заказа:
-                </Typography>
-                <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
-                  <Typography variant="body1" sx={{ 
-                    fontFamily: 'monospace', 
-                    fontWeight: 600,
-                    color: 'primary.main'
-                  }}>
-                    #{order.order_number}
+                {/* Номер заказа */}
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Номер заказа:
                   </Typography>
+                  <Box sx={{ p: 1.5, bgcolor: 'grey.50', borderRadius: 2, minWidth: 0 }}>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontFamily: 'monospace',
+                        fontWeight: 600,
+                        color: 'primary.main',
+                        wordBreak: 'break-word',
+                      }}
+                    >
+                      #{order.order_number}
+                    </Typography>
+                  </Box>
                 </Box>
               </Box>
 
@@ -388,7 +401,7 @@ const OrderDetailPage = () => {
                   </Typography>
                   
                   {order.customer_name && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5, p: 1.5, bgcolor: 'grey.50', borderRadius: 2 }}>
                       <Person sx={{ color: 'primary.main' }} />
                       <Typography variant="body1">
                         {order.customer_name}
@@ -397,16 +410,16 @@ const OrderDetailPage = () => {
                   )}
                   
                   {order.customer_email && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5, p: 1.5, bgcolor: 'grey.50', borderRadius: 2, minWidth: 0 }}>
                       <Email sx={{ color: 'primary.main' }} />
-                      <Typography variant="body1">
+                      <Typography variant="body1" sx={{ minWidth: 0, wordBreak: 'break-word' }}>
                         {order.customer_email}
                       </Typography>
                     </Box>
                   )}
                   
                   {order.customer_phone && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.5, bgcolor: 'grey.50', borderRadius: 2 }}>
                       <Phone sx={{ color: 'primary.main' }} />
                       <Typography variant="body1">
                         {order.customer_phone}

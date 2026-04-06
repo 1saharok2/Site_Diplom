@@ -83,7 +83,6 @@ const ProductTabs = ({
   reviewsLoading = false, 
   onWriteReview,
   onSubmitReview,
-  hasUserReviewed,
   isAuthenticated,
   currentUser
 }) => {
@@ -300,32 +299,25 @@ const ProductTabs = ({
                 )}
               </div>
               
-              {hasUserReviewed && (
-                <small className="text-muted">
-                  Вы уже оставили отзыв об этом товаре.
-                </small>
-              )}
             </div>
 
             {/* Форма отзыва (сразу на странице) */}
-            {!hasUserReviewed && (
-              <div className="mb-4">
-                <ReviewForm
-                  open={isAuthenticated}
-                  onClose={undefined}
-                  product={product}
-                  productName={product?.name}
-                  onSubmit={handleReviewSubmit}
-                  loading={reviewsLoading}
-                />
+            <div className="mb-4">
+              <ReviewForm
+                open={isAuthenticated}
+                onClose={undefined}
+                product={product}
+                productName={product?.name}
+                onSubmit={handleReviewSubmit}
+                loading={reviewsLoading}
+              />
 
-                {!isAuthenticated && (
-                  <Alert variant="info" className="mt-3 mb-0">
-                    Чтобы оставить отзыв, войдите в аккаунт.
-                  </Alert>
-                )}
-              </div>
-            )}
+              {!isAuthenticated && (
+                <Alert variant="info" className="mt-3 mb-0">
+                  Чтобы оставить отзыв, войдите в аккаунт.
+                </Alert>
+              )}
+            </div>
 
             {/* Список отзывов */}
             <ReviewList 
@@ -367,7 +359,7 @@ const ProductTabs = ({
     }
   }, [
     activeTab, product, reviews, reviewsLoading, message, 
-    isAuthenticated, hasUserReviewed, currentUser,
+    isAuthenticated, currentUser,
     renderSpecifications, handleReviewSubmit
   ]);
 

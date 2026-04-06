@@ -202,7 +202,7 @@ const CartItems = () => {
                         whiteSpace: 'nowrap'
                       }}
                     >
-                      {name} {isUpdating && '(обновление...)'}
+                      {name}
                     </Typography>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -256,7 +256,7 @@ const CartItems = () => {
                         </IconButton>
 
                         <TextField
-                          value={isUpdating ? '...' : item.quantity}
+                          value={item.quantity}
                           sx={{
                             width: 60,
                             '& .MuiInputBase-root': {
@@ -301,7 +301,7 @@ const CartItems = () => {
                           minWidth: 120
                         }}
                       >
-                        {isUpdating ? 'Обновление...' : `${(price * item.quantity).toLocaleString('ru-RU')} ₽`}
+                        {(price * item.quantity).toLocaleString('ru-RU')} ₽
                       </Typography>
                     </Box>
                   </Box>

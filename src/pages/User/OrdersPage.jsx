@@ -343,16 +343,14 @@ const OrdersPage = () => {
             spacing={3} 
             sx={{ 
               maxWidth: '1200px',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              alignItems: 'stretch'
             }}
           >
             {orders.map((order) => (
               <Grid 
-                item 
-                xs={12} 
-                md={10} 
-                lg={8} 
                 key={order.id}
+                size={{ xs: 12, md: 10, lg: 8 }}
                 sx={{
                   display: 'flex',
                   justifyContent: 'center'
@@ -366,6 +364,9 @@ const OrdersPage = () => {
                     background: 'white',
                     transition: 'all 0.2s ease',
                     width: '100%',
+                    minHeight: { xs: 180, md: 190 },
+                    display: 'flex',
+                    flexDirection: 'column',
                     '&:hover': {
                       boxShadow: 4
                     }
@@ -376,7 +377,7 @@ const OrdersPage = () => {
                     display: 'flex', 
                     justifyContent: 'space-between', 
                     alignItems: 'flex-start', 
-                    mb: 3,
+                    mb: 2.5,
                     flexDirection: { xs: 'column', md: 'row' },
                     gap: 2
                   }}>
@@ -422,7 +423,8 @@ const OrdersPage = () => {
                     justifyContent: 'space-between', 
                     alignItems: 'center',
                     flexDirection: { xs: 'column', sm: 'row' },
-                    gap: 2
+                    gap: 2,
+                    mt: 'auto'
                   }}>
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
                       Итого: {order.total_amount?.toLocaleString('ru-RU')} ₽

@@ -40,7 +40,6 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [hasSubmittedReview, setHasSubmittedReview] = useState(false);
 
   // Простая функция получения русского названия категории по slug
   const getCategoryName = useCallback((product) => {
@@ -51,13 +50,6 @@ const ProductPage = () => {
     // Возвращаем русское название или сам slug, если не найдено
     return categoryNames[normalized] || normalized;
   }, []);
-
-  // Остальные хуки без изменений...
-  const hasUserReviewed = useMemo(() => {
-    if (!currentUser) return false;
-    if (hasSubmittedReview) return true;
-    return reviews.some(review => review.user_id === currentUser.id);
-  }, [currentUser, reviews, hasSubmittedReview]);
 
   const averageRating = useMemo(() => 
     reviews.length > 0 
@@ -84,7 +76,6 @@ const ProductPage = () => {
 
     try {
       await createReview(reviewData);
-      setHasSubmittedReview(true);
       setMessage('✅ Отзыв успешно отправлен на модерацию');
       setTimeout(() => setMessage(''), 4000);
       await loadProductReviews(reviewData.product_id);
@@ -95,10 +86,6 @@ const ProductPage = () => {
       throw error;
     }
   }, [createReview, currentUser, loadProductReviews]);
-
-  useEffect(() => {
-    setHasSubmittedReview(false);
-  }, [id, currentUser?.id]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -142,9 +129,8 @@ const ProductPage = () => {
     reviewsCount: reviews.length,
     averageRating,
     onWriteReview: handleWriteReview,
-    hasUserReviewed,
     isAuthenticated: !!currentUser
-  }), [currentProduct, product, handleVariantChange, reviews.length, averageRating, handleWriteReview, hasUserReviewed, currentUser]);
+  }), [currentProduct, product, handleVariantChange, reviews.length, averageRating, handleWriteReview, currentUser]);
 
   const productTabsProps = useMemo(() => ({
     product: currentProduct || product,
@@ -152,7 +138,6 @@ const ProductPage = () => {
     reviewsLoading,
     onWriteReview: handleWriteReview,
     onSubmitReview: handleSubmitReview,
-    hasUserReviewed,
     isAuthenticated: !!currentUser,
     currentUser
   }), [
@@ -162,7 +147,6 @@ const ProductPage = () => {
     reviewsLoading, 
     handleWriteReview, 
     handleSubmitReview, 
-    hasUserReviewed, 
     currentUser
   ]);
 

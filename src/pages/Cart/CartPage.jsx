@@ -360,7 +360,16 @@ const CartPage = () => {
             </Box>
 
             {/* Benefits Section */}
-            <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ maxWidth: 1000, mx: 'auto' }}>
+            <Grid
+              container
+              spacing={{ xs: 2, sm: 3 }}
+              sx={{
+                maxWidth: 1000,
+                mx: 'auto',
+                justifyContent: 'center',
+                alignItems: 'stretch',
+              }}
+            >
               {[
                 {
                   icon: <AssignmentReturn sx={{ fontSize: { xs: 30, sm: 35, md: 40 }, color: '#f59e0b' }} />,
@@ -378,7 +387,7 @@ const CartPage = () => {
                   description: 'Всегда готовы помочь'
                 }
               ].map((benefit, index) => (
-                <Grid item xs={12} sm={6} md={3} key={index}>
+                <Grid key={index} size={{ xs: 12, sm: 6, md: 4 }}>
                   <Paper sx={{ 
                     p: { xs: 2, sm: 3 }, 
                     textAlign: 'center',
@@ -601,7 +610,7 @@ const CartPage = () => {
                           desc: 'Без лишних вопросов'
                         },
                         {
-                          icon: <Security sx={{ color: '#ef4444' }} />,
+                          icon: <Security sx={{ color: '#10b981' }} />,
                           title: 'Безопасная оплата',
                           desc: 'SSL шифрование'
                         },

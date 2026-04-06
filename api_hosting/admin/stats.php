@@ -56,6 +56,24 @@ try {
         $stats['revenue'] = $rev;
         // Алиас для фронта (adminService ожидает sales / totalSales)
         $stats['sales'] = $rev;
+
+        // Последние заказы (для дашборда)
+        $recentStmt = $db->prepare("
+            SELECT 
+                o.id,
+                o.order_number,
+                o.total_amount,
+                o.status,
+                o.created_at,
+                COALESCE(o.customer_name, CONCAT(u.first_name, ' ', u.last_name), 'Клиент') AS customer_name,
+                COALESCE(o.customer_email, u.email) AS customer_email
+            FROM orders o
+            LEFT JOIN users u ON u.id = o.user_id
+            ORDER BY o.created_at DESC
+            LIMIT 8
+        ");
+        $recentStmt->execute();
+        $stats['recentOrders'] = $recentStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
         
         ob_clean();
         echo json_encode($stats);
