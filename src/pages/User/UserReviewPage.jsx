@@ -145,7 +145,7 @@ const UserReviewsPage = () => {
         </Typography>
 
         <Grid container spacing={2.5} sx={{ mt: 1.5 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Paper
               variant="outlined"
               sx={{
@@ -163,7 +163,7 @@ const UserReviewsPage = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Paper
               variant="outlined"
               sx={{
@@ -181,7 +181,7 @@ const UserReviewsPage = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Paper
               variant="outlined"
               sx={{
@@ -199,7 +199,7 @@ const UserReviewsPage = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Paper
               variant="outlined"
               sx={{
@@ -227,7 +227,7 @@ const UserReviewsPage = () => {
           const productImageToUse = productImage || '/images/placeholder.jpg';
 
           return (
-            <Grid item xs={12} key={review.id}>
+            <Grid size={{ xs: 12 }} key={review.id}>
               <Card
                 variant="outlined"
                 sx={{

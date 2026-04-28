@@ -30,6 +30,7 @@ import {
   InputAdornment,
   Switch,
   Divider,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Refresh,
@@ -79,6 +80,7 @@ const AdminUsers = () => {
   });
 
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
     fetchUsers();
@@ -272,7 +274,7 @@ const AdminUsers = () => {
 
       {/* Статистика */}
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={6} md={3}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
@@ -286,7 +288,7 @@ const AdminUsers = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={6} md={3}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
             color: 'white',
@@ -300,7 +302,7 @@ const AdminUsers = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={6} md={3}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
             color: 'white',
@@ -319,7 +321,7 @@ const AdminUsers = () => {
       {/* Панель поиска и фильтров */}
       <Paper sx={{ p: 2, mb: 2, borderRadius: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               placeholder="Поиск пользователей..."
@@ -339,7 +341,7 @@ const AdminUsers = () => {
               }}
             />
           </Grid>
-          <Grid item xs={6} md={4}>
+          <Grid size={{ xs: 6, md: 4 }}>
             <TextField
               fullWidth
               select
@@ -374,6 +376,45 @@ const AdminUsers = () => {
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               Попробуйте изменить параметры поиска или фильтрации
             </Typography>
+          </Box>
+        ) : isMobile ? (
+          <Box sx={{ p: 2 }}>
+            {filteredUsers.map((user) => (
+              <Card key={user.id} sx={{ mb: 2, borderRadius: 2, border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}` }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1.5, alignItems: 'flex-start', mb: 1.5 }}>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="subtitle1" fontWeight="bold">
+                        {user?.first_name || user?.name || 'Не указано'} {user?.last_name || ''}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        ID: #{user?.id}
+                      </Typography>
+                    </Box>
+                    <Chip label={getRoleText(user?.role)} color={getRoleColor(user?.role)} variant="outlined" size="small" />
+                  </Box>
+                  <Box sx={{ display: 'grid', gap: 0.75 }}>
+                    <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+                      <strong>Email:</strong> {user?.email || 'N/A'}
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Дата регистрации:</strong> {user?.created_at ? new Date(user.created_at).toLocaleDateString('ru-RU') : 'N/A'}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap' }}>
+                    <Button size="small" variant="outlined" onClick={() => user && handleViewUser(user)} startIcon={<Visibility />}>
+                      Просмотр
+                    </Button>
+                    <Button size="small" variant="outlined" color="warning" onClick={() => user && handleEditUser(user)} startIcon={<Edit />}>
+                      Изменить
+                    </Button>
+                    <Button size="small" variant="outlined" color="error" onClick={() => user && setDeleteDialog({ open: true, user })} startIcon={<Delete />}>
+                      Удалить
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
           </Box>
         ) : (
           <TableContainer>
@@ -660,7 +701,7 @@ const UserManagementDialog = ({ open, onClose, user, onSave, isViewMode }) => {
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle1" fontWeight="600" gutterBottom>Основная информация</Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <TextField
                       fullWidth label="Имя" size="small"
                       value={isViewMode ? displayData.first_name || displayData.name || '' : formData.first_name}
@@ -668,7 +709,7 @@ const UserManagementDialog = ({ open, onClose, user, onSave, isViewMode }) => {
                       InputProps={{ readOnly: isViewMode }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <TextField
                       fullWidth label="Фамилия" size="small"
                       value={isViewMode ? displayData.last_name || '' : formData.last_name}
@@ -685,7 +726,7 @@ const UserManagementDialog = ({ open, onClose, user, onSave, isViewMode }) => {
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle1" fontWeight="600" gutterBottom>Контактная информация</Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <TextField
                       fullWidth label="Email" type="email" size="small"
                       value={isViewMode ? displayData.email : formData.email}
@@ -698,7 +739,7 @@ const UserManagementDialog = ({ open, onClose, user, onSave, isViewMode }) => {
                       helperText={!isViewMode && (!formData.email || !formData.email.includes('@')) ? 'Введите корректный email' : ''}
                     />
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <TextField
                       fullWidth label="Телефон" size="small"
                       value={isViewMode ? displayData.phone || '' : formData.phone}
@@ -722,7 +763,7 @@ const UserManagementDialog = ({ open, onClose, user, onSave, isViewMode }) => {
               <Box sx={{ p: 2, backgroundColor: isViewMode ? 'primary.lightest' : 'grey.50', borderRadius: 2, border: '1px solid', borderColor: isViewMode ? 'primary.main' : 'grey.200' }}>
                 <Typography variant="subtitle1" fontWeight="600" gutterBottom>Настройки доступа</Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <TextField
                       fullWidth select label="Роль пользователя" size="small"
                       value={isViewMode ? displayData.role || 'customer' : formData.role}
@@ -752,7 +793,7 @@ const UserManagementDialog = ({ open, onClose, user, onSave, isViewMode }) => {
                       Оставьте поля пустыми, если не хотите менять пароль.
                     </Typography>
                     <Grid container spacing={2}>
-                      <Grid item xs={12}>
+                      <Grid size={{ xs: 12 }}>
                         <TextField
                           fullWidth label="Новый пароль" type="password" size="small"
                           value={passwordData.newPassword}
@@ -763,7 +804,7 @@ const UserManagementDialog = ({ open, onClose, user, onSave, isViewMode }) => {
                           error={!!passwordError}
                         />
                       </Grid>
-                      <Grid item xs={12}>
+                      <Grid size={{ xs: 12 }}>
                         <TextField
                           fullWidth label="Подтверждение пароля" type="password" size="small"
                           value={passwordData.confirmPassword}

@@ -21,7 +21,8 @@ import {
   Card,
   CardContent,
   alpha,
-  useTheme
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   Add,
@@ -55,6 +56,7 @@ const AdminProducts = () => {
   const [isViewMode, setIsViewMode] = useState(false); // 🔥 НОВОЕ СОСТОЯНИЕ ДЛЯ РЕЖИМА ПРОСМОТРА
 
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
 
   const fetchCategories = async () => {
@@ -259,7 +261,7 @@ const AdminProducts = () => {
       {/* Панель поиска и фильтров */}
       <Paper sx={{ p: 2, mb: 2, borderRadius: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               fullWidth
               placeholder="Поиск товаров..."
@@ -279,7 +281,7 @@ const AdminProducts = () => {
               }}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               fullWidth
               select
@@ -333,7 +335,7 @@ const AdminProducts = () => {
 
       {/* Статистика */}
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={6} md={3}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
@@ -347,7 +349,7 @@ const AdminProducts = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={6} md={3}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
             color: 'white',
@@ -361,7 +363,7 @@ const AdminProducts = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={6} md={3}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
             color: 'white',
@@ -375,7 +377,7 @@ const AdminProducts = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={6} md={3}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
             color: 'white',
@@ -402,6 +404,44 @@ const AdminProducts = () => {
             <Typography variant="h6" color="text.secondary">
               Товары не найдены
             </Typography>
+          </Box>
+        ) : isMobile ? (
+          <Box sx={{ p: 2 }}>
+            {filteredProducts.map((product) => (
+              <Card key={product.id} sx={{ mb: 2, borderRadius: 2, border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}` }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', mb: 1.5 }}>
+                    <Box
+                      component="img"
+                      src={product.image_url || '/placeholder-product.jpg'}
+                      alt={product.name}
+                      sx={{ width: 64, height: 64, borderRadius: 2, objectFit: 'cover', border: '1px solid #ddd', flexShrink: 0 }}
+                      onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+                    />
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Typography variant="subtitle1" fontWeight="bold">
+                        {product.name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+                        {product.brand}
+                      </Typography>
+                      <Typography variant="h6" color="primary.main" sx={{ mt: 0.5 }}>
+                        {product.price} ₽
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1.5 }}>
+                    <Chip label={`Остаток: ${product.stock}`} size="small" color={product.stock > 0 ? 'success' : 'error'} />
+                    <Chip label={product.category_slug} size="small" variant="outlined" />
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Button size="small" variant="outlined" onClick={() => handleView(product)} startIcon={<Visibility />}>Просмотр</Button>
+                    <Button size="small" variant="outlined" color="warning" onClick={() => handleEdit(product)} startIcon={<Edit />}>Изменить</Button>
+                    <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(product.id)} startIcon={<Delete />}>Удалить</Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
           </Box>
         ) : (
           <Box sx={{ overflowX: 'auto' }}>
@@ -639,7 +679,7 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
         <DialogContent sx={{ p: 2 }}>
           <Grid container spacing={2}>
             {/* Название */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Название товара"
@@ -659,7 +699,7 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
             </Grid>
             
             {/* Цена */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Цена"
@@ -680,7 +720,7 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
             </Grid>
 
             {/* Бренд */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Бренд"
@@ -699,7 +739,7 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
             </Grid>
 
             {/* Количество на складе */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Количество на складе"
@@ -719,7 +759,7 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
             </Grid>
 
             {/* Категория */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Категория"
@@ -745,7 +785,7 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
             </Grid>
 
             {/* Описание */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Описание"
@@ -761,7 +801,7 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
             </Grid>
 
             {/* URL изображения */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="URL изображения"
@@ -781,7 +821,7 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
             </Grid>
 
             {formData.image_url && (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Typography variant="body2" gutterBottom>
                   Предпросмотр изображения:
                 </Typography>

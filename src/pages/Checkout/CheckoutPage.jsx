@@ -328,7 +328,7 @@ const CheckoutPage = () => {
 
       <form onSubmit={handleSubmit}>
         <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} alignItems="flex-start">
-          <Grid item xs={12} lg={8} order={{ xs: 2, lg: 1 }}>
+          <Grid size={{ xs: 12, lg: 8 }} order={{ xs: 2, lg: 1 }}>
             <Paper elevation={0} sx={{
               p: { xs: 2, sm: 3, md: 4 },
               borderRadius: { xs: 2, sm: 3, md: 4 },
@@ -392,7 +392,7 @@ const CheckoutPage = () => {
               </Box>
 
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label="Имя *"
@@ -404,7 +404,7 @@ const CheckoutPage = () => {
                     size={isMobile ? 'small' : 'medium'}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label="Фамилия *"
@@ -416,7 +416,7 @@ const CheckoutPage = () => {
                     size={isMobile ? 'small' : 'medium'}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     type="email"
@@ -429,7 +429,7 @@ const CheckoutPage = () => {
                     size={isMobile ? 'small' : 'medium'}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     type="tel"
@@ -443,7 +443,7 @@ const CheckoutPage = () => {
                     size={isMobile ? 'small' : 'medium'}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     fullWidth
                     label="Адрес доставки *"
@@ -456,7 +456,7 @@ const CheckoutPage = () => {
                     size={isMobile ? 'small' : 'medium'}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     fullWidth
                     select
@@ -477,7 +477,7 @@ const CheckoutPage = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} lg={4} order={{ xs: 1, lg: 2 }}>
+          <Grid size={{ xs: 12, lg: 4 }} order={{ xs: 1, lg: 2 }}>
             <Box sx={{ position: { lg: 'sticky' }, top: { lg: 24 } }}>
               <Paper elevation={0} sx={{
                 p: { xs: 2, sm: 3, md: 4 },

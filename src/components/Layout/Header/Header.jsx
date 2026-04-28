@@ -122,7 +122,12 @@ const Header = () => {
     <>
       <StyledAppBar scrolled={scrolled}>
         <Container maxWidth="xl" disableGutters>
-          <Toolbar sx={{ minHeight: { xs: '70px', md: '80px' } }}>
+          <Toolbar
+            sx={{
+              minHeight: { xs: '70px', md: '80px' },
+              justifyContent: { xs: 'space-between', md: 'flex-start' }
+            }}
+          >
             
             {/* ЛОГОТИП */}
             <StyledLogo component={Link} to="/" scrolled={scrolled}>
@@ -247,7 +252,15 @@ const Header = () => {
             )}
 
             {/* ЭКШН-КНОПКИ */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: { xs: 0.5, sm: 1 },
+                ml: { xs: 'auto', md: 0 },
+                justifyContent: { xs: 'flex-end', md: 'flex-start' }
+              }}
+            >
               <StyledActionButton to="/wishlist" scrolled={scrolled}>
                 <Badge badgeContent={wishlistCount} color="error">
                   <Favorite sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />

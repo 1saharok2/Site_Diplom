@@ -66,7 +66,7 @@ const CartSummary = ({ cartItems, onClearCart, onRefreshCart }) => {
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 3, position: 'sticky', top: 20 }}>
+    <Paper elevation={3} sx={{ p: 3, position: { md: 'sticky', xs: 'static' }, top: { md: 20 } }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
         Итоги заказа
       </Typography>

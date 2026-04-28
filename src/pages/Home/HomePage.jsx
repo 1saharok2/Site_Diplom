@@ -224,8 +224,8 @@ const HomePage = () => {
             zIndex: 1,
             overflow: "hidden", 
           }}
-          slidesOffsetBefore={16}
-          slidesOffsetAfter={16}
+          slidesOffsetBefore={isMobile ? 0 : 16}
+          slidesOffsetAfter={isMobile ? 0 : 16}
           slidesPerView={1}
           spaceBetween={32}
         >
@@ -597,7 +597,7 @@ const HomePage = () => {
                 sx={{
                   flex: { xs: '0 0 calc(100% - 32px)', sm: '0 0 calc(50% - 24px)', md: '0 0 calc(25% - 24px)' },
                   maxWidth: { xs: '100%', sm: 'calc(50% - 24px)', md: 'calc(25% - 24px)' },
-                  minWidth: { xs: '280px', sm: 'auto' },
+                  minWidth: { xs: 0, sm: 'auto' },
                 }}
               >
                 <Zoom in timeout={500 + index * 100}>
@@ -717,7 +717,7 @@ const HomePage = () => {
 
         <Grid container spacing={4} justifyContent="center">
           {features.map((f, i) => (
-            <Grid item xs={12} sm={6} md={3} key={i}>
+            <Grid key={i} size={{ xs: 12, sm: 6, md: 3 }}>
               <Grow in timeout={500 + i * 100}>
                 <Card
                   sx={{
@@ -773,12 +773,12 @@ const HomePage = () => {
         size="medium"
         sx={{
           position: "fixed",
-          bottom: 30,
-          right: 30,
+          bottom: { xs: 16, md: 30 },
+          right: { xs: 16, md: 30 },
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           color: "white",
-          width: 56,
-          height: 56,
+          width: { xs: 48, md: 56 },
+          height: { xs: 48, md: 56 },
           "&:hover": { 
             transform: 'translateY(-5px)',
             boxShadow: '0 10px 25px rgba(102, 126, 234, 0.4)',

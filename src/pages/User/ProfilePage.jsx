@@ -711,7 +711,7 @@ const ProfilePage = () => {
 
           <Grid container spacing={3} justifyContent="center">
             {/* Боковая панель с профилем */}
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Slide direction="left" in={true} timeout={700}>
                 <Paper elevation={0} sx={{ 
                   p: 4, 
@@ -747,19 +747,19 @@ const ProfilePage = () => {
                   <br></br>
 
                   <Box sx={{ textAlign: 'left', mb: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, minWidth: 0 }}>
                       <Email sx={{ mr: 2, color: 'primary.main' }} />
-                      <Typography>{userProfile?.email}</Typography>
+                      <Typography sx={{ minWidth: 0, wordBreak: 'break-word' }}>{userProfile?.email}</Typography>
                     </Box>
                     
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, minWidth: 0 }}>
                       <Phone sx={{ mr: 2, color: 'primary.main' }} />
-                      <Typography>{userProfile?.phone || 'Не указан'}</Typography>
+                      <Typography sx={{ minWidth: 0, wordBreak: 'break-word' }}>{userProfile?.phone || 'Не указан'}</Typography>
                     </Box>
                     
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, minWidth: 0 }}>
                       <Place sx={{ mr: 2, color: 'primary.main' }} />
-                      <Typography>{userProfile?.address || 'Не указан'}</Typography>
+                      <Typography sx={{ minWidth: 0, wordBreak: 'break-word' }}>{userProfile?.address || 'Не указан'}</Typography>
                     </Box>
                     
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -796,7 +796,7 @@ const ProfilePage = () => {
             </Grid>
 
             {/* Основное содержание */}
-            <Grid item xs={12} md={8}>
+            <Grid size={{ xs: 12, md: 8 }}>
               <Paper
                 elevation={0}
                 sx={{
@@ -845,7 +845,7 @@ const ProfilePage = () => {
                   
                   <Grid container spacing={2} justifyContent="center">
                     {quickActions.map((action, index) => (
-                      <Grid item xs={12} sm={6} key={index} sx={{ display: 'flex', justifyContent: 'center' }}>
+                      <Grid key={index} size={{ xs: 12, sm: 6 }} sx={{ display: 'flex', justifyContent: 'center' }}>
                         <Card
                           onClick={action.onClick}
                           sx={{

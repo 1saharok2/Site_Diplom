@@ -223,7 +223,7 @@ const OrderDetailPage = () => {
 
       <Grid container spacing={{ xs: 2, md: 3 }}>
         {/* Левая колонка - товары */}
-        <Grid item xs={12} lg={8}>
+        <Grid size={{ xs: 12, lg: 8 }}>
           <Paper 
             elevation={0}
             sx={{ 
@@ -265,7 +265,7 @@ const OrderDetailPage = () => {
                     <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
                       {item.product_name || item.name || `Товар #${item.product_id}`}
                     </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 1 }}>
                       <Typography variant="body2" color="text.secondary">
                         Количество: {item.quantity} × {item.price?.toLocaleString('ru-RU')} ₽
                       </Typography>
@@ -284,6 +284,8 @@ const OrderDetailPage = () => {
               display: 'flex', 
               justifyContent: 'space-between', 
               alignItems: 'center',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 1,
               p: { xs: 2, md: 2.5 },
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               borderRadius: 3,
@@ -300,8 +302,8 @@ const OrderDetailPage = () => {
         </Grid>
 
         {/* Правая колонка - информация */}
-        <Grid item xs={12} lg={4}>
-          <Box sx={{ position: 'sticky', top: 100, zIndex: 10, width: '100%' }}>
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <Box sx={{ position: { lg: 'sticky' }, top: { lg: 100 }, zIndex: 10, width: '100%' }}>
             <Paper 
               elevation={0}
               sx={{ 

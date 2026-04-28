@@ -69,9 +69,9 @@ const SearchPage = () => {
           {filteredProducts.length > 0 ? (
             <Grid container spacing={2}>
               {filteredProducts.map((product) => (
-                <Grid item xs={6} sm={4} key={product.id}>
+                <Grid key={product.id} size={{ xs: 6, sm: 4 }}>
                   <Card 
-                    sx={{ cursor: 'pointer' }}
+                    sx={{ cursor: 'pointer', height: '100%', display: 'flex', flexDirection: 'column' }}
                     onClick={() => handleProductClick(product)}
                   >
                     <CardMedia
@@ -84,8 +84,18 @@ const SearchPage = () => {
                       }}
                       sx={{ objectFit: 'contain', p: 1 }}
                     />
-                    <CardContent>
-                      <Typography variant="body2" noWrap gutterBottom>
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Typography
+                        variant="body2"
+                        gutterBottom
+                        sx={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          minHeight: { xs: 38, sm: 42 }
+                        }}
+                      >
                         {product.name}
                       </Typography>
                       <Typography variant="h6" color="primary">

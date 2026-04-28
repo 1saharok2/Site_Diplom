@@ -172,18 +172,25 @@ const CartItems = () => {
                   }
                 }}
               >
-                <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: { xs: 2, sm: 3 },
+                    alignItems: { xs: 'stretch', sm: 'flex-start' },
+                    flexDirection: { xs: 'column', sm: 'row' },
+                  }}
+                >
                   {/* Изображение товара */}
                   <Avatar
                     src={image}
                     variant="rounded"
                     sx={{
-                      width: 80,
-                      height: 80,
+                      width: { xs: 72, sm: 80 },
+                      height: { xs: 72, sm: 80 },
                       borderRadius: 2,
                       bgcolor: 'grey.100',
                       '& .MuiAvatar-img': {
-                        objectFit: 'cover'
+                        objectFit: 'contain'
                       }
                     }}
                   >
@@ -199,7 +206,7 @@ const CartItems = () => {
                         mb: 1,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
+                        whiteSpace: { xs: 'normal', sm: 'nowrap' }
                       }}
                     >
                       {name}
@@ -298,7 +305,7 @@ const CartItems = () => {
                         sx={{
                           fontWeight: 700,
                           color: isUpdating ? 'text.secondary' : 'primary.main',
-                          minWidth: 120
+                          minWidth: { xs: 'auto', sm: 120 }
                         }}
                       >
                         {(price * item.quantity).toLocaleString('ru-RU')} ₽
@@ -307,7 +314,15 @@ const CartItems = () => {
                   </Box>
 
                   {/* Действия */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: { xs: 'row', sm: 'column' },
+                      gap: 1,
+                      alignItems: 'center',
+                      justifyContent: { xs: 'flex-end', sm: 'flex-start' },
+                    }}
+                  >
                     <IconButton
                       onClick={() => !isUpdating && handleAddToWishlist(item)}
                       disabled={isUpdating}

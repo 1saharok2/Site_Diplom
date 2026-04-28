@@ -37,7 +37,6 @@ const CategoryPage = () => {
   const [isDesktop, setIsDesktop] = useState(
     () => (typeof window !== 'undefined' ? window.matchMedia('(min-width: 992px)').matches : true)
   );
-  const offcanvasContainer = typeof window !== 'undefined' ? window.document.body : undefined;
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 992px)');
@@ -46,17 +45,6 @@ const CategoryPage = () => {
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
-  // Дополнительно фиксируем слой offcanvas/backdrop через inline-стили в runtime.
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    if (!mobileFiltersOpen) return;
-
-    const offcanvasEl = document.querySelector('.category-filters-offcanvas.offcanvas');
-    const backdropEl = document.querySelector('.offcanvas-backdrop.show');
-    if (offcanvasEl) offcanvasEl.style.zIndex = '2000002';
-    if (backdropEl) backdropEl.style.zIndex = '2000001';
-  }, [mobileFiltersOpen]);
-  
   // Новые состояния для фильтров
   const [availabilityFilter, setAvailabilityFilter] = useState('availability-all');
   const [minRating, setMinRating] = useState(null);
@@ -478,12 +466,10 @@ const CategoryPage = () => {
             placement="start"
             backdrop
             scroll={false}
-            container={offcanvasContainer}
-            style={{ zIndex: 2000002 }}
             className="category-filters-offcanvas"
           >
             <Offcanvas.Header closeButton className="border-bottom-0 pb-0">
-              <Offcanvas.Title className="visually-hidden">Фильтры</Offcanvas.Title>
+              <Offcanvas.Title>Фильтры</Offcanvas.Title>
             </Offcanvas.Header>
             <Offcanvas.Body className="p-0">
               <FiltersCard {...filtersCardProps} />
@@ -562,20 +548,6 @@ const CategoryPage = () => {
           </div>
         </Col>
       </Row>
-      {!isDesktop && (
-        <div className="mobile-filters-fab-wrap">
-          <Button
-            type="button"
-            className="mobile-filters-fab"
-            onClick={() => setMobileFiltersOpen(true)}
-          >
-            Фильтры
-            {activeFiltersCount > 0 && (
-              <span className="mobile-filters-fab-badge">{activeFiltersCount}</span>
-            )}
-          </Button>
-        </div>
-      )}
     </Container>
   );
 };
