@@ -6,8 +6,7 @@ import {
   Alert, 
   Button,
   Row,
-  Col,
-  Offcanvas
+  Col
 } from 'react-bootstrap';
 import { categoryService, getCategoryFilters } from '../../../services/categoryService';
 import {
@@ -44,6 +43,26 @@ const CategoryPage = () => {
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
   }, []);
+
+  useEffect(() => {
+    if (isDesktop) {
+      setMobileFiltersOpen(false);
+    }
+  }, [isDesktop]);
+
+  useEffect(() => {
+    if (!mobileFiltersOpen) {
+      document.body.style.overflow = '';
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileFiltersOpen]);
 
   // Новые состояния для фильтров
   const [availabilityFilter, setAvailabilityFilter] = useState('availability-all');
@@ -459,49 +478,48 @@ const CategoryPage = () => {
           </Col>
         )}
 
-        {!isDesktop && (
-          <Offcanvas
-            show={mobileFiltersOpen}
-            onHide={() => setMobileFiltersOpen(false)}
-            placement="start"
-            backdrop
-            scroll={false}
-            className="category-filters-offcanvas"
+        {!isDesktop && mobileFiltersOpen && (
+          <div
+            className="category-filters-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Фильтры каталога"
           >
-            <Offcanvas.Header closeButton className="border-bottom-0 pb-0">
-              <Offcanvas.Title>Фильтры</Offcanvas.Title>
-            </Offcanvas.Header>
-            <Offcanvas.Body className="p-0">
-              <FiltersCard {...filtersCardProps} />
-            </Offcanvas.Body>
-            <div className="mobile-offcanvas-footer">
-              <Button
-                variant="primary"
-                className="w-100 mobile-offcanvas-apply-btn"
-                onClick={() => setMobileFiltersOpen(false)}
-              >
-                Показать {filteredAndSortedProducts.length} товаров
-              </Button>
+            <button
+              type="button"
+              className="category-filters-backdrop"
+              aria-label="Закрыть фильтры"
+              onClick={() => setMobileFiltersOpen(false)}
+            />
+            <div className="category-filters-panel">
+              <div className="category-filters-panel-header">
+                <h5 className="mb-0">Фильтры</h5>
+                <button
+                  type="button"
+                  className="category-filters-close-btn"
+                  onClick={() => setMobileFiltersOpen(false)}
+                  aria-label="Закрыть фильтры"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="category-filters-panel-body">
+                <FiltersCard {...filtersCardProps} />
+              </div>
+              <div className="mobile-offcanvas-footer">
+                <Button
+                  variant="primary"
+                  className="w-100 mobile-offcanvas-apply-btn"
+                  onClick={() => setMobileFiltersOpen(false)}
+                >
+                  Показать {filteredAndSortedProducts.length} товаров
+                </Button>
+              </div>
             </div>
-          </Offcanvas>
+          </div>
         )}
 
         <Col lg={isDesktop ? 9 : 12} className="products-column">
-          {!isDesktop && (
-            <div className="mobile-filters-inline-wrap">
-              <Button
-                type="button"
-                variant="primary"
-                className="mobile-filters-inline-btn"
-                onClick={() => setMobileFiltersOpen(true)}
-              >
-                Открыть фильтры
-                {activeFiltersCount > 0 && (
-                  <span className="mobile-filters-inline-badge">{activeFiltersCount}</span>
-                )}
-              </Button>
-            </div>
-          )}
           <SortingCard
             sortBy={sortBy}
             setSortBy={setSortBy}

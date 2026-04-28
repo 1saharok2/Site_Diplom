@@ -493,7 +493,7 @@ const AdminOrders = () => {
       {/* Статистика */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {statCards.map((stat, index) => (
-          <Grid item xs={6} sm={4} md={2} key={index}>
+          <Grid key={index} size={{ xs: 6, sm: 4, md: 2 }}>
             <Card 
               sx={{ 
                 background: stat.color, 
@@ -522,7 +522,7 @@ const AdminOrders = () => {
       {/* Панель поиска и фильтров */}
       <Paper sx={{ p: isMobile ? 1.5 : 2, mb: 3, borderRadius: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size={isMobile ? "small" : "medium"}
@@ -549,7 +549,7 @@ const AdminOrders = () => {
             />
           </Grid>
           
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <FormControl fullWidth size={isMobile ? "small" : "medium"}>
               <InputLabel>Статус</InputLabel>
               <Select
@@ -567,7 +567,7 @@ const AdminOrders = () => {
             </FormControl>
           </Grid>
 
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <FormControl fullWidth size={isMobile ? "small" : "medium"}>
               <InputLabel>Дата</InputLabel>
               <Select
@@ -583,7 +583,7 @@ const AdminOrders = () => {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid size={{ xs: 12, md: 2 }}>
             <FormControl fullWidth size={isMobile ? "small" : "medium"}>
               <InputLabel>Сумма</InputLabel>
               <Select
@@ -599,7 +599,7 @@ const AdminOrders = () => {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid size={{ xs: 12, md: 2 }}>
             <Button
               fullWidth
               variant="outlined"
@@ -875,6 +875,7 @@ const AdminOrders = () => {
         onClose={() => setDetailDialogOpen(false)}
         maxWidth="md"
         fullWidth
+        fullScreen={isMobile}
         scroll="paper"
       >
         <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -888,19 +889,19 @@ const AdminOrders = () => {
                 Информация о клиенте
               </Typography>
               <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography><strong>Имя:</strong> {selectedOrder.customer_name || 'Не указано'}</Typography>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography><strong>Email:</strong> {selectedOrder.user_email || 'Не указан'}</Typography>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography><strong>Телефон:</strong> {selectedOrder.customer_phone || 'Не указан'}</Typography>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography><strong>Статус:</strong> {getStatusText(selectedOrder.status)}</Typography>
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Typography><strong>Адрес доставки:</strong> {formatShippingAddress(selectedOrder.shipping_address)}</Typography>
                 </Grid>
               </Grid>
@@ -909,7 +910,8 @@ const AdminOrders = () => {
               <Typography variant="h6" gutterBottom color="primary.dark" sx={{ mb: 2 }}>
                 Товары ({selectedOrder.items?.length || 0})
               </Typography>
-              <TableContainer component={Paper} variant="outlined">
+              <Box sx={{ overflowX: 'auto' }}>
+              <TableContainer component={Paper} variant="outlined" sx={{ minWidth: { xs: 520, sm: 'auto' } }}>
                 <Table size="small">
                   <TableHead>
                     <TableRow>
@@ -937,6 +939,7 @@ const AdminOrders = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
+              </Box>
               
               {/* Итоговая сумма */}
               <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>

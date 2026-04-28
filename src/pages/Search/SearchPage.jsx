@@ -20,11 +20,14 @@ const SearchPage = () => {
   const { products } = useProducts();
   const navigate = useNavigate();
 
-  const filteredProducts = searchQuery
-    ? products.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredProducts = normalizedQuery
+    ? products.filter(product => {
+        const name = product.name?.toLowerCase() || '';
+        const brand = product.brand?.toLowerCase() || '';
+        return name.includes(normalizedQuery) || brand.includes(normalizedQuery);
+      })
     : [];
 
   const handleProductClick = (product) => {

@@ -232,15 +232,23 @@ const AdminUsers = () => {
   }
 
   return (
-    <Box sx={{ p: 2, ml: 0 }}>
+    <Box sx={{ p: { xs: 1, sm: 2 }, ml: 0 }}>
       {/* Заголовок */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" sx={{ 
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems={{ xs: 'stretch', sm: 'center' }}
+        flexDirection={{ xs: 'column', sm: 'row' }}
+        gap={1.5}
+        mb={3}
+      >
+        <Typography variant={isMobile ? 'h5' : 'h4'} sx={{ 
           fontWeight: 'bold',
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           backgroundClip: 'text',
           WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
+          WebkitTextFillColor: 'transparent',
+          wordBreak: 'break-word'
         }}>
           Управление пользователями
         </Typography>
@@ -251,10 +259,11 @@ const AdminUsers = () => {
           disabled={loading}
           sx={{
             borderRadius: 2,
-            px: 2,
-            py: 1,
+            px: { xs: 1.5, sm: 2 },
+            py: { xs: 0.75, sm: 1 },
             fontWeight: 'bold',
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            width: { xs: '100%', sm: 'auto' },
             '&:hover': {
               transform: 'translateY(-1px)',
               boxShadow: '0 6px 20px rgba(102, 126, 234, 0.3)'
@@ -273,18 +282,18 @@ const AdminUsers = () => {
       )}
 
       {/* Статистика */}
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid container spacing={{ xs: 1.25, sm: 2 }} sx={{ mb: 2 }}>
         <Grid size={{ xs: 6, md: 3 }}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
             borderRadius: 2
           }}>
-            <CardContent sx={{ textAlign: 'center', p: 2 }}>
-              <Typography variant="h5" gutterBottom>
+            <CardContent sx={{ textAlign: 'center', p: { xs: 1.25, sm: 2 } }}>
+              <Typography variant={isMobile ? 'h6' : 'h5'} gutterBottom>
                 {users.length}
               </Typography>
-              <Typography variant="body2">Всего пользователей</Typography>
+              <Typography variant="body2" sx={{ fontSize: { xs: '0.72rem', sm: '0.875rem' } }}>Всего пользователей</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -294,11 +303,11 @@ const AdminUsers = () => {
             color: 'white',
             borderRadius: 2
           }}>
-            <CardContent sx={{ textAlign: 'center', p: 2 }}>
-              <Typography variant="h5" gutterBottom>
+            <CardContent sx={{ textAlign: 'center', p: { xs: 1.25, sm: 2 } }}>
+              <Typography variant={isMobile ? 'h6' : 'h5'} gutterBottom>
                 {users.filter(u => u.role === 'admin').length}
               </Typography>
-              <Typography variant="body2">Администраторов</Typography>
+              <Typography variant="body2" sx={{ fontSize: { xs: '0.72rem', sm: '0.875rem' } }}>Администраторов</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -308,22 +317,23 @@ const AdminUsers = () => {
             color: 'white',
             borderRadius: 2
           }}>
-            <CardContent sx={{ textAlign: 'center', p: 2 }}>
-              <Typography variant="h5" gutterBottom>
+            <CardContent sx={{ textAlign: 'center', p: { xs: 1.25, sm: 2 } }}>
+              <Typography variant={isMobile ? 'h6' : 'h5'} gutterBottom>
                 {filteredUsers.length}
               </Typography>
-              <Typography variant="body2">Отфильтровано</Typography>
+              <Typography variant="body2" sx={{ fontSize: { xs: '0.72rem', sm: '0.875rem' } }}>Отфильтровано</Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
       {/* Панель поиска и фильтров */}
-      <Paper sx={{ p: 2, mb: 2, borderRadius: 2 }}>
-        <Grid container spacing={2} alignItems="center">
+      <Paper sx={{ p: { xs: 1.25, sm: 2 }, mb: 2, borderRadius: 2 }}>
+        <Grid container spacing={{ xs: 1.25, sm: 2 }} alignItems="center">
           <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
+              size={isMobile ? 'small' : 'medium'}
               placeholder="Поиск пользователей..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -345,6 +355,7 @@ const AdminUsers = () => {
             <TextField
               fullWidth
               select
+              size={isMobile ? 'small' : 'medium'}
               label="Роль"
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
@@ -378,37 +389,43 @@ const AdminUsers = () => {
             </Typography>
           </Box>
         ) : isMobile ? (
-          <Box sx={{ p: 2 }}>
+          <Box sx={{ p: { xs: 1.25, sm: 2 } }}>
             {filteredUsers.map((user) => (
-              <Card key={user.id} sx={{ mb: 2, borderRadius: 2, border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}` }}>
-                <CardContent>
+              <Card key={user.id} sx={{ mb: 1.25, borderRadius: 2, border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}` }}>
+                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1.5, alignItems: 'flex-start', mb: 1.5 }}>
                     <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="subtitle1" fontWeight="bold">
+                      <Typography variant="subtitle2" fontWeight="bold" sx={{ wordBreak: 'break-word' }}>
                         {user?.first_name || user?.name || 'Не указано'} {user?.last_name || ''}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary">
                         ID: #{user?.id}
                       </Typography>
                     </Box>
-                    <Chip label={getRoleText(user?.role)} color={getRoleColor(user?.role)} variant="outlined" size="small" />
+                    <Chip
+                      label={getRoleText(user?.role)}
+                      color={getRoleColor(user?.role)}
+                      variant="outlined"
+                      size="small"
+                      sx={{ maxWidth: 120, '& .MuiChip-label': { px: 1, overflow: 'hidden', textOverflow: 'ellipsis' } }}
+                    />
                   </Box>
                   <Box sx={{ display: 'grid', gap: 0.75 }}>
-                    <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+                    <Typography variant="caption" sx={{ wordBreak: 'break-word' }}>
                       <strong>Email:</strong> {user?.email || 'N/A'}
                     </Typography>
-                    <Typography variant="body2">
+                    <Typography variant="caption">
                       <strong>Дата регистрации:</strong> {user?.created_at ? new Date(user.created_at).toLocaleDateString('ru-RU') : 'N/A'}
                     </Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap' }}>
-                    <Button size="small" variant="outlined" onClick={() => user && handleViewUser(user)} startIcon={<Visibility />}>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 1, mt: 1.5 }}>
+                    <Button size="small" variant="outlined" onClick={() => user && handleViewUser(user)} startIcon={<Visibility />} sx={{ minWidth: 0, px: 1 }}>
                       Просмотр
                     </Button>
-                    <Button size="small" variant="outlined" color="warning" onClick={() => user && handleEditUser(user)} startIcon={<Edit />}>
+                    <Button size="small" variant="outlined" color="warning" onClick={() => user && handleEditUser(user)} startIcon={<Edit />} sx={{ minWidth: 0, px: 1 }}>
                       Изменить
                     </Button>
-                    <Button size="small" variant="outlined" color="error" onClick={() => user && setDeleteDialog({ open: true, user })} startIcon={<Delete />}>
+                    <Button size="small" variant="outlined" color="error" onClick={() => user && setDeleteDialog({ open: true, user })} startIcon={<Delete />} sx={{ minWidth: 0, px: 1 }}>
                       Удалить
                     </Button>
                   </Box>
@@ -523,6 +540,7 @@ const AdminUsers = () => {
       <Dialog
         open={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false, user: null })}
+        fullScreen={isMobile}
         PaperProps={{
           sx: {
             borderRadius: 2
@@ -615,6 +633,8 @@ const UserManagementDialog = ({ open, onClose, user, onSave, isViewMode }) => {
   const [passwordError, setPasswordError] = useState('');
   const [saving, setSaving] = useState(false);
   const [localSnackbar, setLocalSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   // Инициализация при открытии
   useEffect(() => {
@@ -685,6 +705,7 @@ const UserManagementDialog = ({ open, onClose, user, onSave, isViewMode }) => {
         onClose={onClose}
         maxWidth="sm"
         fullWidth
+        fullScreen={isMobile}
         PaperProps={{ sx: { borderRadius: 3, boxShadow: '0 10px 40px rgba(0,0,0,0.1)' } }}
       >
         <DialogTitle sx={{ 
@@ -696,7 +717,7 @@ const UserManagementDialog = ({ open, onClose, user, onSave, isViewMode }) => {
         
         <DialogContent sx={{ p: 0 }}>
           {displayData && (
-            <Box sx={{ p: 3, pb: 2 }}>
+            <Box sx={{ p: { xs: 1.5, sm: 3 }, pb: { xs: 1.5, sm: 2 } }}>
               {/* Основная информация */}
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle1" fontWeight="600" gutterBottom>Основная информация</Typography>
@@ -832,8 +853,8 @@ const UserManagementDialog = ({ open, onClose, user, onSave, isViewMode }) => {
           )}
         </DialogContent>
 
-        <DialogActions sx={{ p: 3, pt: 0, gap: 2, justifyContent: 'center' }}>
-          <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2, px: 4, py: 1, minWidth: 120 }}>
+        <DialogActions sx={{ p: { xs: 1.5, sm: 3 }, pt: 0, gap: 1.5, justifyContent: 'center', flexDirection: { xs: 'column', sm: 'row' } }}>
+          <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2, px: { xs: 2, sm: 4 }, py: 1, minWidth: { xs: '100%', sm: 120 } }}>
             {isViewMode ? 'Закрыть' : 'Отмена'}
           </Button>
           {!isViewMode && (
@@ -841,7 +862,7 @@ const UserManagementDialog = ({ open, onClose, user, onSave, isViewMode }) => {
               onClick={handleSave}
               variant="contained"
               disabled={saving || !!passwordError}
-              sx={{ borderRadius: 2, px: 4, py: 1, minWidth: 180,
+              sx={{ borderRadius: 2, px: { xs: 2, sm: 4 }, py: 1, minWidth: { xs: '100%', sm: 180 },
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 '&:hover': { transform: 'translateY(-1px)', boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)' }
               }}

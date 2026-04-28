@@ -172,8 +172,8 @@ const MobileTicketCard = ({ ticket, handleMenuOpen, viewTicketDetails, updateTic
   return (
     <Card 
       sx={{ 
-        mb: 2, 
-        p: 2, 
+        mb: 1.25, 
+        p: 1.5, 
         borderLeft: `4px solid ${getBorderColor()}`,
         borderRadius: 2,
         boxShadow: 2,
@@ -182,12 +182,12 @@ const MobileTicketCard = ({ ticket, handleMenuOpen, viewTicketDetails, updateTic
         }
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-        <Box>
-          <Typography variant="subtitle1" fontWeight="bold">
+      <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="subtitle2" fontWeight="bold" sx={{ wordBreak: 'break-word' }}>
             {ticket.ticket_number}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', wordBreak: 'break-word' }}>
             {ticket.subject}
           </Typography>
         </Box>
@@ -204,7 +204,7 @@ const MobileTicketCard = ({ ticket, handleMenuOpen, viewTicketDetails, updateTic
         </Box>
       </Box>
       
-      <Box display="flex" gap={1} mt={1} mb={1}>
+      <Box display="flex" gap={0.75} mt={1} mb={1} flexWrap="wrap">
         <Chip
           icon={getStatusIcon(ticket.status)}
           label={getStatusText(ticket.status)}
@@ -221,14 +221,14 @@ const MobileTicketCard = ({ ticket, handleMenuOpen, viewTicketDetails, updateTic
         />
       </Box>
       
-      <Typography variant="body2" sx={{ mt: 1 }}>
+      <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
         <strong>От:</strong> {ticket.name}
       </Typography>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', wordBreak: 'break-word' }}>
         <strong>Email:</strong> {ticket.email}
       </Typography>
       {ticket.phone && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
           <strong>Телефон:</strong> {ticket.phone}
         </Typography>
       )}
@@ -237,7 +237,7 @@ const MobileTicketCard = ({ ticket, handleMenuOpen, viewTicketDetails, updateTic
         📅 {formatDate(ticket.created_at)}
       </Typography>
       
-      <Box mt={2} display="flex" justifyContent="space-between" gap={1}>
+      <Box mt={1.5} display="grid" gridTemplateColumns="repeat(2, minmax(0, 1fr))" gap={1}>
         <Button 
           size="small" 
           variant="outlined" 
@@ -563,7 +563,7 @@ const AdminSupportTickets = () => {
   return (
     <Box sx={{ p: isMobile ? 1 : 3 }}>
       {/* Заголовок */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box display="flex" justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }} flexDirection={{ xs: 'column', sm: 'row' }} gap={1.5} mb={3}>
         <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
           💬 Обращения в поддержку
         </Typography>
@@ -572,6 +572,7 @@ const AdminSupportTickets = () => {
           startIcon={<RefreshIcon />}
           onClick={fetchTickets}
           size={isMobile ? "small" : "medium"}
+          sx={{ width: { xs: '100%', sm: 'auto' } }}
         >
           Обновить
         </Button>
@@ -589,9 +590,9 @@ const AdminSupportTickets = () => {
       )}
 
       {/* Статистика */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
+      <Grid container spacing={{ xs: 1.25, sm: 2 }} sx={{ mb: 3 }}>
         {statCards.map((stat, index) => (
-          <Grid item xs={6} sm={4} md={2} key={index}>
+          <Grid key={index} size={{ xs: 6, sm: 4, md: 2 }}>
             <Card 
               sx={{ 
                 background: stat.color, 
@@ -604,11 +605,11 @@ const AdminSupportTickets = () => {
                 }
               }}
             >
-              <CardContent sx={{ textAlign: 'center', p: 1.5 }}>
-                <Typography variant="h4" sx={{ lineHeight: 1, mb: 0.5 }}>
+              <CardContent sx={{ textAlign: 'center', p: { xs: 1.25, sm: 1.5 } }}>
+                <Typography variant={isMobile ? 'h6' : 'h4'} sx={{ lineHeight: 1, mb: 0.5 }}>
                   {stat.count}
                 </Typography>
-                <Typography variant="body2" sx={{ lineHeight: 1, opacity: 0.9 }}>
+                <Typography variant="body2" sx={{ lineHeight: 1.1, opacity: 0.9, fontSize: { xs: '0.72rem', sm: '0.875rem' } }}>
                   {stat.icon} {stat.title}
                 </Typography>
               </CardContent>
@@ -624,6 +625,15 @@ const AdminSupportTickets = () => {
           onChange={(e, newValue) => setActiveTab(newValue)}
           variant={isMobile ? "scrollable" : "standard"}
           scrollButtons="auto"
+          sx={{
+            minHeight: { xs: 40, sm: 48 },
+            '& .MuiTab-root': {
+              minHeight: { xs: 40, sm: 48 },
+              minWidth: { xs: 88, sm: 120 },
+              px: { xs: 1, sm: 1.5 },
+              fontSize: { xs: '0.75rem', sm: '0.875rem' }
+            }
+          }}
         >
           <Tab 
             icon={<FilterIcon />} 
@@ -647,9 +657,9 @@ const AdminSupportTickets = () => {
       </Box>
 
       {/* Панель поиска и фильтров */}
-      <Paper sx={{ p: isMobile ? 1.5 : 2, mb: 3, borderRadius: 2 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
+      <Paper sx={{ p: isMobile ? 1.25 : 2, mb: 3, borderRadius: 2 }}>
+        <Grid container spacing={{ xs: 1.25, sm: 2 }} alignItems="center">
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size={isMobile ? "small" : "medium"}
@@ -676,7 +686,7 @@ const AdminSupportTickets = () => {
             />
           </Grid>
           
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <FormControl fullWidth size={isMobile ? "small" : "medium"}>
               <InputLabel>Статус</InputLabel>
               <Select
@@ -693,7 +703,7 @@ const AdminSupportTickets = () => {
             </FormControl>
           </Grid>
 
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <FormControl fullWidth size={isMobile ? "small" : "medium"}>
               <InputLabel>Приоритет</InputLabel>
               <Select
@@ -710,7 +720,7 @@ const AdminSupportTickets = () => {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Box display="flex" gap={1}>
               <Button
                 fullWidth
@@ -740,8 +750,8 @@ const AdminSupportTickets = () => {
       </Paper>
 
       {/* Результаты поиска */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-        <Typography variant="h6" color="text.primary" fontWeight="bold">
+      <Box display="flex" justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} flexDirection={{ xs: 'column', sm: 'row' }} gap={0.5} sx={{ mb: 2 }}>
+        <Typography variant={isMobile ? 'subtitle1' : 'h6'} color="text.primary" fontWeight="bold">
           Результаты: {filteredTickets.length} обращений
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -979,6 +989,7 @@ const AdminSupportTickets = () => {
         onClose={() => setDetailDialogOpen(false)}
         maxWidth="md"
         fullWidth
+        fullScreen={isMobile}
         scroll="paper"
       >
         <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -992,16 +1003,16 @@ const AdminSupportTickets = () => {
                 Информация о клиенте
               </Typography>
               <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography><strong>Имя:</strong> {selectedTicket.name}</Typography>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography><strong>Email:</strong> {selectedTicket.email}</Typography>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography><strong>Телефон:</strong> {selectedTicket.phone || 'Не указан'}</Typography>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Box display="flex" gap={1}>
                     <Chip
                       icon={getStatusIcon(selectedTicket.status)}
@@ -1017,10 +1028,10 @@ const AdminSupportTickets = () => {
                     />
                   </Box>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography><strong>Дата создания:</strong> {new Date(selectedTicket.created_at).toLocaleString('ru-RU')}</Typography>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   {selectedTicket.updated_at && (
                     <Typography><strong>Последнее обновление:</strong> {new Date(selectedTicket.updated_at).toLocaleString('ru-RU')}</Typography>
                   )}
@@ -1106,6 +1117,7 @@ const AdminSupportTickets = () => {
         onClose={() => setReplyDialogOpen(false)}
         maxWidth="md"
         fullWidth
+        fullScreen={isMobile}
       >
         <DialogTitle>
           Ответ на обращение {selectedTicket?.ticket_number}

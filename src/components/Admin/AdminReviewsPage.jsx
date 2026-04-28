@@ -19,6 +19,7 @@ import {
   CardContent,
   alpha,
   useTheme,
+  useMediaQuery,
   Snackbar,
   Avatar,
   Rating,
@@ -69,6 +70,7 @@ const AdminReviewsPage = () => {
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   // Загрузка всех данных
   const loadData = useCallback(async () => {
@@ -236,10 +238,10 @@ const AdminReviewsPage = () => {
   }
 
   return (
-    <Box sx={{ p: 0, ml: 0 }}>
+      <Box sx={{ p: { xs: 0, sm: 0 }, ml: 0 }}>
       {/* Заголовок и кнопка обновления */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" sx={{ 
+      <Box display="flex" justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }} flexDirection={{ xs: 'column', sm: 'row' }} gap={1.5} mb={3}>
+        <Typography variant={isMobile ? 'h6' : 'h5'} sx={{ 
           fontWeight: 'bold',
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           backgroundClip: 'text',
@@ -254,9 +256,10 @@ const AdminReviewsPage = () => {
           onClick={loadData}
           sx={{
             borderRadius: 2,
-            px: 2,
+            px: { xs: 1.5, sm: 2 },
             py: 0.8,
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            width: { xs: '100%', sm: 'auto' }
           }}
         >
           Обновить
@@ -264,8 +267,8 @@ const AdminReviewsPage = () => {
       </Box>
 
       {/* Статистика */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={6} md={3}>
+      <Grid container spacing={{ xs: 1.25, sm: 2 }} sx={{ mb: 3 }}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
@@ -277,16 +280,16 @@ const AdminReviewsPage = () => {
               transform: 'scale(1.02)'
             }
           }} onClick={() => setActiveTab('all')}>
-            <CardContent sx={{ textAlign: 'center', p: 2 }}>
-              <AllInbox sx={{ fontSize: 32, mb: 1 }} />
-              <Typography variant="h5" gutterBottom>
+            <CardContent sx={{ textAlign: 'center', p: { xs: 1.25, sm: 2 } }}>
+              <AllInbox sx={{ fontSize: { xs: 24, sm: 32 }, mb: 1 }} />
+              <Typography variant={isMobile ? 'h6' : 'h5'} gutterBottom>
                 {stats.total}
               </Typography>
-              <Typography variant="body2">Всего отзывов</Typography>
+              <Typography variant="body2" sx={{ fontSize: { xs: '0.72rem', sm: '0.875rem' } }}>Всего отзывов</Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={6} md={3}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
             color: 'white',
@@ -298,16 +301,16 @@ const AdminReviewsPage = () => {
               transform: 'scale(1.02)'
             }
           }} onClick={() => setActiveTab('pending')}>
-            <CardContent sx={{ textAlign: 'center', p: 2 }}>
-              <Pending sx={{ fontSize: 32, mb: 1 }} />
-              <Typography variant="h5" gutterBottom>
+            <CardContent sx={{ textAlign: 'center', p: { xs: 1.25, sm: 2 } }}>
+              <Pending sx={{ fontSize: { xs: 24, sm: 32 }, mb: 1 }} />
+              <Typography variant={isMobile ? 'h6' : 'h5'} gutterBottom>
                 {stats.pending}
               </Typography>
-              <Typography variant="body2">На модерации</Typography>
+              <Typography variant="body2" sx={{ fontSize: { xs: '0.72rem', sm: '0.875rem' } }}>На модерации</Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={6} md={3}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
             color: 'white',
@@ -319,16 +322,16 @@ const AdminReviewsPage = () => {
               transform: 'scale(1.02)'
             }
           }} onClick={() => setActiveTab('approved')}>
-            <CardContent sx={{ textAlign: 'center', p: 2 }}>
-              <CheckCircle sx={{ fontSize: 32, mb: 1 }} />
-              <Typography variant="h5" gutterBottom>
+            <CardContent sx={{ textAlign: 'center', p: { xs: 1.25, sm: 2 } }}>
+              <CheckCircle sx={{ fontSize: { xs: 24, sm: 32 }, mb: 1 }} />
+              <Typography variant={isMobile ? 'h6' : 'h5'} gutterBottom>
                 {stats.approved}
               </Typography>
-              <Typography variant="body2">Одобрено</Typography>
+              <Typography variant="body2" sx={{ fontSize: { xs: '0.72rem', sm: '0.875rem' } }}>Одобрено</Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={6} md={3}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <Card sx={{ 
             background: 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)',
             color: 'white',
@@ -340,12 +343,12 @@ const AdminReviewsPage = () => {
               transform: 'scale(1.02)'
             }
           }} onClick={() => setActiveTab('rejected')}>
-            <CardContent sx={{ textAlign: 'center', p: 2 }}>
-              <Cancel sx={{ fontSize: 32, mb: 1 }} />
-              <Typography variant="h5" gutterBottom>
+            <CardContent sx={{ textAlign: 'center', p: { xs: 1.25, sm: 2 } }}>
+              <Cancel sx={{ fontSize: { xs: 24, sm: 32 }, mb: 1 }} />
+              <Typography variant={isMobile ? 'h6' : 'h5'} gutterBottom>
                 {stats.rejected}
               </Typography>
-              <Typography variant="body2">Отклонено</Typography>
+              <Typography variant="body2" sx={{ fontSize: { xs: '0.72rem', sm: '0.875rem' } }}>Отклонено</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -360,8 +363,11 @@ const AdminReviewsPage = () => {
           scrollButtons="auto"
           sx={{
             '& .MuiTab-root': {
-              minWidth: 120,
-              fontWeight: 'bold'
+              minWidth: { xs: 88, sm: 120 },
+              minHeight: { xs: 40, sm: 48 },
+              px: { xs: 1, sm: 1.5 },
+              fontWeight: 'bold',
+              fontSize: { xs: '0.72rem', sm: '0.875rem' }
             }
           }}
         >
@@ -393,11 +399,12 @@ const AdminReviewsPage = () => {
       </Paper>
 
       {/* Панель поиска */}
-      <Paper sx={{ p: 2, mb: 2, borderRadius: 2 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12}>
+      <Paper sx={{ p: { xs: 1.25, sm: 2 }, mb: 2, borderRadius: 2 }}>
+        <Grid container spacing={{ xs: 1.25, sm: 2 }} alignItems="center">
+          <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
+              size={isMobile ? 'small' : 'medium'}
               placeholder="Поиск по пользователям, товарам, тексту или ID отзыва..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -444,6 +451,79 @@ const AdminReviewsPage = () => {
                   ? 'Нет отзывов в системе'
                   : `Нет ${activeTab === 'pending' ? 'ожидающих' : activeTab === 'approved' ? 'одобренных' : 'отклоненных'} отзывов`}
             </Typography>
+          </Box>
+        ) : isMobile ? (
+          <Box sx={{ p: 1.25, display: 'grid', gap: 1.25 }}>
+            {filteredReviews.map((review) => {
+              const statusConfig = getStatusConfig(review.status);
+              return (
+                <Card key={review.id} sx={{ borderRadius: 2, border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}` }}>
+                  <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, mb: 1 }}>
+                      <Box sx={{ display: 'flex', gap: 1, minWidth: 0 }}>
+                        <Avatar
+                          src={review.user?.avatar}
+                          sx={{ width: 36, height: 36, bgcolor: theme.palette.primary.main, flexShrink: 0 }}
+                        >
+                          {review.user?.name ? review.user.name[0] : <Person fontSize="small" />}
+                        </Avatar>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="subtitle2" fontWeight="bold" sx={{ wordBreak: 'break-word' }}>
+                            {review.user?.name || 'Аноним'}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                            ID: {review.id}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Chip
+                        icon={statusConfig.icon}
+                        label={statusConfig.label}
+                        color={statusConfig.color}
+                        size="small"
+                        variant={review.status === 'pending' ? 'filled' : 'outlined'}
+                        sx={{ alignSelf: 'flex-start', maxWidth: 140 }}
+                      />
+                    </Box>
+
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, wordBreak: 'break-word' }}>
+                      Товар: {review.product?.name || 'Товар не найден'}
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 1.25, wordBreak: 'break-word' }}>
+                      {review.comment}
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 1.25, flexWrap: 'wrap' }}>
+                      <Box>
+                        <Rating value={review.rating} readOnly size="small" />
+                        <Typography variant="caption" sx={{ display: 'block' }}>
+                          {review.rating}.0 / 5.0
+                        </Typography>
+                      </Box>
+                      <Typography variant="caption" color="text.secondary">
+                        {formatDate(review.created_at)}
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'grid', gridTemplateColumns: review.status === 'pending' ? 'repeat(3, minmax(0, 1fr))' : '1fr', gap: 1 }}>
+                      {review.status === 'pending' && (
+                        <>
+                          <Button size="small" variant="outlined" color="success" onClick={() => handleApprove(review.id)} sx={{ minWidth: 0, px: 1 }}>
+                            Одобрить
+                          </Button>
+                          <Button size="small" variant="outlined" color="error" onClick={() => handleRejectClick(review)} sx={{ minWidth: 0, px: 1 }}>
+                            Отклонить
+                          </Button>
+                        </>
+                      )}
+                      <Button size="small" variant="outlined" color="error" onClick={() => handleDeleteClick(review)} sx={{ minWidth: 0, px: 1 }}>
+                        Удалить
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </Box>
         ) : (
           <Box sx={{ overflowX: 'auto' }}>
@@ -635,6 +715,7 @@ const AdminReviewsPage = () => {
         onClose={() => setRejectDialogOpen(false)} 
         maxWidth="sm" 
         fullWidth
+        fullScreen={isMobile}
         PaperProps={{
           sx: {
             borderRadius: 2
@@ -700,6 +781,7 @@ const AdminReviewsPage = () => {
         onClose={() => setDeleteDialogOpen(false)} 
         maxWidth="sm" 
         fullWidth
+        fullScreen={isMobile}
         PaperProps={{
           sx: {
             borderRadius: 2

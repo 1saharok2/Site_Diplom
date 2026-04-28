@@ -103,11 +103,15 @@ const Header = () => {
   };
 
   const filteredProducts = searchQuery && products
-    ? products.filter(p =>
-        p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category?.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 5)
+    ? products.filter(p => {
+        const query = searchQuery.trim().toLowerCase();
+        if (!query) return false;
+
+        const name = p.name?.toLowerCase() || '';
+        const brand = p.brand?.toLowerCase() || '';
+
+        return name.includes(query) || brand.includes(query);
+      }).slice(0, 5)
     : [];
 
   const cartItemsCount = cartItems?.reduce((total, item) => total + item.quantity, 0) || 0;
@@ -125,7 +129,8 @@ const Header = () => {
           <Toolbar
             sx={{
               minHeight: { xs: '70px', md: '80px' },
-              justifyContent: { xs: 'space-between', md: 'flex-start' }
+              justifyContent: { xs: 'space-between', md: 'flex-start' },
+              px: { xs: 1, sm: 2, md: 3 }
             }}
           >
             

@@ -26,13 +26,21 @@ export const StyledLogo = styled(Box, {
 })(({ theme, scrolled }) => ({
   textDecoration: 'none',
   fontWeight: 700,
-  fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' },
+  fontSize: '1.2rem',
   color: scrolled ? theme.palette.primary.main : '#fff',
   display: 'flex',
   alignItems: 'center',
-  gap: { xs: '4px', sm: '8px' },
+  gap: '4px',
   transition: 'all 0.3s ease',
   cursor: 'pointer',
+  flexShrink: 0,
+  [theme.breakpoints.up('sm')]: {
+    fontSize: '1.4rem',
+    gap: '8px',
+  },
+  [theme.breakpoints.up('md')]: {
+    fontSize: '1.6rem',
+  },
   '&:hover': {
     transform: 'scale(1.05)',
   },
@@ -97,11 +105,18 @@ export const StyledActionButton = styled(Link, {
   alignItems: 'center',
   justifyContent: 'center',
   borderRadius: '50%',
-  width: { xs: 36, sm: 42 },
-  height: { xs: 36, sm: 42 },
-  minWidth: { xs: 36, sm: 42 },
-  minHeight: { xs: 36, sm: 42 },
+  width: 36,
+  height: 36,
+  minWidth: 36,
+  minHeight: 36,
   transition: 'all 0.3s ease',
+  flexShrink: 0,
+  [theme.breakpoints.up('sm')]: {
+    width: 42,
+    height: 42,
+    minWidth: 42,
+    minHeight: 42,
+  },
   '&:hover': {
     backgroundColor: scrolled
       ? alpha(theme.palette.primary.main, 0.1)
@@ -115,20 +130,28 @@ export const StyledActionButton = styled(Link, {
 
 /* === Drawer для мобильного меню === */
 export const DrawerContainer = styled(Box)(({ theme }) => ({
-  width: { xs: '100%', sm: 320 },
+  width: '100%',
   display: 'flex',
   flexDirection: 'column',
   height: '100%',
   backgroundColor: theme.palette.background.paper,
-  padding: { xs: theme.spacing(1.5), sm: theme.spacing(2) },
+  padding: theme.spacing(1.5),
   overflow: 'auto',
+  [theme.breakpoints.up('sm')]: {
+    width: 320,
+    padding: theme.spacing(2),
+  },
 }));
 
 export const DrawerHeader = styled(Box)(({ theme }) => ({
-  fontSize: { xs: '1.2rem', sm: '1.5rem' },
+  fontSize: '1.2rem',
   fontWeight: 700,
   color: theme.palette.primary.main,
-  marginBottom: { xs: theme.spacing(1.5), sm: theme.spacing(2) },
+  marginBottom: theme.spacing(1.5),
   paddingBottom: theme.spacing(1),
   borderBottom: `1px solid ${theme.palette.divider}`,
+  [theme.breakpoints.up('sm')]: {
+    fontSize: '1.5rem',
+    marginBottom: theme.spacing(2),
+  },
 }));

@@ -21,15 +21,18 @@ const SortingCard = ({
           )}
           {showFilterButton && (
             <Button
-              variant="outline-primary"
-              size="sm"
+              variant="primary"
               className="sorting-filters-btn"
               type="button"
               onClick={onOpenFilters}
+              aria-label={`Открыть фильтры${activeFiltersCount > 0 ? `. Активных фильтров: ${activeFiltersCount}` : ''}`}
             >
-              Фильтры
+              <span className="sorting-filters-btn-icon" aria-hidden>
+                ≡
+              </span>
+              <span className="sorting-filters-btn-text">Открыть фильтры</span>
               {activeFiltersCount > 0 && (
-                <Badge bg="primary" className="ms-1 sorting-filters-badge">
+                <Badge bg="light" text="primary" className="sorting-filters-badge">
                   {activeFiltersCount}
                 </Badge>
               )}

@@ -223,11 +223,13 @@ const HomePage = () => {
             position: "relative",
             zIndex: 1,
             overflow: "hidden", 
+            marginLeft: 0,
+            marginRight: 0,
           }}
           slidesOffsetBefore={isMobile ? 0 : 16}
           slidesOffsetAfter={isMobile ? 0 : 16}
           slidesPerView={1}
-          spaceBetween={32}
+          spaceBetween={isMobile ? 0 : 32}
         >
           {carouselProducts.map((product, index) => {
             const discount = calculateDiscount(product.price, product.old_price);

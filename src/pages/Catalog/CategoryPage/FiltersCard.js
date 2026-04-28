@@ -317,6 +317,7 @@ const FiltersCard = ({
             border-radius: 8px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.06);
             margin-bottom: 20px;
+            background: #fff;
           }
 
           .dns-filters-header {
@@ -387,6 +388,7 @@ const FiltersCard = ({
 
           .dns-filters-body {
             padding: 0;
+            background: #fff;
           }
 
           .dns-filter-chips {
@@ -707,17 +709,28 @@ const FiltersCard = ({
             display: flex;
             align-items: center;
             padding: 8px 0;
+            min-width: 0;
           }
 
           .dns-checkbox {
             margin-right: 10px;
+            display: flex;
+            align-items: center;
+            flex: 0 0 auto;
+            min-height: 18px;
           }
 
           .dns-checkbox .form-check-input {
+            appearance: auto;
+            -webkit-appearance: checkbox;
             width: 18px;
             height: 18px;
             border: 2px solid #ccc;
             border-radius: 4px;
+            margin: 0;
+            position: static;
+            box-shadow: none;
+            background: #fff;
           }
 
           .dns-checkbox .form-check-input:checked {
@@ -732,10 +745,15 @@ const FiltersCard = ({
             flex: 1;
             cursor: pointer;
             font-size: 14px;
+            min-width: 0;
+            margin: 0;
           }
 
           .dns-filter-text {
             color: #333;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
 
           .dns-filter-count {
