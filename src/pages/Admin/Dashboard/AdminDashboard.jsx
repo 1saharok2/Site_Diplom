@@ -242,7 +242,7 @@ const AdminDashboard = () => {
                 {stats.recentOrders.map((order) => (
                   <Box
                     key={order.id}
-                    onClick={() => navigate(`/admin/orders/${order.id}`)} // Делаем кликабельным весь блок
+                    onClick={() => navigate(`/admin/orders?order=${encodeURIComponent(order.id)}`)}
                     sx={{
                       p: 2,
                       mb: 1.5,

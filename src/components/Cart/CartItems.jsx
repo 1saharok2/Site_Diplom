@@ -1,5 +1,5 @@
 // src/components/Cart/CartItems.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Paper,
   Typography,
@@ -29,14 +29,41 @@ const CartItems = () => {
     message: '', 
     severity: 'success' 
   });
+  /** Локальный ввод количества по строке id позиции корзины */
+  const [quantityDraftById, setQuantityDraftById] = useState({});
+
+  useEffect(() => {
+    setQuantityDraftById((prev) => {
+      const next = { ...prev };
+      for (const k of Object.keys(next)) {
+        if (!cartItems.some((i) => String(i.id) === String(k))) delete next[k];
+      }
+      return next;
+    });
+  }, [cartItems]);
+
+  const clampQuantityForItem = useCallback(
+    (cartItemId, rawQty) => {
+      const item = cartItems.find((i) => i.id === cartItemId);
+      let n = Math.max(1, Math.floor(Number(rawQty)) || 1);
+      const stock = item?.stock != null ? Number(item.stock) : null;
+      if (stock != null && Number.isFinite(stock) && stock >= 0) {
+        n = Math.min(n, stock);
+      }
+      return n;
+    },
+    [cartItems]
+  );
 
   const handleQuantityChange = async (cartItemId, newQuantity) => {
-    if (newQuantity < 1) return;
-    
+    const qty = clampQuantityForItem(cartItemId, newQuantity);
+    const item = cartItems.find((i) => i.id === cartItemId);
+    if (item && qty === item.quantity) return;
+
     setUpdatingItems(prev => ({ ...prev, [cartItemId]: true }));
     
     try {
-      await updateQuantity(cartItemId, newQuantity);
+      await updateQuantity(cartItemId, qty);
     } catch (error) {
       console.error('Ошибка обновления количества:', error);
       setSnackbar({
@@ -47,6 +74,45 @@ const CartItems = () => {
     } finally {
       setUpdatingItems(prev => ({ ...prev, [cartItemId]: false }));
     }
+  };
+
+  const quantityFieldValue = (item) => {
+    if (Object.prototype.hasOwnProperty.call(quantityDraftById, item.id)) {
+      return quantityDraftById[item.id];
+    }
+    return String(item.quantity ?? 1);
+  };
+
+  const flushQuantityDraft = async (item) => {
+    if (!Object.prototype.hasOwnProperty.call(quantityDraftById, item.id)) return;
+    const raw = quantityDraftById[item.id];
+    setQuantityDraftById((prev) => {
+      const next = { ...prev };
+      delete next[item.id];
+      return next;
+    });
+
+    const trimmed = String(raw).trim();
+    if (trimmed === '' || !/^\d+$/.test(trimmed)) {
+      setSnackbar({
+        open: true,
+        message: 'Введите целое число от 1',
+        severity: 'warning',
+      });
+      return;
+    }
+
+    const parsed = parseInt(trimmed, 10);
+    const stock = item?.stock != null ? Number(item.stock) : null;
+    if (stock != null && Number.isFinite(stock) && parsed > stock) {
+      setSnackbar({
+        open: true,
+        message: `В наличии не более ${stock} шт.`,
+        severity: 'info',
+      });
+    }
+
+    await handleQuantityChange(item.id, parsed);
   };
 
   const handleRemoveItem = async (cartItemId) => {
@@ -263,30 +329,57 @@ const CartItems = () => {
                         </IconButton>
 
                         <TextField
-                          value={item.quantity}
+                          value={quantityFieldValue(item)}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, '').slice(0, 5);
+                            setQuantityDraftById((prev) => ({
+                              ...prev,
+                              [item.id]: digits,
+                            }));
+                          }}
+                          onBlur={() => !isUpdating && flushQuantityDraft(item)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              e.currentTarget.blur();
+                            }
+                          }}
                           sx={{
-                            width: 60,
+                            width: 72,
                             '& .MuiInputBase-root': {
                               border: 'none',
-                              background: 'transparent'
+                              background: 'transparent',
+                            },
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              display: 'none',
                             },
                             '& .MuiInputBase-input': {
                               textAlign: 'center',
                               fontWeight: 600,
                               py: 1,
-                              color: isUpdating ? 'text.secondary' : 'text.primary'
-                            }
+                              color: isUpdating ? 'text.secondary' : 'text.primary',
+                            },
                           }}
                           inputProps={{
-                            style: { textAlign: 'center', fontSize: '1rem' }
+                            style: { textAlign: 'center', fontSize: '1rem' },
+                            inputMode: 'numeric',
+                            'aria-label': 'Количество',
                           }}
                           disabled={isUpdating}
                         />
 
                         <IconButton
                           size="small"
-                          onClick={() => !isUpdating && handleQuantityChange(item.id, item.quantity + 1)}
-                          disabled={isUpdating}
+                          onClick={() =>
+                            !isUpdating &&
+                            handleQuantityChange(item.id, item.quantity + 1)
+                          }
+                          disabled={
+                            isUpdating ||
+                            (item.stock != null &&
+                              Number.isFinite(Number(item.stock)) &&
+                              item.quantity >= Number(item.stock))
+                          }
                           sx={{
                             borderRadius: 0,
                             color: isUpdating ? 'grey.400' : 'primary.main',
@@ -373,6 +466,7 @@ const CartItems = () => {
         autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ zIndex: (t) => t.zIndex.snackbar }}
       >
         <Alert 
           onClose={handleCloseSnackbar} 

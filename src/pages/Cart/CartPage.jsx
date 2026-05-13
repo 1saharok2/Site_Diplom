@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Grid,
@@ -12,7 +12,7 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   ShoppingCart,
   ArrowBack,
@@ -33,8 +33,17 @@ const CartPage = () => {
   const { items: cartItems, loading, refreshCart, clearCart } = useCart();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [stockWarning, setStockWarning] = useState('');
+
+  useEffect(() => {
+    const w = location.state?.stockWarning;
+    if (!w || typeof w !== 'string') return;
+    setStockWarning(w);
+    navigate('/cart', { replace: true, state: {} });
+  }, [location.state, navigate]);
 
   const handleClearCart = () => {
     clearCart();
@@ -159,6 +168,16 @@ const CartPage = () => {
             </Box>
           </Box>
         </Box>
+
+        {stockWarning ? (
+          <Alert
+            severity="warning"
+            sx={{ mb: 2, borderRadius: 2 }}
+            onClose={() => setStockWarning('')}
+          >
+            {stockWarning}
+          </Alert>
+        ) : null}
 
         {!isAuthenticated && (
           <Alert 

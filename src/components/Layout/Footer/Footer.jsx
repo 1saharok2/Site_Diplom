@@ -31,7 +31,7 @@ const Footer = () => {
           {/* Информация о компании - занимает 6 колонок на md экранах */}
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 1.5 }}>
-              Гитон
+              Магазин электроники
             </Typography>
             <Typography variant="body2" sx={{ mb: 1.5, opacity: 0.8, maxWidth: '500px' }}>
               Ваш надежный партнер в мире электроники и техники. 
@@ -146,7 +146,7 @@ const Footer = () => {
           gap: 1.5 // Уменьшено с 2 до 1.5
         }}>
           <Typography variant="body2" sx={{ opacity: 0.7, fontSize: '0.8rem' }}>
-            © 2025 Гитон. Все права защищены.
+            © 2026 Магазин электроники. Все права защищены.
           </Typography>
           
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}> {/* Уменьшено с 3 до 2 */}

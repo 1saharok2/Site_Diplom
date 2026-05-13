@@ -55,6 +55,11 @@ const theme = createTheme({
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
   },
+  // Snackbar/тосты выше шапки (1100) и декоративных слоёв страниц (transform/stacking)
+  zIndex: {
+    snackbar: 20000,
+    tooltip: 20001,
+  },
 });
 
 // Компонент загрузки

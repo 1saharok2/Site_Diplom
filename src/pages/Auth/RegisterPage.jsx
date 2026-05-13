@@ -13,6 +13,8 @@ import {
   CircularProgress
 } from '@mui/material';
 
+const MAX_PHONE_DIGITS = 15;
+
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -28,9 +30,12 @@ const RegisterPage = () => {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
+    const next =
+      name === 'phone' ? value.replace(/\D/g, '').slice(0, MAX_PHONE_DIGITS) : value;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: next
     });
     // Очищаем ошибку при изменении поля
     if (error) setError('');
@@ -59,6 +64,11 @@ const RegisterPage = () => {
 
     if (formData.password !== formData.confirmPassword) {
       setError('Пароли не совпадают');
+      return false;
+    }
+
+    if (formData.phone && formData.phone.length > MAX_PHONE_DIGITS) {
+      setError(`Телефон: не более ${MAX_PHONE_DIGITS} цифр`);
       return false;
     }
 
@@ -208,12 +218,14 @@ const RegisterPage = () => {
             <TextField
               fullWidth
               type="tel"
+              inputMode="numeric"
               label="Телефон (необязательно)"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
               margin="normal"
-              placeholder="+7 (999) 999-99-99"
+              placeholder="79991234567"
+              helperText={`Только цифры, до ${MAX_PHONE_DIGITS} символов`}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2

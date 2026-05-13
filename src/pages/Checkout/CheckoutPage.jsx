@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -21,10 +21,12 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/api';
+import { cartService } from '../../services/cartService';
+import { formatCartStockIssuesMessage, getCartStockIssues } from '../../utils/cartStock';
 import { ShoppingCartCheckout, LocalShipping, Lock, CreditCard } from '@mui/icons-material';
 
 const CheckoutPage = () => {
-  const { items: cartItems, getTotalPrice, clearCart, loading: cartLoading } = useCart();
+  const { items: cartItems, getTotalPrice, clearCart, loading: cartLoading, refreshCart } = useCart();
   const { isAuthenticated: isAuthHook, currentUser: authUser } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -32,6 +34,7 @@ const CheckoutPage = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const stockRedirectDoneRef = useRef(false);
 
   const [formData, setFormData] = useState({
     firstName: authUser?.first_name || authUser?.firstName || '',
@@ -49,6 +52,31 @@ const CheckoutPage = () => {
       [e.target.name]: e.target.value
     });
   };
+
+  useEffect(() => {
+    if (cartLoading || !isAuthHook || !authUser?.id || stockRedirectDoneRef.current) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const fresh = await cartService.getCart(authUser.id, true);
+        if (cancelled) return;
+        const issues = getCartStockIssues(fresh);
+        if (issues.length) {
+          stockRedirectDoneRef.current = true;
+          await refreshCart(true);
+          navigate('/cart', {
+            replace: true,
+            state: { stockWarning: formatCartStockIssuesMessage(issues) },
+          });
+        }
+      } catch {
+        // не блокируем страницу при ошибке сети
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [cartLoading, isAuthHook, authUser?.id, navigate, refreshCart]);
 
   const getProductName = (item) => {
     return item?.product_name || 
@@ -142,6 +170,29 @@ const CheckoutPage = () => {
       return;
     }
 
+    let itemsForOrder = cartItems;
+    try {
+      const fresh = await cartService.getCart(authUser.id, true);
+      const issues = getCartStockIssues(fresh);
+      if (issues.length) {
+        await refreshCart(true);
+        setError(formatCartStockIssuesMessage(issues));
+        setLoading(false);
+        return;
+      }
+      itemsForOrder = fresh;
+      await refreshCart(true);
+    } catch (e) {
+      setError(e.message || 'Не удалось проверить остатки');
+      setLoading(false);
+      return;
+    }
+
+    const orderLineTotal = itemsForOrder.reduce(
+      (s, item) => s + getProductPrice(item) * (Number(item.quantity) || 1),
+      0
+    );
+
     // Подготовка данных
     const orderData = {
       userId: authUser.id,
@@ -151,8 +202,8 @@ const CheckoutPage = () => {
       email: formData.email,
       address: formData.address,
       payment_method: formData.paymentMethod || 'card',
-      total_amount: getTotalPrice().toFixed(2),
-      items: cartItems.map(item => ({
+      total_amount: orderLineTotal.toFixed(2),
+      items: itemsForOrder.map(item => ({
         product_id: getProductId(item),
         quantity: item.quantity || 1,
         price: getProductPrice(item)
@@ -175,7 +226,7 @@ const CheckoutPage = () => {
         navigate('/order-success', { 
           state: {
             orderNumber: response.orderNumber || response.order_number || '12345',
-            totalAmount: getTotalPrice(),
+            totalAmount: orderLineTotal,
             paymentMethod: formData.paymentMethod
           }
         });

@@ -48,8 +48,8 @@ try {
         $stmt->execute();
         $stats['categories'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
         
-        // Общая сумма заказов
-        $query = "SELECT SUM(total_amount) as total FROM orders";
+        // Общая сумма только по доставленным заказам
+        $query = "SELECT SUM(total_amount) as total FROM orders WHERE status = 'delivered'";
         $stmt = $db->prepare($query);
         $stmt->execute();
         $rev = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   Container,
@@ -106,6 +106,12 @@ const ProfilePage = () => {
   const [supportTickets, setSupportTickets] = useState([]);
   const [supportLoading, setSupportLoading] = useState(false);
   const [supportError, setSupportError] = useState('');
+  const [supportSeenRev, setSupportSeenRev] = useState(0);
+  const supportTicketsPrimedRef = useRef(false);
+
+  useEffect(() => {
+    supportTicketsPrimedRef.current = false;
+  }, [currentUser?.id]);
 
   const formFromUser = useCallback((user) => {
     if (!user) {
@@ -594,11 +600,52 @@ const ProfilePage = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (mainContentTab === 1 && currentUser) {
-      fetchSupportTickets();
+  const supportUnreadTickets = useMemo(() => {
+    let seenMs = 0;
+    try {
+      const v = localStorage.getItem('profile_support_responses_seen_at');
+      if (v) seenMs = new Date(v).getTime() || 0;
+    } catch (_) {
+      seenMs = 0;
     }
+    return supportTickets.filter((t) => {
+      const r = t.response && String(t.response).trim();
+      if (!r) return false;
+      const ra = t.responded_at ? new Date(t.responded_at).getTime() : 0;
+      return ra > seenMs;
+    });
+  }, [supportTickets, supportSeenRev]);
+
+  useEffect(() => {
+    if (profileLoading || !currentUser) return;
+    if (supportTicketsPrimedRef.current) return;
+    supportTicketsPrimedRef.current = true;
+    fetchSupportTickets();
+  }, [profileLoading, currentUser, fetchSupportTickets]);
+
+  useEffect(() => {
+    if (mainContentTab !== 1 || !currentUser) return;
+    fetchSupportTickets();
   }, [mainContentTab, currentUser?.id, fetchSupportTickets]);
+
+  useEffect(() => {
+    if (mainContentTab !== 1 || supportLoading || !supportTickets.length) return;
+    let max = 0;
+    for (const t of supportTickets) {
+      if (!t.response || !String(t.response).trim() || !t.responded_at) continue;
+      const ms = new Date(t.responded_at).getTime();
+      if (Number.isFinite(ms)) max = Math.max(max, ms);
+    }
+    if (max <= 0) return;
+    try {
+      const cur = localStorage.getItem('profile_support_responses_seen_at');
+      const curMs = cur ? new Date(cur).getTime() || 0 : 0;
+      if (max > curMs) {
+        localStorage.setItem('profile_support_responses_seen_at', new Date(max).toISOString());
+        setSupportSeenRev((x) => x + 1);
+      }
+    } catch (_) {}
+  }, [mainContentTab, supportTickets, supportLoading]);
 
   const quickActions = [
     {
@@ -707,6 +754,22 @@ const ProfilePage = () => {
                 {message}
               </Alert>
             </Fade>
+          )}
+
+          {supportUnreadTickets.length > 0 && (
+            <Alert
+              severity="info"
+              sx={{ mb: 3, borderRadius: 3 }}
+              action={
+                <Button color="inherit" size="small" onClick={() => setMainContentTab(1)}>
+                  К обращениям
+                </Button>
+              }
+            >
+              {supportUnreadTickets.length === 1
+                ? 'Поддержка ответила на ваше обращение — откройте вкладку «Поддержка», чтобы прочитать ответ.'
+                : `Поддержка ответила на ${supportUnreadTickets.length} обращения — откройте вкладку «Поддержка», чтобы прочитать ответы.`}
+            </Alert>
           )}
 
           <Grid container spacing={3} justifyContent="center">
@@ -823,7 +886,19 @@ const ProfilePage = () => {
                   <Tab
                     icon={<SupportAgent fontSize="small" />}
                     iconPosition="start"
-                    label="Поддержка"
+                    label={
+                      <Stack direction="row" alignItems="center" spacing={0.75} component="span">
+                        <span>Поддержка</span>
+                        {supportUnreadTickets.length > 0 ? (
+                          <Chip
+                            size="small"
+                            label={supportUnreadTickets.length}
+                            color="error"
+                            sx={{ height: 20, minWidth: 22, '& .MuiChip-label': { px: 0.5, fontSize: '0.7rem' } }}
+                          />
+                        ) : null}
+                      </Stack>
+                    }
                   />
                 </Tabs>
               </Paper>

@@ -32,7 +32,13 @@ try {
     $firstName = $parts[0] ?? 'User';
     $lastName = $parts[1] ?? '';
     
-    $phone = $data['phone'] ?? '';
+    $phoneRaw = isset($data['phone']) ? (string) $data['phone'] : '';
+    $phone = preg_replace('/\D+/', '', $phoneRaw);
+    if (strlen($phone) > 15) {
+        http_response_code(400);
+        echo json_encode(['message' => 'Телефон: не более 15 цифр', 'success' => false]);
+        exit;
+    }
     $address = $data['address'] ?? '';
     $token = bin2hex(random_bytes(32));
 

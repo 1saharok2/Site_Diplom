@@ -71,6 +71,7 @@ const AddToCartButton = ({ product, size = 'medium', variant = 'contained' }) =>
           autoHideDuration={3000}
           onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          sx={{ zIndex: (t) => t.zIndex.snackbar }}
         >
           <Alert severity="success" onClose={handleCloseSnackbar}>
             Товар добавлен в корзину!
@@ -110,6 +111,7 @@ const AddToCartButton = ({ product, size = 'medium', variant = 'contained' }) =>
         autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        sx={{ zIndex: (t) => t.zIndex.snackbar }}
       >
         <Alert severity="success" onClose={handleCloseSnackbar}>
           Товар добавлен в корзину!

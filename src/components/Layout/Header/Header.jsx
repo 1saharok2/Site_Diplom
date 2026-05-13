@@ -136,7 +136,7 @@ const Header = () => {
             
             {/* ЛОГОТИП */}
             <StyledLogo component={Link} to="/" scrolled={scrolled}>
-             Гитон
+             МЭ
             </StyledLogo>
 
             {/* ПОИСК */}
@@ -396,7 +396,7 @@ const Header = () => {
           <DrawerHeader>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                Гитон
+                МЭ
               </Typography>
               <IconButton onClick={handleDrawerToggle} size="small">
                 <Clear />

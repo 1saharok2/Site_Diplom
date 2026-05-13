@@ -28,6 +28,15 @@ import {
 import { keyframes } from "@emotion/react";
 import "./AboutPage.css";
 
+/**
+ * Файлы из папки public_html/images/ (на хостинге она в корне сайта рядом с index.html).
+ * Учитывает CRA PUBLIC_URL, если приложение отдаётся из подпапки.
+ */
+function siteImage(filename) {
+  const base = (process.env.PUBLIC_URL || "").replace(/\/$/, "");
+  return `${base}/images/${filename}`;
+}
+
 const gradientBackground = keyframes`
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -73,19 +82,19 @@ const AboutPage = () => {
     {
       name: "Коробков Иван",
       position: "CEO & Основатель",
-      avatar: "https://electronic.tw1.ru/images/3w.jpg",
+      avatar: siteImage("3w.jpg"),
       description: "Опытный специалист с многолетним стажем в e-commerce",
     },
     {
       name: "Стариков Александр",
       position: "Технический директор",
-      avatar: "https://electronic.tw1.ru/images/2w.jpg",
+      avatar: siteImage("2w.jpg"),
       description: "Профессиональный программист и лидер технической команды",
     },
     {
       name: "Амин Гусейнли",
       position: "Менеджер по продажам",
-      avatar: "https://electronic.tw1.ru/images/1w.jpg",
+      avatar: siteImage("1w.jpg"),
       description: "Эксперт в клиентском сервисе и управлении продажами",
     },
   ];
@@ -99,8 +108,20 @@ const AboutPage = () => {
 
   const avatarImgProps = {
     loading: "lazy",
+    decoding: "async",
+    referrerPolicy: "no-referrer",
     onError: (e) => {
-      e.currentTarget.src = `${process.env.PUBLIC_URL || ""}/images/avatar-placeholder.png`;
+      const el = e.currentTarget;
+      const step = el.dataset.fallbackStep || "0";
+      if (step === "0") {
+        el.dataset.fallbackStep = "1";
+        el.src = siteImage("placeholder.jpg");
+        return;
+      }
+      if (step === "1") {
+        el.dataset.fallbackStep = "2";
+        el.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(el.alt || "User")}`;
+      }
     },
   };
 

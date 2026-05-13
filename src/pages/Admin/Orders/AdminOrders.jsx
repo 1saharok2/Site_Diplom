@@ -49,6 +49,7 @@ import {
   AccessTime as PendingIcon,
   Settings as ProcessingIcon
 } from '@mui/icons-material';
+import { useSearchParams } from 'react-router-dom';
 import { adminService } from '../../../services/adminService';
 
 // =================================================================
@@ -228,6 +229,9 @@ const MobileOrderCard = ({ order, handleMenuOpen, viewOrderDetails, updateOrderS
 // =================================================================
 
 const AdminOrders = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const orderOpenParam = searchParams.get('order');
+
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -254,6 +258,25 @@ const AdminOrders = () => {
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  // Переход с дашборда: /admin/orders?order=ID — открыть карточку заказа
+  useEffect(() => {
+    if (!orderOpenParam || loading) return;
+    if (!orders.length) return;
+    const o = orders.find((x) => String(x.id) === String(orderOpenParam));
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('order');
+        return next;
+      },
+      { replace: true }
+    );
+    if (o) {
+      setSelectedOrder(o);
+      setDetailDialogOpen(true);
+    }
+  }, [orderOpenParam, loading, orders, setSearchParams]);
 
   // Фильтрация заказов
   const filterOrders = useCallback(() => {

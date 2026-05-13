@@ -11,8 +11,8 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { cartService } from '../../services/cartService';
-import { orderService } from '../../services/orderService';
 import { useAuth } from '../../context/AuthContext';
+import { formatCartStockIssuesMessage, getCartStockIssues } from '../../utils/cartStock';
 
 const CartSummary = ({ cartItems, onClearCart, onRefreshCart }) => {
   const [loading, setLoading] = useState(false);
@@ -24,7 +24,7 @@ const CartSummary = ({ cartItems, onClearCart, onRefreshCart }) => {
   const totalAmount = cartService.getCartTotal(cartItems);
   const itemsCount = cartService.getCartItemsCount(cartItems);
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: '/cart' } });
       return;
@@ -36,8 +36,28 @@ const CartSummary = ({ cartItems, onClearCart, onRefreshCart }) => {
       return;
     }
 
-    // Просто уходим на страницу оформления, ничего не отправляя на сервер!
-    navigate('/checkout'); 
+    setLoading(true);
+    setError('');
+    try {
+      const uid = user?.uuid || user?.id;
+      const items =
+        uid != null && uid !== ''
+          ? await cartService.getCart(uid, true)
+          : cartItems;
+      const issues = getCartStockIssues(items);
+      if (issues.length > 0) {
+        setError(formatCartStockIssuesMessage(issues));
+        setShowError(true);
+        if (onRefreshCart) await onRefreshCart();
+        return;
+      }
+      navigate('/checkout');
+    } catch (e) {
+      setError(e.message || 'Не удалось проверить наличие товаров');
+      setShowError(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClearCart = async () => {
@@ -144,6 +164,7 @@ const CartSummary = ({ cartItems, onClearCart, onRefreshCart }) => {
         autoHideDuration={6000}
         onClose={handleCloseError}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ zIndex: (t) => t.zIndex.snackbar }}
       >
         <Alert 
           severity="error" 

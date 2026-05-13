@@ -62,7 +62,7 @@ const YandexMap = ({ center = [51.670550205174614, 36.147750777233355], zoom = 1
           hintContent: 'Наш магазин - нажмите для информации',
           balloonContent: `
             <div style="padding: 12px; max-width: 250px;">
-              <h3 style="margin: 0 0 8px 0; color: #d64e2cb6;">Гитон</h3>
+              <h3 style="margin: 0 0 8px 0; color: #d64e2cb6;">Магазин электроники</h3>
               <p style="margin: 0 0 8px 0;">
                 <strong>📍 Адрес:</strong><br/>
                 г. Курск, ул. Белгородская, д. 14
@@ -192,7 +192,7 @@ const YandexMap = ({ center = [51.670550205174614, 36.147750777233355], zoom = 1
       }}
     >
       <Typography variant="h6" gutterBottom>
-        🗺️ Магазин "Гитон"
+        🗺️ Магазин "Магазин электроники"
       </Typography>
       <Typography variant="body2">
         г. Курск, ул. Белгородская, д. 14
