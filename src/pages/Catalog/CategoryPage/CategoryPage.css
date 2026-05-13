@@ -1539,7 +1539,6 @@ input:checked + .slider:before {
   font-weight: 500;
 }
 
-/* Убираем старые костыли */
 .filter-toggle-item input[type="checkbox"]:checked + label::after,
 .filter-toggle-item input[type="radio"]:checked + label::after,
 .brand-item .form-check-input:checked + .form-check-label::after {
