@@ -1,9 +1,10 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, memo } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
-// Удаляем неиспользуемую переменную yandexMapsLoaded
+/** Один и тот же массив по ссылке — иначе при каждом рендере родителя «новый» default center ломает useCallback и пересоздаёт карту. */
+const DEFAULT_MAP_CENTER = Object.freeze([51.670550205174614, 36.147750777233355]);
 
-const YandexMap = ({ center = [51.670550205174614, 36.147750777233355], zoom = 15 }) => {
+const YandexMap = ({ center = DEFAULT_MAP_CENTER, zoom = 15 }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -252,4 +253,4 @@ const YandexMap = ({ center = [51.670550205174614, 36.147750777233355], zoom = 1
   );
 };
 
-export default YandexMap;
+export default memo(YandexMap);
