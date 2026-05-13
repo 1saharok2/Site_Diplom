@@ -3,6 +3,13 @@ import "./ContactsPage.css";
 import YandexMap from "../../../components/YandexMap";
 import axios from "axios";
 
+const MAX_PHONE_DIGITS = 15;
+
+const sanitizePhoneDigits = (value) =>
+  String(value ?? "")
+    .replace(/\D/g, "")
+    .slice(0, MAX_PHONE_DIGITS);
+
 const getAuthToken = () =>
   localStorage.getItem("token") || localStorage.getItem("authToken") || "";
 
@@ -32,7 +39,7 @@ const ContactsPage = () => {
         ...prev,
         name: fullName || prev.name,
         email: u.email || prev.email,
-        phone: u.phone || prev.phone,
+        phone: sanitizePhoneDigits(u.phone || prev.phone),
       }));
     } catch {
       /* ignore */
@@ -41,9 +48,10 @@ const ContactsPage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    const next = name === "phone" ? sanitizePhoneDigits(value) : value;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: next,
     }));
   };
 
@@ -58,9 +66,13 @@ const ContactsPage = () => {
       if (token) {
         headers.Authorization = `Bearer ${token}`;
       }
+      const payload = {
+        ...formData,
+        phone: sanitizePhoneDigits(formData.phone),
+      };
       const response = await axios.post(
         "/api/support/create-ticket.php",
-        formData,
+        payload,
         { headers }
       );
       
@@ -242,12 +254,18 @@ const ContactsPage = () => {
                     <label htmlFor="phone">Телефон</label>
                     <input
                       type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel"
+                      maxLength={MAX_PHONE_DIGITS}
                       id="phone"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder="+7 (999) 123-45-67"
+                      placeholder="79991234567"
                     />
+                    <small className="form-field-hint">
+                      Только цифры, не более {MAX_PHONE_DIGITS} символов
+                    </small>
                   </div>
                   
                   <div className="form-group">

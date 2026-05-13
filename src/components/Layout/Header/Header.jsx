@@ -346,12 +346,19 @@ const Header = () => {
                   <Button 
                     component={Link} 
                     to="/login" 
-                    variant="outlined"
+                    variant="contained"
                     size="small"
                     sx={{ 
                       fontSize: { xs: '0.75rem', sm: '0.875rem' },
                       padding: { xs: '4px 8px', sm: '6px 16px' },
-                      minWidth: { xs: '60px', sm: 'auto' }
+                      minWidth: { xs: '60px', sm: 'auto' },
+                      backgroundColor: '#ffffff',
+                      color: 'primary.main',
+                      boxShadow: 'none',
+                      '&:hover': {
+                        backgroundColor: '#f5f5f5',
+                        boxShadow: 'none',
+                      },
                     }}
                   >
                     Войти
@@ -660,9 +667,11 @@ const Header = () => {
                     padding: { xs: '4px 8px', sm: '6px 16px' },
                     minWidth: { xs: '60px', sm: 'auto' },
                     backgroundColor: '#ffffff',  
-                    color: 'primary.main',       
+                    color: 'primary.main',
+                    boxShadow: 'none',
                     '&:hover': {
-                      backgroundColor: '#f5f5f5', 
+                      backgroundColor: '#f5f5f5',
+                      boxShadow: 'none',
                     }
                   }}
                 >
