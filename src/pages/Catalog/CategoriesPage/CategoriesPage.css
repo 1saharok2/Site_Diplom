@@ -3,13 +3,16 @@
   min-height: 80vh;
 }
 
+/* minmax(..., min(100%, 300px)...) даёт нестабильное число колонок при первой отрисовке (SPA),
+   пока ширина контейнера ещё «не устаканилась»; фиксированный min в px + auto-fill стабильнее */
 .categories-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 25px;
   padding: 20px 0;
   width: 100%;
   align-items: stretch;
+  min-width: 0;
 }
 
 .categories-grid > * {

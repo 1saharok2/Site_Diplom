@@ -32,6 +32,12 @@ try {
     if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
         throw new Exception('Некорректный email адрес');
     }
+
+    $phoneRaw = isset($data['phone']) ? (string) $data['phone'] : '';
+    $phone = preg_replace('/\D+/', '', $phoneRaw);
+    if (strlen($phone) > 15) {
+        throw new Exception('Телефон: не более 15 цифр');
+    }
     
     // user_id из токена (Authorization с фронта или REDIRECT_ после Apache)
     $userId = null;
@@ -78,7 +84,7 @@ try {
         ':user_id' => $userId,
         ':name' => htmlspecialchars(strip_tags($data['name'])),
         ':email' => htmlspecialchars(strip_tags($data['email'])),
-        ':phone' => isset($data['phone']) ? htmlspecialchars(strip_tags($data['phone'])) : '',
+        ':phone' => $phone,
         ':subject' => htmlspecialchars(strip_tags($data['subject'])),
         ':message' => htmlspecialchars(strip_tags($data['message'])),
         ':ticket_number' => $ticketNumber

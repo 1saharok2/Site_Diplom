@@ -12,6 +12,8 @@
 
 .products-column {
   padding-left: 0;
+  /* Иначе flex-элемент с grid внутри не сжимается и при первой отрисовке ширина считается неверно */
+  min-width: 0;
 }
 
 /* Карточка сортировки */
@@ -337,10 +339,11 @@ input:checked + .slider:before {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.25rem;
   width: 100%;
   align-items: stretch;
+  min-width: 0;
 }
 
 .products-grid > * {
@@ -758,7 +761,7 @@ input:checked + .slider:before {
 
 @media (max-width: 768px) {
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 1rem;
   }
   

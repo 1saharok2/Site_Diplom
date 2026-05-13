@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { Container, Button, Spinner, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { categoryService } from '../../../services/categoryService';
@@ -27,6 +27,20 @@ const CategoriesPage = () => {
 
     fetchCategories();
   }, []);
+
+  /** Пересчёт сетки после появления карточек (устраняет «узкую» первую отрисовку в SPA) */
+  useLayoutEffect(() => {
+    if (loading || categories.length === 0) return;
+    let alive = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (alive) window.dispatchEvent(new Event('resize'));
+      });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [loading, categories]);
 
   // Функция для склонения слова "товар"
   const getProductCountText = (count) => {

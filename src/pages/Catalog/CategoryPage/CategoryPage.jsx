@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   Container, 
@@ -252,6 +252,20 @@ const CategoryPage = () => {
         }
       });
   }, [processedProducts, productMatchesFilters, sortBy]);
+
+  /** После загрузки / смены набора товаров пересчитываем сетку (flex + grid при SPA-переходе) */
+  useLayoutEffect(() => {
+    if (loading) return;
+    let alive = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (alive) window.dispatchEvent(new Event('resize'));
+      });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [loading, slug, filteredAndSortedProducts.length]);
 
   const clearAllFilters = () => {
     setFilterInStock(true); // Сбрасываем к значению по умолчанию (true)
