@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import "./ContactsPage.css";
 import YandexMap from "../../../components/YandexMap";
 import axios from "axios";
-
-const MAX_PHONE_DIGITS = 15;
-
-const sanitizePhoneDigits = (value) =>
-  String(value ?? "")
-    .replace(/\D/g, "")
-    .slice(0, MAX_PHONE_DIGITS);
+import {
+  formatPhoneRu,
+  sanitizeFormField,
+  sanitizePhoneDigits,
+  MAX_EMAIL_LEN,
+  MAX_MESSAGE_LEN,
+  MAX_NAME_LEN
+} from "../../../utils/formInput";
 
 const getAuthToken = () =>
   localStorage.getItem("token") || localStorage.getItem("authToken") || "";
@@ -39,7 +40,7 @@ const ContactsPage = () => {
         ...prev,
         name: fullName || prev.name,
         email: u.email || prev.email,
-        phone: sanitizePhoneDigits(u.phone || prev.phone),
+        phone: formatPhoneRu(u.phone || prev.phone),
       }));
     } catch {
       /* ignore */
@@ -48,10 +49,13 @@ const ContactsPage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const next = name === "phone" ? sanitizePhoneDigits(value) : value;
+    if (name === "subject") {
+      setFormData((prev) => ({ ...prev, subject: value }));
+      return;
+    }
     setFormData((prev) => ({
       ...prev,
-      [name]: next,
+      [name]: sanitizeFormField(name, value),
     }));
   };
 
@@ -231,8 +235,11 @@ const ContactsPage = () => {
                       value={formData.name}
                       onChange={handleChange}
                       required
+                      maxLength={MAX_NAME_LEN}
+                      autoComplete="name"
                       placeholder="Ваше имя"
                     />
+                    <small className="form-field-hint">Только буквы, пробел и дефис</small>
                   </div>
                   
                   <div className="form-group">
@@ -244,6 +251,9 @@ const ContactsPage = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
+                      maxLength={MAX_EMAIL_LEN}
+                      autoComplete="email"
+                      inputMode="email"
                       placeholder="your@email.com"
                     />
                   </div>
@@ -254,17 +264,17 @@ const ContactsPage = () => {
                     <label htmlFor="phone">Телефон</label>
                     <input
                       type="tel"
-                      inputMode="numeric"
+                      inputMode="tel"
                       autoComplete="tel"
-                      maxLength={MAX_PHONE_DIGITS}
+                      maxLength={18}
                       id="phone"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder="79991234567"
+                      placeholder="+7 (999) 999-99-99"
                     />
                     <small className="form-field-hint">
-                      Только цифры, не более {MAX_PHONE_DIGITS} символов
+                      Формат: +7 (999) 999-99-99
                     </small>
                   </div>
                   
@@ -296,8 +306,12 @@ const ContactsPage = () => {
                     onChange={handleChange}
                     required
                     rows="6"
+                    maxLength={MAX_MESSAGE_LEN}
                     placeholder="Опишите вашу проблему или вопрос подробно..."
                   ></textarea>
+                  <small className="form-field-hint">
+                    До {MAX_MESSAGE_LEN} символов
+                  </small>
                 </div>
                 
                 <div className="form-footer">

@@ -23,6 +23,14 @@ import { useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/api';
 import { cartService } from '../../services/cartService';
 import { formatCartStockIssuesMessage, getCartStockIssues } from '../../utils/cartStock';
+import {
+  formatPhoneRu,
+  sanitizeFormField,
+  sanitizePhoneDigits,
+  MAX_ADDRESS_LEN,
+  MAX_EMAIL_LEN,
+  MAX_NAME_LEN
+} from '../../utils/formInput';
 import { ShoppingCartCheckout, LocalShipping, Lock, CreditCard } from '@mui/icons-material';
 
 const CheckoutPage = () => {
@@ -40,17 +48,22 @@ const CheckoutPage = () => {
     firstName: authUser?.first_name || authUser?.firstName || '',
     lastName: authUser?.last_name || authUser?.lastName || '',
     email: authUser?.email || '',
-    phone: authUser?.phone || '',
+    phone: formatPhoneRu(authUser?.phone || ''),
     address: '',
     city: '',
     paymentMethod: 'card'
   });
 
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    if (name === 'paymentMethod') {
+      setFormData((prev) => ({ ...prev, paymentMethod: value }));
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: sanitizeFormField(name, value)
+    }));
   };
 
   useEffect(() => {
@@ -198,7 +211,7 @@ const CheckoutPage = () => {
       userId: authUser.id,
       first_name: formData.firstName,
       last_name: formData.lastName,
-      phone: formData.phone,
+      phone: sanitizePhoneDigits(formData.phone),
       email: formData.email,
       address: formData.address,
       payment_method: formData.paymentMethod || 'card',
@@ -453,6 +466,12 @@ const CheckoutPage = () => {
                     required
                     disabled={loading}
                     size={isMobile ? 'small' : 'medium'}
+                    inputProps={{
+                      maxLength: MAX_NAME_LEN,
+                      autoComplete: 'given-name',
+                      inputMode: 'text'
+                    }}
+                    helperText="Только буквы, пробел и дефис"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -465,6 +484,12 @@ const CheckoutPage = () => {
                     required
                     disabled={loading}
                     size={isMobile ? 'small' : 'medium'}
+                    inputProps={{
+                      maxLength: MAX_NAME_LEN,
+                      autoComplete: 'family-name',
+                      inputMode: 'text'
+                    }}
+                    helperText="Только буквы, пробел и дефис"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -478,6 +503,11 @@ const CheckoutPage = () => {
                     required
                     disabled={loading}
                     size={isMobile ? 'small' : 'medium'}
+                    inputProps={{
+                      maxLength: MAX_EMAIL_LEN,
+                      autoComplete: 'email',
+                      inputMode: 'email'
+                    }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -492,6 +522,12 @@ const CheckoutPage = () => {
                     placeholder="+7 (999) 999-99-99"
                     disabled={loading}
                     size={isMobile ? 'small' : 'medium'}
+                    inputProps={{
+                      maxLength: 18,
+                      autoComplete: 'tel',
+                      inputMode: 'tel'
+                    }}
+                    helperText="Формат: +7 (999) 999-99-99"
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -505,6 +541,11 @@ const CheckoutPage = () => {
                     disabled={loading}
                     placeholder="ул. Примерная, д. 1, кв. 1"
                     size={isMobile ? 'small' : 'medium'}
+                    inputProps={{
+                      maxLength: MAX_ADDRESS_LEN,
+                      autoComplete: 'street-address'
+                    }}
+                    helperText="Улица, дом, квартира — без лишних символов"
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>

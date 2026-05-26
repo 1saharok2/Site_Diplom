@@ -51,7 +51,6 @@ import {
   AccountCircle,
   LocalShipping,
   CheckCircle,
-  Image as ImageIcon,
   PhotoCamera,
   SupportAgent,
   Dashboard as DashboardIcon
@@ -62,6 +61,13 @@ import { favoritesService } from '../../services/favoritesService';
 import { reviewService } from '../../services/reviewService';
 import { adminService } from '../../services/adminService';
 import { apiService } from '../../services/api';
+import {
+  formatPhoneRu,
+  MAX_ADDRESS_LEN,
+  MAX_NAME_LEN,
+  sanitizeFormField,
+  sanitizePhoneDigits
+} from '../../utils/formInput';
 
 /** Ссылка на фото: http(s) или путь с сайта, до 500 символов (как в БД). */
 const isAvatarUrlAllowed = (s) => {
@@ -125,7 +131,7 @@ const ProfilePage = () => {
     return {
       name,
       email: user.email || '',
-      phone: user.phone || '',
+      phone: formatPhoneRu(user.phone || ''),
       address: user.address || '',
       avatarUrl: user.avatar_url || ''
     };
@@ -438,10 +444,11 @@ const ProfilePage = () => {
   };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: sanitizeFormField(name, value)
+    }));
   };
 
   const handlePasswordChange = (e) => {
@@ -493,7 +500,7 @@ const ProfilePage = () => {
       // Обновляем профиль через adminService
       const trimmedAvatar = formData.avatarUrl.trim();
       if (trimmedAvatar && !isAvatarUrlAllowed(trimmedAvatar)) {
-        setMessage('Укажите корректную ссылку на фото (https://… или путь, начинающийся с /), не длиннее 500 символов');
+        setMessage('Некорректное фото профиля. Загрузите файл заново.');
         setMessageType('error');
         setLoading(false);
         return;
@@ -501,7 +508,7 @@ const ProfilePage = () => {
 
       const result = await updateProfile({
         name: formData.name,
-        phone: formData.phone,
+        phone: sanitizePhoneDigits(formData.phone),
         address: formData.address,
         avatar_url: trimmedAvatar
       });
@@ -1296,19 +1303,6 @@ const ProfilePage = () => {
                     >
                       {avatarUploading ? 'Загрузка…' : 'Выбрать файл с устройства'}
                     </Button>
-                    <TextField
-                      fullWidth
-                      label="Или ссылка на фото"
-                      name="avatarUrl"
-                      value={formData.avatarUrl}
-                      onChange={handleChange}
-                      placeholder="https://… или /api/uploads/…"
-                      sx={{ mb: 1 }}
-                      InputProps={{
-                        startAdornment: <ImageIcon sx={{ mr: 1, color: 'primary.main' }} />
-                      }}
-                      helperText="Можно загрузить файл выше или вставить URL (https или путь с /), до 500 символов."
-                    />
                     <Button
                       type="button"
                       size="small"
@@ -1328,6 +1322,12 @@ const ProfilePage = () => {
                     onChange={handleChange}
                     required
                     sx={{ mb: 3 }}
+                    inputProps={{
+                      maxLength: MAX_NAME_LEN,
+                      autoComplete: 'name',
+                      inputMode: 'text'
+                    }}
+                    helperText="Только буквы, пробел и дефис"
                     InputProps={{
                       startAdornment: <Person sx={{ mr: 1, color: 'primary.main' }} />
                     }}
@@ -1356,7 +1356,14 @@ const ProfilePage = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
+                    placeholder="+7 (999) 999-99-99"
                     sx={{ mb: 3 }}
+                    inputProps={{
+                      maxLength: 18,
+                      autoComplete: 'tel',
+                      inputMode: 'tel'
+                    }}
+                    helperText="Формат: +7 (999) 999-99-99"
                     InputProps={{
                       startAdornment: <Phone sx={{ mr: 1, color: 'primary.main' }} />
                     }}
@@ -1370,7 +1377,13 @@ const ProfilePage = () => {
                     onChange={handleChange}
                     multiline
                     rows={3}
+                    placeholder="ул. Примерная, д. 1, кв. 1"
                     sx={{ mb: 2 }}
+                    inputProps={{
+                      maxLength: MAX_ADDRESS_LEN,
+                      autoComplete: 'street-address'
+                    }}
+                    helperText="Улица, дом, квартира — без лишних символов"
                     InputProps={{
                       startAdornment: <Place sx={{ mr: 1, color: 'primary.main' }} />
                     }}
