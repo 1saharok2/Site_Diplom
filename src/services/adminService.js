@@ -28,11 +28,14 @@ export const fetchWithAuth = async (url, options = {}) => {
   const token =
     localStorage.getItem('token') || localStorage.getItem('authToken');
 
+  const isFormData =
+    typeof FormData !== 'undefined' && options.body instanceof FormData;
+
   const response = await fetch(`${API_BASE}${url}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}), 
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {})
     }
   });
@@ -45,7 +48,14 @@ export const fetchWithAuth = async (url, options = {}) => {
       window.location.href = '/login';
     }
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `HTTP ${response.status}`);
+    throw new Error(
+      errorData.message ||
+        errorData.error ||
+        (Array.isArray(errorData.details)
+          ? errorData.details.join('; ')
+          : '') ||
+        `HTTP ${response.status}`
+    );
   }
 
   return response.json();
@@ -118,6 +128,20 @@ export const adminService = {
       console.error('Error in createProduct:', error);
       throw error;
     }
+  },
+
+  /** Загрузка файла изображения товара; возвращает публичный URL (/api/uploads/products/...) */
+  uploadProductImage: async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const data = await fetchWithAuth('/admin/upload_product_image.php', {
+      method: 'POST',
+      body: formData
+    });
+    if (!data?.success || !data?.url) {
+      throw new Error(data?.message || 'Не удалось загрузить изображение');
+    }
+    return data.url;
   },
 
   updateProduct: async (id, productData) => {

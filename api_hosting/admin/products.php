@@ -4,8 +4,8 @@
 ini_set('display_errors', 0);
 error_reporting(0);
 
-// 1. МЕНЯЕМ ПУТЬ К НОВОМУ ПОДКЛЮЧЕНИЮ
-require_once __DIR__ . '/../config/Database.php'; 
+// Подключение БД (имя файла в нижнем регистре — важно для Linux-хостинга)
+require_once __DIR__ . '/../config/database.php'; 
 
 header('Access-Control-Allow-Origin: https://electronic.tw1.ru');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -128,9 +128,14 @@ function processImageData($imageData) {
     return null;
 }
 
+function tableExists(PDO $conn, $tableName) {
+    $stmt = $conn->prepare("SHOW TABLES LIKE ?");
+    $stmt->execute([$tableName]);
+    return (bool) $stmt->fetchColumn();
+}
+
 // Основная логика
 try {
-    // 2. ИНИЦИАЛИЗИРУЕМ ПОДКЛЮЧЕНИЕ ЧЕРЕЗ НОВЫЙ КЛАСС
     $db = new Database();
     $conn = $db->getConnection(); 
 
@@ -186,12 +191,23 @@ try {
             
         case 'POST':
             checkAdminAuth();
-            $input = json_decode(file_get_contents('php://input'), true);
-            if (!$input) { /* ошибка JSON */ }
-            
+            $raw = file_get_contents('php://input');
+            $input = json_decode($raw, true);
+            if (!is_array($input)) {
+                http_response_code(400);
+                ob_clean();
+                echo json_encode(['error' => 'Некорректный JSON в теле запроса'], JSON_UNESCAPED_UNICODE);
+                break;
+            }
+
             $errors = validateProductData($input);
-            if (!empty($errors)) { /* ошибка валидации */ }
-            
+            if (!empty($errors)) {
+                http_response_code(400);
+                ob_clean();
+                echo json_encode(['error' => 'Ошибка валидации', 'details' => $errors], JSON_UNESCAPED_UNICODE);
+                break;
+            }
+
             $slug = generateSlug($input['name']);
             // Проверка уникальности slug через PDO
             $check_stmt = $conn->prepare("SELECT id FROM products WHERE slug = ?");
@@ -208,20 +224,26 @@ try {
             
             $stmt = $conn->prepare($sql);
             $success = $stmt->execute([
-                trim($input['name']), $slug, floatval($input['price']), 
-                $input['old_price'] ?? null, trim($input['description'] ?? ''), 
-                trim($input['category_slug']), trim($input['brand'] ?? ''), 
-                $input['rating'] ?? 0, $input['reviews_count'] ?? 0, 
-                $input['is_new'] ?? 0, $input['discount'] ?? 0, 
-                $input['stock'] ?? 0, $specifications, $input['is_active'] ?? 1, $image_url
+                trim($input['name']), $slug, floatval($input['price']),
+                $input['old_price'] ?? null, trim($input['description'] ?? ''),
+                trim($input['category_slug']), trim($input['brand'] ?? ''),
+                $input['rating'] ?? 0, $input['reviews_count'] ?? 0,
+                $input['is_new'] ?? 0, $input['discount'] ?? 0,
+                intval($input['stock'] ?? 0), $specifications, $input['is_active'] ?? 1, $image_url
             ]);
-            
+
             if ($success) {
                 $new_id = $conn->lastInsertId();
                 $get_stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
                 $get_stmt->execute([$new_id]);
                 ob_clean();
+                http_response_code(201);
                 echo json_encode($get_stmt->fetch(PDO::FETCH_ASSOC), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            } else {
+                http_response_code(500);
+                ob_clean();
+                $err = $stmt->errorInfo();
+                echo json_encode(['error' => 'Не удалось сохранить товар', 'message' => $err[2] ?? ''], JSON_UNESCAPED_UNICODE);
             }
             break;
             
@@ -353,14 +375,60 @@ try {
             break;
             
         case 'DELETE':
-                    checkAdminAuth();
-                    if (!$id) { /* ошибка ID */ }
-                    $stmt = $conn->prepare("DELETE FROM products WHERE id = ?");
-                    if ($stmt->execute([$id])) {
-                        ob_clean();
-                        echo json_encode(['success' => true, 'message' => 'Товар успешно удален']);
+            checkAdminAuth();
+            if (!$id) {
+                http_response_code(400);
+                ob_clean();
+                echo json_encode(['error' => 'ID товара не указан'], JSON_UNESCAPED_UNICODE);
+                break;
+            }
+
+            // Проверяем, что товар существует
+            $existsStmt = $conn->prepare("SELECT id FROM products WHERE id = ? LIMIT 1");
+            $existsStmt->execute([$id]);
+            if (!$existsStmt->fetchColumn()) {
+                http_response_code(404);
+                ob_clean();
+                echo json_encode(['error' => 'Товар не найден'], JSON_UNESCAPED_UNICODE);
+                break;
+            }
+
+            try {
+                $conn->beginTransaction();
+
+                // Чистим зависимые записи, чтобы не падать по FK (корзина/избранное и т.п.)
+                $dependentTables = ['user_cart', 'user_wishlist', 'user_actions', 'reviews'];
+                foreach ($dependentTables as $tbl) {
+                    if (tableExists($conn, $tbl)) {
+                        $del = $conn->prepare("DELETE FROM `{$tbl}` WHERE product_id = ?");
+                        $del->execute([$id]);
                     }
-                    break;
+                }
+
+                $stmt = $conn->prepare("DELETE FROM products WHERE id = ?");
+                $stmt->execute([$id]);
+                $conn->commit();
+
+                ob_clean();
+                echo json_encode(['success' => true, 'message' => 'Товар успешно удален']);
+            } catch (Throwable $deleteErr) {
+                if ($conn->inTransaction()) {
+                    $conn->rollBack();
+                }
+
+                // Обычно это значит, что товар участвует в order_items
+                $msg = $deleteErr->getMessage();
+                if (strpos($msg, 'Integrity constraint violation') !== false) {
+                    http_response_code(409);
+                    ob_clean();
+                    echo json_encode([
+                        'error' => 'Нельзя удалить товар, который уже используется в заказах. Снимите товар с продажи вместо удаления.'
+                    ], JSON_UNESCAPED_UNICODE);
+                } else {
+                    throw $deleteErr;
+                }
+            }
+            break;
             
         default:
             http_response_code(405);

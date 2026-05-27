@@ -1,5 +1,5 @@
 // pages/Admin/Products/AdminProducts.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -31,14 +31,48 @@ import {
   Delete,
   Edit,
   Visibility,
-  Image,
   Category,
   Inventory,
   LocalOffer,
-  BrandingWatermark
+  BrandingWatermark,
+  PhotoCamera
 } from '@mui/icons-material';
 import { adminService } from '../../../services/adminService';
-import { useNavigate } from 'react-router-dom';
+import { getProductThumbnailSrc } from '../../../utils/productImage';
+
+/** Нормализация списка URL картинок из ответа API / формы */
+function extractProductImageUrls(product) {
+  if (!product) return [];
+  if (Array.isArray(product.images) && product.images.length > 0) {
+    return product.images
+      .map((u) => (typeof u === 'string' ? u.trim() : ''))
+      .filter(Boolean);
+  }
+  const raw = product.image_url;
+  if (raw == null || raw === '') return [];
+  if (Array.isArray(raw)) {
+    return raw.map((u) => (typeof u === 'string' ? u.trim() : '')).filter(Boolean);
+  }
+  if (typeof raw === 'string') {
+    const t = raw.trim();
+    if (!t) return [];
+    if (t.startsWith('[') || t.startsWith('"')) {
+      try {
+        const parsed = JSON.parse(t);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .filter((x) => typeof x === 'string' && x.trim())
+            .map((x) => x.trim());
+        }
+        return typeof parsed === 'string' && parsed.trim() ? [parsed.trim()] : [];
+      } catch {
+        return [t];
+      }
+    }
+    return [t];
+  }
+  return [];
+}
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -57,7 +91,6 @@ const AdminProducts = () => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const navigate = useNavigate();
 
   const fetchCategories = async () => {
     try {
@@ -197,7 +230,11 @@ const AdminProducts = () => {
       fetchProducts();
       handleDialogClose();
     } catch (error) {
-      showSnackbar('Ошибка при сохранении товара', 'error');
+      const msg =
+        error?.message && String(error.message).trim()
+          ? error.message
+          : 'Ошибка при сохранении товара';
+      showSnackbar(msg, 'error');
     }
   };
 
@@ -413,7 +450,7 @@ const AdminProducts = () => {
                   <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', mb: 1.5 }}>
                     <Box
                       component="img"
-                      src={product.image_url || '/placeholder-product.jpg'}
+                      src={getProductThumbnailSrc(product)}
                       alt={product.name}
                       sx={{ width: 64, height: 64, borderRadius: 2, objectFit: 'cover', border: '1px solid #ddd', flexShrink: 0 }}
                       onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
@@ -482,7 +519,7 @@ const AdminProducts = () => {
                   {/* Изображение товара */}
                   <Box
                     component="img"
-                    src={product.image_url || '/placeholder-product.jpg'}
+                    src={getProductThumbnailSrc(product)}
                     alt={product.name}
                     sx={{
                       width: 50,
@@ -599,6 +636,7 @@ const AdminProducts = () => {
 
 // 🔥 АДАПТИРОВАННЫЙ ProductDialog
 const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMode }) => {
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -606,10 +644,13 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
     category_slug: '',
     brand: '',
     stock: '',
-    image_url: ''
+    imageUrls: []
   });
+  const [imageUploading, setImageUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   useEffect(() => {
+    setUploadError('');
     if (product) {
       setFormData({
         name: product.name || '',
@@ -618,7 +659,7 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
         category_slug: product.category_slug || '',
         brand: product.brand || '',
         stock: product.stock || '',
-        image_url: product.image_url || ''
+        imageUrls: extractProductImageUrls(product)
       });
     } else {
       setFormData({
@@ -628,34 +669,67 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
         category_slug: '',
         brand: '',
         stock: '',
-        image_url: ''
+        imageUrls: []
       });
     }
-  }, [product]);
+  }, [product, open]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (isViewMode) return; // Защита от отправки в режиме просмотра
-    const submitData = {
-      ...formData,
-      images: formData.image_url ? [formData.image_url] : []
-    };
-    onSubmit(submitData);
+    if (isViewMode) return;
+    const { imageUrls, ...rest } = formData;
+    onSubmit({
+      ...rest,
+      images: imageUrls
+    });
   };
 
   const handleChange = (e) => {
-    // Разрешаем изменения только если это не режим просмотра
     if (!isViewMode) {
       setFormData({ ...formData, [e.target.name]: e.target.value });
     }
   };
 
+  const handlePickImages = () => {
+    if (!isViewMode) fileInputRef.current?.click();
+  };
+
+  const handleImageFiles = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (!files.length || isViewMode) return;
+    setUploadError('');
+    setImageUploading(true);
+    try {
+      const newUrls = [];
+      for (const file of files) {
+        const url = await adminService.uploadProductImage(file);
+        newUrls.push(url);
+      }
+      setFormData((prev) => ({
+        ...prev,
+        imageUrls: [...prev.imageUrls, ...newUrls]
+      }));
+    } catch (err) {
+      setUploadError(err.message || 'Не удалось загрузить изображение');
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const removeImageAt = (index) => {
+    if (isViewMode) return;
+    setFormData((prev) => ({
+      ...prev,
+      imageUrls: prev.imageUrls.filter((_, i) => i !== index)
+    }));
+  };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="md" 
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
       fullWidth
       PaperProps={{
         sx: {
@@ -664,21 +738,32 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
         }
       }}
     >
-      <DialogTitle sx={{ 
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white',
-        fontWeight: 'bold',
-        p: 2
-      }}>
-        {isViewMode 
-            ? '👁️ Просмотр товара' 
-            : product ? '✏️ Редактировать товар' : '➕ Добавить товар'}
+      <DialogTitle
+        sx={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          fontWeight: 'bold',
+          p: 2
+        }}
+      >
+        {isViewMode
+          ? '👁️ Просмотр товара'
+          : product
+            ? '✏️ Редактировать товар'
+            : '➕ Добавить товар'}
       </DialogTitle>
-      
+
       <form onSubmit={handleSubmit}>
         <DialogContent sx={{ p: 2 }}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            multiple
+            style={{ display: 'none' }}
+            onChange={handleImageFiles}
+          />
           <Grid container spacing={2}>
-            {/* Название */}
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
@@ -693,12 +778,11 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
                       <Inventory />
                     </InputAdornment>
                   ),
-                  readOnly: isViewMode, // 🔥 Только для чтения в режиме просмотра
+                  readOnly: isViewMode
                 }}
               />
             </Grid>
-            
-            {/* Цена */}
+
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
@@ -714,12 +798,11 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
                       <LocalOffer />
                     </InputAdornment>
                   ),
-                  readOnly: isViewMode, // 🔥 Только для чтения
+                  readOnly: isViewMode
                 }}
               />
             </Grid>
 
-            {/* Бренд */}
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
@@ -733,12 +816,11 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
                       <BrandingWatermark />
                     </InputAdornment>
                   ),
-                  readOnly: isViewMode, // 🔥 Только для чтения
+                  readOnly: isViewMode
                 }}
               />
             </Grid>
 
-            {/* Количество на складе */}
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
@@ -753,12 +835,11 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
                       <Inventory />
                     </InputAdornment>
                   ),
-                  readOnly: isViewMode, // 🔥 Только для чтения
+                  readOnly: isViewMode
                 }}
               />
             </Grid>
 
-            {/* Категория */}
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
@@ -767,16 +848,16 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
                 select
                 value={formData.category_slug}
                 onChange={handleChange}
-                disabled={isViewMode} // 🔥 Отключаем SELECT в режиме просмотра
+                disabled={isViewMode}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
                       <Category />
                     </InputAdornment>
-                  ),
+                  )
                 }}
               >
-                {categories.map(category => (
+                {categories.map((category) => (
                   <MenuItem key={category.slug} value={category.slug}>
                     {category.name}
                   </MenuItem>
@@ -784,7 +865,6 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
               </TextField>
             </Grid>
 
-            {/* Описание */}
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
@@ -795,61 +875,96 @@ const ProductDialog = ({ open, onClose, onSubmit, product, categories, isViewMod
                 value={formData.description}
                 onChange={handleChange}
                 InputProps={{
-                    readOnly: isViewMode, // 🔥 Только для чтения
+                  readOnly: isViewMode
                 }}
               />
             </Grid>
 
-            {/* URL изображения */}
             <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="URL изображения"
-                name="image_url"
-                value={formData.image_url}
-                onChange={handleChange}
-                helperText="Введите URL основного изображения товара"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Image />
-                    </InputAdornment>
-                  ),
-                  readOnly: isViewMode, // 🔥 Только для чтения
-                }}
-              />
+              <Typography variant="subtitle2" gutterBottom>
+                Фотографии товара
+              </Typography>
+              {!isViewMode && (
+                <Button
+                  type="button"
+                  variant="outlined"
+                  size="small"
+                  startIcon={
+                    imageUploading ? (
+                      <CircularProgress size={16} color="inherit" />
+                    ) : (
+                      <PhotoCamera />
+                    )
+                  }
+                  disabled={imageUploading}
+                  onClick={handlePickImages}
+                  sx={{ mb: 1 }}
+                >
+                  {imageUploading ? 'Загрузка…' : 'Выбрать файлы с компьютера'}
+                </Button>
+              )}
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                JPEG, PNG, WebP или GIF, до 5 МБ на файл. Можно выбрать несколько сразу.
+              </Typography>
+              {uploadError && (
+                <Alert severity="error" sx={{ mb: 1 }} onClose={() => setUploadError('')}>
+                  {uploadError}
+                </Alert>
+              )}
+              {formData.imageUrls.length > 0 && (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mt: 1 }}>
+                  {formData.imageUrls.map((url, index) => (
+                    <Box
+                      key={`${url}-${index}`}
+                      sx={{
+                        position: 'relative',
+                        width: 120,
+                        height: 120,
+                        borderRadius: 1,
+                        overflow: 'hidden',
+                        border: '1px solid',
+                        borderColor: 'divider'
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        src={url}
+                        alt=""
+                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(ev) => {
+                          ev.target.src = '/placeholder-product.jpg';
+                        }}
+                      />
+                      {!isViewMode && (
+                        <IconButton
+                          type="button"
+                          size="small"
+                          color="error"
+                          onClick={() => removeImageAt(index)}
+                          sx={{
+                            position: 'absolute',
+                            top: 2,
+                            right: 2,
+                            bgcolor: 'background.paper'
+                          }}
+                          aria-label="Удалить фото"
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+              )}
             </Grid>
-
-            {formData.image_url && (
-              <Grid size={{ xs: 12 }}>
-                <Typography variant="body2" gutterBottom>
-                  Предпросмотр изображения:
-                </Typography>
-                <Box
-                  component="img"
-                  src={formData.image_url}
-                  alt="Предпросмотр"
-                  sx={{
-                    maxWidth: '100%',
-                    maxHeight: 200,
-                    borderRadius: 1,
-                    objectFit: 'contain',
-                    border: '1px solid #ddd'
-                  }}
-                  onError={(e) => {
-                    e.target.src = '/placeholder-product.jpg';
-                  }}
-                />
-              </Grid>
-            )}
           </Grid>
         </DialogContent>
 
         <DialogActions sx={{ p: 2, pt: 0 }}>
           <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 1 }}>
-            {isViewMode ? 'Закрыть' : 'Отмена'} {/* 🔥 Изменение текста кнопки */}
+            {isViewMode ? 'Закрыть' : 'Отмена'}
           </Button>
-          {!isViewMode && ( // 🔥 Скрываем кнопку "Сохранить" в режиме просмотра
+          {!isViewMode && (
             <Button type="submit" variant="contained" sx={{ borderRadius: 1 }}>
               {product ? 'Сохранить изменения' : 'Создать товар'}
             </Button>

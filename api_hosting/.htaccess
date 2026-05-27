@@ -44,6 +44,18 @@ RewriteRule ^admin/products/([0-9]+)/?$ admin/products.php?id=$1 [QSA,L]
 RewriteCond %{REQUEST_METHOD} DELETE
 RewriteRule ^admin/products/([0-9]+)/?$ admin/products.php?id=$1 [QSA,L]
 
+# admin categories
+RewriteCond %{REQUEST_METHOD} POST
+RewriteRule ^admin/categories/?$ admin/categories.php [QSA,L]
+RewriteCond %{REQUEST_METHOD} PUT
+RewriteRule ^admin/categories/([0-9]+)/?$ admin/categories.php?id=$1 [QSA,L]
+RewriteCond %{REQUEST_METHOD} DELETE
+RewriteRule ^admin/categories/([0-9]+)/?$ admin/categories.php?id=$1 [QSA,L]
+RewriteCond %{REQUEST_METHOD} GET
+RewriteRule ^admin/categories/?$ admin/categories.php [QSA,L]
+RewriteCond %{REQUEST_METHOD} GET
+RewriteRule ^admin/categories/([0-9]+)/?$ admin/categories.php?id=$1 [QSA,L]
+
 # остальные правила...
 RewriteRule ^categories/?$ categories.php [QSA,L]
 RewriteRule ^categories/([^/]+)/?$ categories.php?slug=$1 [QSA,L]
